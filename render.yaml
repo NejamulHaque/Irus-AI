@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: irus-assistant
+    env: python
+    buildCommand: ""
+    startCommand: python app.py
+    envVars:
+      - key: HOST
+        value: your-db-host
+      - key: USER
+        value: your-db-user
+      - key: PASSWORD
+        value: your-db-password
+      - key: DATABASE
+        value: your-db-name

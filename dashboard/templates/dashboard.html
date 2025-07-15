@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Irus AI Assistant – Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="manifest" href="/static/manifest.json">
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+  <style>
+    :root {
+      --bg: #f2f4f8;
+      --card: #ffffff;
+      --primary: #007bff;
+      --secondary: #17a2b8;
+      --shadow: rgba(0, 0, 0, 0.1);
+    }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    .header {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      padding: 20px;
+      text-align: center;
+      font-size: 1.8rem;
+      font-weight: bold;
+      box-shadow: 0 2px 8px var(--shadow);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+    .header a.logout {
+      color: #fff;
+      text-decoration: none;
+      margin-left: 20px;
+      font-size: 14px;
+    }
+    .header a.logout.active {
+      text-decoration: underline;
+      font-weight: bold;
+    }
+    .main {
+      display: flex;
+      flex: 1;
+      padding: 20px;
+      gap: 20px;
+      box-sizing: border-box;
+    }
+    .history-panel, .chat-panel {
+      background: var(--card);
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 8px 24px var(--shadow);
+    }
+    .history-panel {
+      width: 30%;
+      overflow-y: auto;
+    }
+    .chat-panel {
+      width: 70%;
+      display: flex;
+      flex-direction: column;
+    }
+    .chat-box {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 10px;
+      padding-bottom: 120px;
+    }
+    .chat-msg {
+      margin: 10px 0;
+      max-width: 75%;
+      padding: 14px 18px;
+      border-radius: 20px;
+      font-size: 15px;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    .chat-msg.user {
+      background: var(--primary);
+      color: white;
+      margin-left: auto;
+      border-bottom-right-radius: 0;
+    }
+    .chat-msg.bot {
+      background: #f1f3f6;
+      color: #333;
+      margin-right: auto;
+      border-bottom-left-radius: 0;
+    }
+    .floating-chat-bar {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--card);
+      box-shadow: 0 4px 12px var(--shadow);
+      border-radius: 30px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 999;
+      flex-wrap: wrap;
+    }
+    .floating-chat-bar select,
+    .floating-chat-bar input,
+    .floating-chat-bar button {
+      padding: 10px;
+      border-radius: 25px;
+      border: 1px solid #ccc;
+      outline: none;
+      font-size: 14px;
+    }
+    .floating-chat-bar button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+    .floating-chat-bar button:hover {
+      background: #0056b3;
+    }
+    #usageChart {
+      max-height: 280px;
+      margin-bottom: 20px;
+    }
+    .memory-title {
+      margin-top: 40px;
+    }
+    @media (max-width: 768px) {
+      .main {
+        flex-direction: column;
+        padding: 10px;
+      }
+      .history-panel, .chat-panel {
+        width: 100%;
+      }
+      .floating-chat-bar {
+        flex-wrap: wrap;
+        bottom: 10px;
+        width: calc(100% - 20px);
+        left: 10px;
+        transform: none;
+      }
+      .floating-chat-bar input,
+      .floating-chat-bar select,
+      .floating-chat-bar button {
+        font-size: 13px;
+        flex: 1 1 100%;
+        margin: 4px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- ✅ Flash Message Display -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div style="position:fixed; top:10px; right:10px; z-index:10000;">
+        {% for category, message in messages %}
+          <div style="background-color: {% if category == 'success' %}#d4edda{% elif category == 'danger' %}#f8d7da{% else %}#cce5ff{% endif %}; color: #000; padding: 10px 20px; margin-bottom: 5px; border-radius: 8px;">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- ✅ Header with Nav -->
+  <div class="header">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div>Welcome to Irus, {{ username }} 👋</div>
+      <nav style="display: flex; gap: 15px;">
+        <a href="/home" class="logout {% if current_page == 'home' %}active{% endif %}">🏠 Home</a>
+        <a href="/profile" class="logout">👤 Profile</a>
+        <a href="/logout" class="logout">🚪 Logout</a>
+      </nav>
+    </div>
+  </div>
+
+  <!-- ✅ Main Dashboard Body -->
+  <div class="main">
+    <div class="history-panel">
+      <h3>🧠 Your Conversations</h3>
+      <form action="/delete_history" method="POST" onsubmit="return confirm('Are you sure you want to delete your chat history?');">
+        <button type="submit" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded">
+          🗑️ Delete History
+        </button>
+      </form>
+      {% for item in history %}
+        <div class="bg-white p-4 rounded shadow-md mb-3">
+          <div class="font-bold text-gray-700">You:</div>
+          <p>{{ item.user_message }}</p>
+          <div class="font-bold text-gray-700 mt-2">Assistant:</div>
+          <p>{{ item.assistant_response }}</p>
+        </div>
+      {% endfor %}
+      <h3 class="memory-title">📚 Memory Log</h3>
+      <div id="memory-list"></div>
+    </div>
+
+    <div class="chat-panel">
+      <h3>💬 Chat with Irus</h3>
+      <h3>📊 Usage Analytics</h3>
+      <canvas id="usageChart"></canvas>
+      <div class="chat-box" id="chat-box"></div>
+    </div>
+  </div>
+
+  <!-- ✅ Floating Chat Input -->
+  <div class="floating-chat-bar">
+    <select id="language-select">
+      <option value="en">🇬🇧 English</option>
+      <option value="hi">🇮🇳 Hindi</option>
+    </select>
+    <select id="mode-select">
+      <option value="chat">🤖 Chat Mode</option>
+      <option value="faq">📘 FAQ Assistant</option>
+    </select>
+    🗣️ Voice:
+    <select id="voice-select">
+      <option value="male">Male</option>
+      <option value="female">Female</option>
+    </select>
+    <input type="text" id="user-input" placeholder="Ask anything..." onkeydown="if(event.key==='Enter') sendMessage()" />
+    <button id="mic-btn" onclick="toggleMic()">🎧 Start</button>
+    <button onclick="sendMessage()">Send</button>
+    <button onclick="stopSpeaking()">⛔️ Stop Speaking</button>
+    <input type="file" id="upload-file" style="display:none" onchange="uploadFile(event)">
+    <button onclick="document.getElementById('upload-file').click()">📤 Upload</button>
+    <button onclick="downloadLastResponse()">📥 Download</button>
+    <label><input type="checkbox" id="privateToggle"> Private?</label>
+  </div>
+  <script>
+const chatBox = document.getElementById("chat-box");
+const input = document.getElementById("user-input");
+let selectedVoice = null;
+let lastBotResponse = "";
+let micActive = false;
+let wakeRecognizer = null;
+let commandRecognizer = null;
+
+// ✅ Load voices
+function loadVoices() {
+  const voices = speechSynthesis.getVoices();
+  const gender = document.getElementById("voice-select").value;
+
+  const filtered = voices.filter(v => {
+    const name = v.name.toLowerCase();
+    return gender === "male"
+      ? name.includes("david") || name.includes("fred") || name.includes("male") || name.includes("alex")
+      : name.includes("zira") || name.includes("female") || name.includes("susan") || name.includes("victoria");
+  });
+
+  selectedVoice = filtered[0] || voices[0];
+  console.log("✅ Voice loaded:", selectedVoice?.name || "default");
+}
+
+// Ensure voices are loaded
+speechSynthesis.onvoiceschanged = loadVoices;
+document.getElementById("voice-select").addEventListener("change", loadVoices);
+
+
+// ✅ Stop speaking
+function stopSpeaking() {
+  if (speechSynthesis.speaking) speechSynthesis.cancel();
+}
+
+// ✅ Send Message
+async function sendMessage() {
+  const input = document.getElementById("user-input");
+  const message = input.value.trim();
+  if (!message) return;
+
+  // Show user message
+  const userDiv = document.createElement("div");
+  userDiv.className = "chat-msg user";
+  userDiv.innerText = message;
+  document.getElementById("chat-box").appendChild(userDiv);
+  input.value = "";
+  document.getElementById("chat-box").scrollTop = chatBox.scrollHeight;
+
+  const lang = document.getElementById("language-select").value || "en";
+  const mode = document.getElementById("mode-select").value || "chat";
+
+  try {
+    const res = await fetch("/api/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message, lang, mode })
+    });
+
+    const data = await res.json();
+
+    // Show bot response
+    const botDiv = document.createElement("div");
+    botDiv.className = "chat-msg bot";
+    botDiv.innerText = data.response;
+    document.getElementById("chat-box").appendChild(botDiv);
+    document.getElementById("chat-box").scrollTop = chatBox.scrollHeight;
+
+    lastBotResponse = data.response;
+
+    // ✅ Speak the response
+    const utter = new SpeechSynthesisUtterance(data.response);
+    utter.voice = selectedVoice || speechSynthesis.getVoices()[0];
+    utter.lang = lang === "hi" ? "hi-IN" : "en-US";
+    console.log("🗣️ Speaking using:", utter.voice.name);
+    speechSynthesis.speak(utter);
+  } catch (error) {
+    console.error("❌ Error fetching response:", error);
+  }
+}
+
+// ✅ Toggle Mic
+function toggleMic() {
+  if (!("webkitSpeechRecognition" in window)) return alert("Only works in Chrome!");
+
+  micActive = !micActive;
+  const micBtn = document.getElementById("mic-btn");
+  micBtn.innerText = micActive ? "🛑 Stop" : "🎧 Start";
+
+  if (micActive) {
+    initWakeRecognizer();
+    wakeRecognizer.start();
+  } else {
+    wakeRecognizer?.stop();
+    commandRecognizer?.stop();
+  }
+}
+
+function initWakeRecognizer() {
+  wakeRecognizer = new webkitSpeechRecognition();
+  wakeRecognizer.continuous = true;
+  wakeRecognizer.lang = "en-US";
+
+  wakeRecognizer.onresult = (e) => {
+    const transcript = e.results[e.resultIndex][0].transcript.toLowerCase();
+    if (transcript.includes("hey irus")) {
+      wakeRecognizer.stop();
+      startCommandRecognizer();
+    }
+  };
+  wakeRecognizer.onend = () => {
+    if (micActive) wakeRecognizer.start();
+  };
+}
+
+function startCommandRecognizer() {
+  commandRecognizer = new webkitSpeechRecognition();
+  commandRecognizer.continuous = false;
+  commandRecognizer.lang = "en-US";
+
+  commandRecognizer.onresult = (e) => {
+    input.value = e.results[0][0].transcript.trim();
+    sendMessage();
+  };
+  commandRecognizer.onend = () => {
+    if (micActive) wakeRecognizer.start();
+  };
+
+  commandRecognizer.start();
+}
+
+// ✅ Load usage stats
+async function loadUsageChart() {
+  const res = await fetch("/api/stats");
+  const stats = await res.json();
+  const ctx = document.getElementById('usageChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: stats.labels,
+      datasets: [{
+        label: 'Queries per Day',
+        data: stats.data,
+        backgroundColor: 'rgba(0, 123, 255, 0.6)',
+        borderColor: 'rgba(0, 123, 255, 1)',
+        borderWidth: 2,
+        borderRadius: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        title: { display: false }
+      },
+      scales: {
+        y: { beginAtZero: true, ticks: { stepSize: 1 } }
+      }
+    }
+  });
+}
+
+// ✅ Load Memory
+async function loadMemory() {
+  const res = await fetch("/api/memory");
+  const memory = await res.json();
+  const memoryList = document.getElementById("memory-list");
+  memory.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "history-item";
+    div.innerHTML = `📌 <strong>${item.fact}</strong><br><small>🗓 ${item.date}</small>`;
+    memoryList.appendChild(div);
+  });
+}
+
+// ✅ Upload File
+function uploadFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    input.value = `Please read this file:\n${reader.result}`;
+    sendMessage();
+  };
+  reader.readAsText(file);
+}
+
+// ✅ Download Bot Response
+function downloadLastResponse() {
+  if (!lastBotResponse) return alert("No response to download yet!");
+  const blob = new Blob([lastBotResponse], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "irus-response.txt";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ✅ Initial Load
+window.onload = async () => {
+  await waitForVoicesToLoad(); // 👈 wait until voices are ready
+  loadVoices();                // 👈 then load voice options
+  loadMemory();
+  loadUsageChart();
+};
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/static/service-worker.js');
+}
+function waitForVoicesToLoad() {
+  return new Promise(resolve => {
+    let voices = speechSynthesis.getVoices();
+    if (voices.length !== 0) return resolve(voices);
+
+    speechSynthesis.onvoiceschanged = () => {
+      voices = speechSynthesis.getVoices();
+      if (voices.length !== 0) resolve(voices);
+    };
+  });
+}
+if (!selectedVoice) {
+  const voices = speechSynthesis.getVoices();
+  selectedVoice = voices[0]; // fallback
+}
+loadVoices();
+</script>
+</div>
+  <!-- ✅ Footer -->
+  <footer style="background: var(--primary); color: white; padding: 10px; text-align: left;">
+    <p>© 2023 Irus AI Assistant. All rights reserved.</p>
+  </footer>
+</body>
+</html>

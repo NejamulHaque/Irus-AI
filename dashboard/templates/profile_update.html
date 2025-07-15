@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Profile – Irus AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #e8ecf4, #ffffff);
+    }
+    .glass {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    }
+    .neumorphic {
+      background: #f1f3f6;
+      border-radius: 1rem;
+      box-shadow: 10px 10px 30px #d1d9e6, -10px -10px 30px #ffffff;
+      transition: 0.3s ease;
+    }
+    .neumorphic:focus-within {
+      box-shadow: inset 6px 6px 12px #d1d9e6, inset -6px -6px 12px #ffffff;
+    }
+    .btn-glow:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px rgba(59, 130, 246, 0.4);
+    }
+    .nav-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 30px;
+      max-width: 1000px;
+      margin: auto;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 24px;
+      color: white;
+      font-weight: bold;
+    }
+    .logo img {
+      height: 32px;
+      width: 32px;
+      border-radius: 50%;
+      object-fit: cover;
+      filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.3));
+    }
+    .nav-links a {
+      margin-left: 20px;
+      text-decoration: none;
+      color: white;
+      font-weight: 500;
+      transition: 0.3s ease;
+    }
+    .nav-links a:hover {
+      color: #ffc107;
+      text-decoration: underline;
+    }
+    @media (max-width: 600px) {
+      .nav-bar {
+        flex-direction: column;
+        gap: 10px;
+      }
+      .nav-links a {
+        margin-left: 0;
+        margin-right: 10px;
+      }
+    }
+    .header {
+      width: 100%;
+      padding: 12px 30px;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(8px);
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 100;
+    }
+    .nav-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1000px;
+      margin: auto;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 22px;
+      font-weight: bold;
+      color: #fff;
+    }
+    .logo img {
+      height: 30px;
+      width: 30px;
+      border-radius: 50%;
+    }
+    .nav-links {
+      display: flex;
+      gap: 20px;
+    }
+    .nav-links a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      transition: 0.3s;
+    }
+    .nav-links a:hover {
+      color: #ffc107;
+    }
+  </style>
+</head>
+<body class="text-gray-800 min-h-screen flex items-center justify-center px-4">
+  <div class="header">
+    <nav class="nav-bar">
+      <div class="logo">
+        <img src="https://ideogram.ai/assets/image/lossless/response/I1u9WRGERNaEx-RQyzFM4A" alt="Irus Logo" />
+        <span>Irus</span>
+      </div>
+      <div class="nav-links">
+        <a href="/resumee">Resume Builder</a>
+        <a href="/portfolio">Portfolio</a>
+        <a href="/login">Login</a>
+      </div>
+    </nav>
+  </div>
+  <div class="glass rounded-3xl p-10 max-w-2xl w-full shadow-2xl border border-blue-100 mt-10">
+    <h2 class="text-3xl font-bold text-center text-blue-600 mb-6 drop-shadow">👤 Update Your Profile</h2>
+    <p class="text-sm text-center text-gray-500 mb-6">🕒 Last login: {{ user.last_login or 'N/A' }}</p>
+
+    <form action="/update_profile" method="POST" enctype="multipart/form-data" class="space-y-8">
+      <div class="flex flex-col items-center">
+        <img id="profile-preview" src="{{ user.profile_pic or '/static/default-user.png' }}"
+             class="w-24 h-24 rounded-full object-cover border-4 border-blue-400 shadow-md hover:scale-105 duration-200 mb-2">
+        <label class="text-sm text-gray-700">Change Profile Picture</label>
+        <input type="file" name="profile_pic" accept="image/*"
+               onchange="previewImage(event)"
+               class="mt-1 text-sm file:bg-blue-100 file:border-none file:px-4 file:py-2 file:rounded-full file:text-blue-700 file:cursor-pointer"/>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold">Full Name</label>
+        <input type="text" name="name" value="{{ user.name or '' }}" placeholder="Your name"
+               class="w-full px-5 py-3 neumorphic focus:outline-none">
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold">Bio</label>
+        <textarea name="bio" rows="3" placeholder="Short description..."
+                  class="w-full px-5 py-3 neumorphic focus:outline-none">{{ user.bio or '' }}</textarea>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold">Social Links</label>
+        <input type="url" name="github" placeholder="GitHub URL" value="{{ user.github or '' }}"
+               class="w-full px-5 py-3 neumorphic mb-2 focus:outline-none">
+        <input type="url" name="linkedin" placeholder="LinkedIn URL" value="{{ user.linkedin or '' }}"
+               class="w-full px-5 py-3 neumorphic mb-2 focus:outline-none">
+        <input type="url" name="twitter" placeholder="Twitter URL" value="{{ user.twitter or '' }}"
+               class="w-full px-5 py-3 neumorphic focus:outline-none">
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold">Upload Resume (PDF/DOCX)</label>
+        <input type="file" name="resume" accept=".pdf,.doc,.docx"
+               class="text-sm file:bg-green-100 file:border-none file:px-4 file:py-2 file:rounded-full file:text-green-700 file:cursor-pointer"/>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold">Change Password</label>
+        <input type="password" name="current_password" placeholder="Current Password"
+               class="w-full px-5 py-3 neumorphic mb-2 focus:outline-none">
+        <input type="password" name="new_password" placeholder="New Password"
+               class="w-full px-5 py-3 neumorphic focus:outline-none">
+      </div>
+
+      <div class="text-center">
+        <button type="submit"
+                class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-2xl shadow-lg transition-all btn-glow">
+          💾 Save Changes
+        </button>
+      </div>
+    </form>
+  </div>
+  <script>
+    function previewImage(event) {
+      const reader = new FileReader();
+      reader.onload = function () {
+        document.getElementById('profile-preview').src = reader.result;
+      };
+      reader.readAsDataURL(event.target.files[0]);
+    }
+  </script>
+</body>
+</html>
