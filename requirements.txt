@@ -439,3 +439,4 @@ xxhash==3.5.0
 yagmail==0.15.293
 yarl==1.20.1
 zipp==3.23.0
+packaging==23.2
