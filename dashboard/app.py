@@ -6,6 +6,7 @@ import mysql.connector
 import bcrypt
 import uuid
 from datetime import datetime
+from config import DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, FLASK_SECRET_KEY
 
 # Fix import path to reach irus_assistant/
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -15,22 +16,15 @@ sys.path.insert(0, BASE_DIR)
 from irus_assistant.groq_logic import ask, search
 
 app = Flask(__name__)
-app.secret_key = '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'
-
-# DB config
-HOST = "localhost"
-USER = "root"
-PASSWORD = "newpassword"
-DATABASE = "personal_assistant"
+app.secret_key = FLASK_SECRET_KEY
 
 def get_db():
     return mysql.connector.connect(
-        host=HOST,
-        user=USER,
-        password=PASSWORD,
-        database=DATABASE
+        host=DB_HOST,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        database=DB_NAME
     )
-
 @app.route('/')
 def home():
     return redirect('/dashboard') if 'user_id' in session else redirect('/login')

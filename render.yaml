@@ -1,15 +1,22 @@
 services:
   - type: web
-    name: irus-assistant
+    name: irus-ai
     env: python
-    buildCommand: ""
-    startCommand: python app.py
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app"
     envVars:
-      - key: HOST
-        value: your-db-host
-      - key: USER
-        value: your-db-user
-      - key: PASSWORD
-        value: your-db-password
-      - key: DATABASE
-        value: your-db-name
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_MODEL
+        value: mixtral-8x7b-32768
+      - key: DB_HOST
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        value: personal_assistant
+      - key: SECRET_KEY
+        sync: false
