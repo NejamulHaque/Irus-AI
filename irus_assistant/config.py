@@ -5,7 +5,7 @@ load_dotenv()
 
 # Groq AI
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-GROQ_MODEL = os.getenv("GROQ_MODEL", "mixtral-8x7b-32768")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama3-70b-8192")
 
 # MySQL DB
 DB_HOST = os.getenv("DB_HOST")
