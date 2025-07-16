@@ -6,7 +6,7 @@ import mysql.connector
 import bcrypt
 import uuid
 from datetime import datetime
-from irus_assistant.config import DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, FLASK_SECRET_KEY
+from irus_assistant.config import HOST as DB_HOST, USER as DB_USER, PASSWORD as DB_PASSWORD, DATABASE as DB_NAME, FLASK_SECRET_KEY
 
 # Fix import path to reach irus_assistant/
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
