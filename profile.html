@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{{ user.name or "Your" }} Profile – Irus AI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="{% if user.dark_mode %}bg-gray-900 text-white{% else %}bg-gray-100 text-gray-800{% endif %} min-h-screen py-10 px-4">
+<style>
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(to bottom right, #f0f4f8, #d9e4f5);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: #333;
+}
+
+/* Dark mode */
+body.dark-mode {
+  background: linear-gradient(to bottom right, #1f2937, #111827);
+  color: #f9fafb;
+}
+
+.profile-card {
+  background-color: white;
+  border-radius: 1.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+  padding: 2rem;
+  max-width: 600px;
+  width: 100%;
+  transition: all 0.3s ease;
+}
+
+.dark-mode .profile-card {
+  background-color: #1f2937;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+
+.profile-img {
+  width: 110px;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 3px solid #3b82f6;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.profile-name {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-top: 1rem;
+}
+
+.profile-bio {
+  font-size: 0.95rem;
+  text-align: center;
+  margin-top: 0.5rem;
+  color: #555;
+}
+
+.dark-mode .profile-bio {
+  color: #ccc;
+}
+
+.resume-btn {
+  margin-top: 1rem;
+  padding: 0.5rem 1.25rem;
+  background-color: #10b981;
+  color: white;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-block;
+  transition: 0.3s ease;
+}
+
+.resume-btn:hover {
+  background-color: #059669;
+}
+
+.social-links {
+  margin-top: 1.5rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.social-links a {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  color: #3b82f6;
+  text-decoration: none;
+  transition: 0.2s;
+}
+
+.social-links img {
+  width: 20px;
+  height: 20px;
+}
+
+.social-links a:hover {
+  text-decoration: underline;
+}
+
+.edit-btn {
+  margin-top: 2rem;
+  display: inline-block;
+  background-color: #3b82f6;
+  color: white;
+  padding: 0.6rem 1.5rem;
+  border-radius: 1rem;
+  font-weight: 600;
+  box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+  transition: 0.3s ease;
+}
+
+.edit-btn:hover {
+  background-color: #2563eb;
+}
+.nav-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 30px;
+  max-width: 1000px;
+  margin: auto;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 24px;
+  color: white;
+  font-weight: bold;
+}
+
+.logo img {
+  height: 32px;
+  width: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.3));
+}
+
+.nav-links a {
+  margin-left: 20px;
+  text-decoration: none;
+  color: white;
+  font-weight: 500;
+  transition: 0.3s ease;
+}
+
+.nav-links a:hover {
+  color: #ffc107;
+  text-decoration: underline;
+}
+
+@media (max-width: 600px) {
+  .nav-bar {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .nav-links a {
+    margin-left: 0;
+    margin-right: 10px;
+  }
+}
+.header {
+  width: 100%;
+  padding: 12px 30px;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 100;
+}
+
+.nav-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1000px;
+  margin: auto;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 22px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.logo img {
+  height: 30px;
+  width: 30px;
+  border-radius: 50%;
+}
+
+.nav-links {
+  display: flex;
+  gap: 20px;
+}
+
+.nav-links a {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  transition: 0.3s;
+}
+
+.nav-links a:hover {
+  color: #ffc107;
+}
+</style>
+<div class="header">
+  <nav class="nav-bar">
+    <div class="logo">
+      <img src="https://ideogram.ai/assets/image/lossless/response/I1u9WRGERNaEx-RQyzFM4A" alt="Irus Logo" />
+      <span>Irus</span>
+    </div>
+    <div class="nav-links">
+      <a href="/home" class="logout {% if current_page == 'home' %}active{% endif %}">🏠 Home</a>
+      <a href="https://resume-builder-alpha-puce.vercel.app/">Resume Builder</a>
+      <a href="https://portfolio-ai-theta.vercel.app/">Portfolio</a>
+      <a href="https://portfolio-builder-ayb0.onrender.com/">Portfolio Builder</a>
+      <a href="/logout" class="logout">🚪 Logout</a>
+    </div>
+  </nav>
+</div>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="max-w-xl mx-auto mb-4">
+      {% for category, message in messages %}
+        <div class="p-4 rounded-md text-sm font-medium mb-2
+                    {% if category == 'success' %} bg-green-100 text-green-800
+                    {% elif category == 'danger' %} bg-red-100 text-red-800
+                    {% elif category == 'warning' %} bg-yellow-100 text-yellow-800
+                    {% else %} bg-blue-100 text-blue-800 {% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<!-- HEADER -->
+<div class="header">
+  <nav class="nav-bar">
+    <div class="logo">
+      <img src="https://ideogram.ai/assets/image/lossless/response/I1u9WRGERNaEx-RQyzFM4A" alt="Irus Logo" />
+      <span>Irus</span>
+    </div>
+    <div class="nav-links">
+      <a href="/dashboard">Home</a>
+      <a href="/resumee">Resume Builder</a>
+      <a href="/portfolio">Portfolio</a>
+    </div>
+  </nav>
+</div>
+
+<!-- PROFILE CARD -->
+<div class="max-w-2xl mx-auto bg-white {% if user.dark_mode %}bg-gray-800 text-white{% endif %} rounded-2xl shadow-xl p-6 mt-24">
+  <div class="flex flex-col items-center">
+    <!-- ✅ Fallback if image not found -->
+    <img src="{{ user.profile_pic or '/static/default-user.png' }}"
+         alt="Profile Picture"
+         onerror="this.src='/static/default-user.png';"
+         class="w-28 h-28 rounded-full border-4 border-blue-400 shadow mb-4 object-cover">
+
+    <h2 class="text-2xl font-bold">{{ user.name or 'Unnamed User' }}</h2>
+    <p class="text-center text-sm mt-1">{{ user.bio or 'No bio provided.' }}</p>
+    <p class="text-xs text-gray-500 mt-1">🕒 Last login: {{ user.last_login.strftime("%d %b %Y %I:%M %p") if user.last_login else 'N/A' }}</p>
+
+    <div class="mt-6 text-sm space-y-2 w-full text-left">
+      <p><strong>Name:</strong> {{ user.name }}</p>
+      <p><strong>Bio:</strong> {{ user.bio }}</p>
+      <p><strong>Email:</strong> {{ user.email }}</p>
+      <p><strong>GitHub:</strong> <a href="{{ user.github }}" target="_blank" class="text-blue-500 hover:underline">{{ user.github }}</a></p>
+      <p><strong>LinkedIn:</strong> <a href="{{ user.linkedin }}" target="_blank" class="text-blue-500 hover:underline">{{ user.linkedin }}</a></p>
+      <p><strong>Twitter:</strong> <a href="{{ user.twitter }}" target="_blank" class="text-blue-500 hover:underline">{{ user.twitter }}</a></p>
+      {% if user.resume %}
+        <p><strong>Resume:</strong> <a href="{{ user.resume }}" target="_blank" class="text-green-600 font-semibold hover:underline">📄 Download</a></p>
+      {% endif %}
+    </div>
+
+    <a href="/profile/edit"
+       class="mt-8 inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-xl shadow-lg transition">
+       ✏️ Edit Profile
+    </a>
+  </div>
+</div>
+
+</body>
+</html>
