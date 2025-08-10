@@ -8,6 +8,10 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="manifest" href="/static/manifest.json">
   <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+  <meta name="description" content="Irus AI – Your smart assistant for voice chat, weather, resume builder, and more.">
+  <meta name="keywords" content="AI Assistant, Irus, Voice Chat, Resume Builder, Portfolio Generator, GPT, Chatbot">
+  <meta name="author" content="Nejamul Haque">
+  <meta name="theme-color" content="#007bff">
   <style>
     :root {
       --bg: #f2f4f8;
@@ -175,18 +179,20 @@
     {% endif %}
   {% endwith %}
 
-  <!-- ✅ Header with Nav -->
-  <div class="header">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-      <div>Welcome to Irus, {{ username }} 👋</div>
-      <nav style="display: flex; gap: 15px;">
-        <a href="/home" class="logout {% if current_page == 'home' %}active{% endif %}">🏠 Home</a>
-        <a href="/profile" class="logout">👤 Profile</a>
-        <a href="/logout" class="logout">🚪 Logout</a>
-      </nav>
-    </div>
+   <!-- ✅ Header with Navigation -->
+<div class="header">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+    <div>👋 Welcome, {{ username }} to Irus AI Assistant</div>
+    <nav style="display: flex; flex-wrap: wrap; gap: 15px; font-size: 14px;">
+      <a href="https://haque-and-sons-backend.onrender.com/" target="_blank" class="logout">🏠 Home</a>
+      <a href="https://resume-builder-alpha-puce.vercel.app/" target="_blank" class="logout">📄 Resume Builder</a>
+      <a href="https://portfolio-ai-theta.vercel.app/" target="_blank" class="logout">🌐 Portfolio</a>
+      <a href="https://portfolio-builder-ayb0.onrender.com/" target="_blank" class="logout">🧰 Portfolio Builder</a>
+      <a href="/profile" class="logout">👤 Profile</a>
+      <a href="/logout" class="logout">🚪 Logout</a>
+    </nav>
   </div>
-
+</div>
   <!-- ✅ Main Dashboard Body -->
   <div class="main">
     <div class="history-panel">
@@ -415,16 +421,27 @@ async function loadMemory() {
   });
 }
 
-// ✅ Upload File
 function uploadFile(event) {
   const file = event.target.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    input.value = `Please read this file:\n${reader.result}`;
-    sendMessage();
-  };
-  reader.readAsText(file);
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  fetch("/api/upload", {
+    method: "POST",
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    const botDiv = document.createElement("div");
+    botDiv.className = "chat-msg bot";
+    botDiv.innerText = data.summary || data.error || "❌ Something went wrong.";
+    document.getElementById("chat-box").appendChild(botDiv);
+    document.getElementById("chat-box").scrollTop = chatBox.scrollHeight;
+    lastBotResponse = data.summary;
+  })
+  .catch(err => console.error("❌ Upload error:", err));
 }
 
 // ✅ Download Bot Response
@@ -439,38 +456,41 @@ function downloadLastResponse() {
   URL.revokeObjectURL(url);
 }
 
-// ✅ Initial Load
-window.onload = async () => {
-  await waitForVoicesToLoad(); // 👈 wait until voices are ready
-  loadVoices();                // 👈 then load voice options
-  loadMemory();
-  loadUsageChart();
-};
-
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/static/service-worker.js');
-}
-function waitForVoicesToLoad() {
-  return new Promise(resolve => {
-    let voices = speechSynthesis.getVoices();
-    if (voices.length !== 0) return resolve(voices);
-
-    speechSynthesis.onvoiceschanged = () => {
-      voices = speechSynthesis.getVoices();
-      if (voices.length !== 0) resolve(voices);
+<!-- ✅ Initial Load Fix -->
+    window.onload = async () => {
+      await waitForVoicesToLoad();
+      loadVoices();
+      loadMemory();
+      loadUsageChart();
     };
-  });
-}
-if (!selectedVoice) {
-  const voices = speechSynthesis.getVoices();
-  selectedVoice = voices[0]; // fallback
-}
-loadVoices();
-</script>
-</div>
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/static/service-worker.js');
+    }
+
+    function waitForVoicesToLoad() {
+      return new Promise(resolve => {
+        let voices = speechSynthesis.getVoices();
+        if (voices.length !== 0) return resolve(voices);
+
+        speechSynthesis.onvoiceschanged = () => {
+          voices = speechSynthesis.getVoices();
+          if (voices.length !== 0) resolve(voices);
+        };
+      });
+    }
+
+    if (!selectedVoice) {
+      const voices = speechSynthesis.getVoices();
+      selectedVoice = voices[0]; // fallback
+    }
+
+    loadVoices();
+  </script>
+
   <!-- ✅ Footer -->
   <footer style="background: var(--primary); color: white; padding: 10px; text-align: left;">
-    <p>© 2023 Irus AI Assistant. All rights reserved.</p>
+    <p>&copy; 2025 Irus AI Assistant. All rights reserved.</p>
   </footer>
 </body>
 </html>
