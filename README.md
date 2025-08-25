@@ -154,6 +154,9 @@ if not install
 ```bash
 pip install -r requirements.txt
 ```
+## Demo
+https://irus-personal-assistant.onrender.com/register
+
 ## 🧑‍💻 Author
 Built with ❤️ by Nejamul Haque
 Portfolio: https://portfolio-ai-theta.vercel.app/
