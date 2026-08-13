@@ -20,7 +20,7 @@ self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET' || url.origin !== location.origin) return;
 
   // Never cache dynamic data (chat streams, uploads, memories, admin)
-  if (['/chat/', '/documents', '/memories', '/admin', '/profile', '/folders'].some(p => url.pathname.startsWith(p))) return;
+  if (['/chat/', '/documents', '/memories', '/admin', '/profile', '/folders', '/api'].some(p => url.pathname.startsWith(p))) return;
 
   // Pages: network-first, fallback to cache (offline support)
   if (e.request.mode === 'navigate') {

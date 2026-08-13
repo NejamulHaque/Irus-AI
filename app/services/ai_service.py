@@ -1,138 +1,159 @@
 import os
 import json
-import requests
 
-SYSTEM_PROMPT = """
-You are Irus, a professional AI assistant.
 
-Your rules:
-- Be helpful, clear, and professional.
-- Use Markdown when useful.
-- Use code blocks for code.
-- Be concise but informative.
-- If you do not know something, say honestly that you do not know.
-""".strip()
+# -----------------------
+# Message building
+# -----------------------
 
-def build_messages(history_messages, extra_context="", user_memories=None):
-    """
-    Builds the message list for the AI.
-    Injects user memories and document context into the system prompt.
-    """
-    system_content = SYSTEM_PROMPT
-    
-    # Inject Memories
+def build_messages(history, extra_context="", user_memories=None):
+    system_prompt = (
+        "You are Irus, a professional, friendly AI assistant. "
+        "Answer clearly and concisely, using Markdown formatting when helpful. "
+        "When live web results are provided, cite them like [Source 1]."
+    )
     if user_memories:
-        memory_text = "\n".join([f"- {m}" for m in user_memories])
-        system_content += f"\n\n[USER MEMORIES]\n{memory_text}\n[END OF MEMORIES]\nUse these memories to personalize your responses."
-        
-    # Inject Document Context (RAG)
+        system_prompt += "\n\n[LONG-TERM MEMORY ABOUT THE USER]\n" + "\n".join(f"- {m}" for m in user_memories)
     if extra_context:
-        system_content += f"\n\n{extra_context}"
-        
-    return [{"role": "system", "content": system_content}] + history_messages
+        system_prompt += "\n\n" + extra_context.strip()
+
+    messages = [{"role": "system", "content": system_prompt}]
+    for msg in history:
+        messages.append({"role": msg["role"], "content": msg["content"]})
+    return messages
 
 
-def stream_chat(messages, model_override=None):
-    provider = os.getenv("AI_PROVIDER", "groq").lower()
-    fallback = os.getenv("FALLBACK_PROVIDER", "").lower()
-    started = False
+# -----------------------
+# Multimodal helpers
+# -----------------------
 
-    try:
-        if provider == "groq":
-            for chunk in _stream_groq(messages, model_override):
-                started = True
-                yield chunk
-        elif provider == "ollama":
-            for chunk in _stream_ollama(messages):
-                started = True
-                yield chunk
-        else:
-            raise ValueError(f"Unknown AI_PROVIDER: {provider}")
+def _flatten_text(content):
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        return "\n".join(
+            part.get("text", "") for part in content
+            if isinstance(part, dict) and part.get("type") == "text"
+        )
+    return str(content)
 
-    except Exception as e:
-        if not started and fallback and fallback != provider:
-            yield f"[Warning: {provider} failed. Trying fallback: {fallback}]\n"
-            try:
-                if fallback == "groq":
-                    yield from _stream_groq(messages)
-                elif fallback == "ollama":
-                    yield from _stream_ollama(messages)
-                else:
-                    yield f"[AI fallback error] Unknown fallback provider: {fallback}"
-            except Exception as fallback_error:
-                yield f"[AI fallback error] {fallback_error}"
-        else:
-            yield f"[AI error] {e}"
 
+def _extract_images(content):
+    images = []
+    if isinstance(content, list):
+        for part in content:
+            if isinstance(part, dict) and part.get("type") == "image_url":
+                url = part.get("image_url", {}).get("url", "")
+                if url.startswith("data:") and "," in url:
+                    images.append(url.split(",", 1)[1])
+    return images
+
+
+# -----------------------
+# Groq (supports vision natively)
+# -----------------------
 
 def _stream_groq(messages, model_override=None):
     from groq import Groq
+
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
         raise RuntimeError("GROQ_API_KEY is missing in .env")
 
     client = Groq(api_key=api_key)
-    
-    # Use the user's preferred model, or fallback to .env
     model = model_override or os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
-    
-    temperature = float(os.getenv("AI_TEMPERATURE", "0.7"))
-    max_tokens = int(os.getenv("AI_MAX_TOKENS", "1024"))
 
     stream = client.chat.completions.create(
         model=model,
         messages=messages,
-        temperature=temperature,
-        max_tokens=max_tokens,
-        stream=True
+        temperature=float(os.getenv("AI_TEMPERATURE", "0.7")),
+        max_tokens=int(os.getenv("AI_MAX_TOKENS", "1024")),
+        stream=True,
     )
-
     for chunk in stream:
-        if not chunk.choices:
-            continue
-        choice = chunk.choices[0]
-        delta = choice.delta
-        if delta and delta.content:
+        delta = chunk.choices[0].delta
+        if getattr(delta, "content", None):
             yield delta.content
 
 
+# -----------------------
+# Ollama (vision only with a vision model)
+# -----------------------
+
 def _stream_ollama(messages):
-    base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").rstrip("/")
-    if base_url.endswith("/v1"):
-        base_url = base_url[:-3]
-    url = f"{base_url}/api/chat"
+    import requests
 
+    base = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").rstrip("/")
+    if base.endswith("/v1"):
+        base = base[:-3]
     model = os.getenv("OLLAMA_MODEL", "llama3.2")
-    temperature = float(os.getenv("AI_TEMPERATURE", "0.7"))
-    max_tokens = int(os.getenv("AI_MAX_TOKENS", "1024"))
 
-    payload = {
-        "model": model,
-        "messages": messages,
-        "stream": True,
-        "options": {
-            "temperature": temperature,
-            "num_predict": max_tokens
-        }
-    }
+    flat = []
+    for m in messages:
+        entry = {"role": m["role"], "content": _flatten_text(m["content"])}
+        imgs = _extract_images(m["content"])
+        if imgs:
+            entry["images"] = imgs
+        flat.append(entry)
 
-    try:
-        response = requests.post(url, json=payload, stream=True, timeout=(10, 300))
-    except requests.exceptions.ConnectionError:
-        raise RuntimeError("Cannot connect to Ollama.")
+    # Vision handling: use a vision model if configured, else strip images
+    if any("images" in e for e in flat):
+        vision_model = os.getenv("OLLAMA_VISION_MODEL", "").strip()
+        if vision_model:
+            model = vision_model
+        else:
+            for e in flat:
+                e.pop("images", None)
+            print("--- [AI] Ollama: no vision model configured (set OLLAMA_VISION_MODEL=llava). Answering from text only. ---")
 
-    if response.status_code != 200:
-        raise RuntimeError(f"Ollama error {response.status_code}: {response.text[:200]}")
+    with requests.post(
+        f"{base}/api/chat",
+        json={"model": model, "messages": flat, "stream": True},
+        stream=True,
+        timeout=180
+    ) as r:
+        if r.status_code != 200:
+            raise RuntimeError(f"Ollama error {r.status_code}: {r.text[:300]}")
+        for line in r.iter_lines():
+            if line:
+                data = json.loads(line)
+                content = data.get("message", {}).get("content")
+                if content:
+                    yield content
 
-    for line in response.iter_lines():
-        if not line:
-            continue
+
+# -----------------------
+# Main entry with fallback
+# -----------------------
+
+def stream_chat(messages, model_override=None):
+    provider = os.getenv("AI_PROVIDER", "groq").lower()
+    fallback = os.getenv("FALLBACK_PROVIDER", "").lower()
+    order = [provider] + ([fallback] if fallback and fallback != provider else [])
+
+    last_error = None
+    for i, p in enumerate(order):
+        started = False
         try:
-            data = json.loads(line.decode("utf-8"))
-        except json.JSONDecodeError:
-            continue
-        if data.get("done"):
-            break
-        content = data.get("message", {}).get("content")
-        if content:
-            yield content
+            if p == "groq":
+                gen = _stream_groq(messages, model_override)
+            elif p == "ollama":
+                gen = _stream_ollama(messages)
+            else:
+                continue
+
+            for chunk in gen:
+                started = True
+                yield chunk
+            return
+
+        except Exception as e:
+            last_error = e
+            print(f"--- [AI] {p} failed: {e} ---")
+            if started:
+                raise
+            if i < len(order) - 1:
+                print(f"[Warning: {p} failed. Trying fallback: {order[i + 1]}]")
+
+    if last_error:
+        raise last_error

@@ -78,12 +78,12 @@
 [data-theme="light"] .hover\:text-zinc-300:hover { color: var(--t-1) !important; }
 [data-theme="light"] .placeholder-zinc-600::placeholder { color: var(--t-4) !important; }
 
-/* KEEP colored elements intact (user bubble, avatars, logo) */
+/* KEEP colored elements intact */
 [data-theme="light"] .bg-indigo-600.text-white,
 [data-theme="light"] .bg-gradient-to-br .text-white,
 [data-theme="light"] .bg-red-600 .text-white { color: #ffffff !important; }
 
-/* Invert white buttons to black in light mode (New Chat, Send, Save) */
+/* Invert white buttons to black in light mode */
 [data-theme="light"] .bg-white { background-color: #18181b !important; }
 [data-theme="light"] .text-black { color: #fafafa !important; }
 [data-theme="light"] .hover\:bg-zinc-200:hover { background-color: #3f3f46 !important; }
@@ -114,3 +114,39 @@
 
 /* Scrollbars */
 [data-theme="light"] .custom-scrollbar::-webkit-scrollbar-thumb { background: #d4d4d8; }
+
+/* ============ RESPONSIVE & TOUCH ============ */
+
+@media (max-width: 768px) {
+  [data-theme="light"] {
+    --bg-0: #fafafa;
+    --bg-1: #ffffff;
+    --bg-2: #f4f4f5;
+  }
+}
+
+@media (hover: none) {
+  .active\:scale-95:active { transform: scale(0.95); }
+}
+
+button, a {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+* {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+}
+
+@media (hover: none) {
+  button:focus, a:focus, input:focus, textarea:focus { outline: none; }
+}

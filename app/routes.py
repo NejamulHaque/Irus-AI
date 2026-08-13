@@ -2,6 +2,8 @@ import os
 import re
 import json
 import random
+import secrets
+import hashlib
 import urllib.parse
 from datetime import datetime, timedelta
 from sqlalchemy import func
@@ -32,7 +34,7 @@ from werkzeug.security import (
 )
 
 from app import limiter
-from app.models import db, User, Conversation, Message, Document, Memory, ErrorLog
+from app.models import db, User, Conversation, Message, Document, DocumentChunk, Memory, ErrorLog, APIKey
 from app.services import ai_service, document_service, search_service
 
 
@@ -42,6 +44,7 @@ main = Blueprint('main', __name__)
 # -----------------------
 # Helpers
 # -----------------------
+
 USERNAME_PATTERN = re.compile(r'^[a-zA-Z0-9_.-]{3,30}$')
 EMAIL_PATTERN = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
 
@@ -61,21 +64,37 @@ def get_user_conversation(conversation_id):
         id=conversation_id,
         user_id=current_user.id
     ).first()
+
+
+def _auth_api_key():
+    """Authenticate a request via `Authorization: Bearer irus_...` header."""
+    auth = request.headers.get('Authorization', '')
+    if not auth.startswith('Bearer '):
+        return None
+    raw = auth[7:].strip()
+    if not raw.startswith('irus_'):
+        return None
+    key = APIKey.query.filter_by(
+        key_hash=hashlib.sha256(raw.encode()).hexdigest()
+    ).first()
+    if key:
+        key.last_used_at = datetime.utcnow()
+        db.session.commit()
+    return key
+
+
+# -----------------------
+# Health (uptime monitoring / DevSecOps)
+# -----------------------
+
 @main.route('/health')
 def health():
     return jsonify({'status': 'ok'}), 200
 
+
 # -----------------------
 # Auth
 # -----------------------
-
-@main.route('/sw.js')
-def service_worker():
-    response = current_app.send_static_file('sw.js')
-    response.headers['Content-Type'] = 'application/javascript'
-    response.headers['Service-Worker-Allowed'] = '/'
-    response.headers['Cache-Control'] = 'no-cache'
-    return response
 
 @main.route('/auth', methods=['GET', 'POST'])
 @limiter.limit("20 per minute")
@@ -270,6 +289,118 @@ def rename_chat(conversation_id):
 
 
 # -----------------------
+# Folders & Chat History
+# -----------------------
+
+@main.route('/chat/history')
+@login_required
+def chat_history():
+    conversations = Conversation.query.filter_by(
+        user_id=current_user.id
+    ).order_by(Conversation.updated_at.desc()).all()
+
+    return jsonify({
+        'conversations': [{
+            'id': c.id,
+            'title': c.title,
+            'folder': c.folder,
+            'updated_at': c.updated_at.isoformat()
+        } for c in conversations]
+    })
+
+
+@main.route('/chat/<int:conversation_id>/folder', methods=['POST'])
+@login_required
+def update_folder(conversation_id):
+    conversation = get_user_conversation(conversation_id)
+
+    if not conversation:
+        return jsonify({'error': 'Conversation not found'}), 404
+
+    data = request.get_json(silent=True) or {}
+    folder = (data.get('folder') or '').strip()
+
+    conversation.folder = folder if folder else None
+    db.session.commit()
+
+    return jsonify({'success': True, 'folder': conversation.folder})
+
+
+@main.route('/folders', methods=['GET'])
+@login_required
+def get_folders():
+    folders = db.session.query(Conversation.folder).filter_by(
+        user_id=current_user.id
+    ).distinct().all()
+
+    return jsonify(sorted([f[0] for f in folders if f[0]]))
+
+
+@main.route('/folders/<path:folder_name>/delete', methods=['DELETE'])
+@login_required
+def delete_folder(folder_name):
+    Conversation.query.filter_by(
+        user_id=current_user.id,
+        folder=folder_name
+    ).update({'folder': None})
+
+    db.session.commit()
+    return jsonify({'success': True})
+
+
+# -----------------------
+# Public Share Links
+# -----------------------
+
+@main.route('/chat/<int:conversation_id>/share', methods=['POST'])
+@login_required
+def share_chat(conversation_id):
+    conversation = get_user_conversation(conversation_id)
+
+    if not conversation:
+        return jsonify({'error': 'Conversation not found'}), 404
+
+    if not conversation.share_token:
+        conversation.share_token = secrets.token_urlsafe(16)
+        db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'token': conversation.share_token,
+        'url': url_for('main.shared_chat', token=conversation.share_token, _external=True)
+    })
+
+
+@main.route('/chat/<int:conversation_id>/unshare', methods=['POST'])
+@login_required
+def unshare_chat(conversation_id):
+    conversation = get_user_conversation(conversation_id)
+
+    if not conversation:
+        return jsonify({'error': 'Conversation not found'}), 404
+
+    conversation.share_token = None
+    db.session.commit()
+
+    return jsonify({'success': True})
+
+
+@main.route('/share/<token>')
+def shared_chat(token):
+    conversation = Conversation.query.filter_by(share_token=token).first()
+
+    if not conversation:
+        flash('This share link is invalid or has been disabled.', 'error')
+        return redirect(url_for('main.auth'))
+
+    messages = Message.query.filter_by(
+        conversation_id=conversation.id
+    ).order_by(Message.created_at.asc()).all()
+
+    return render_template('share.html', conversation=conversation, messages=messages)
+
+
+# -----------------------
 # Streaming Chat Endpoint
 # -----------------------
 
@@ -291,6 +422,11 @@ def stream_chat(conversation_id):
     web_search = data.get('web_search', False)
     image_mode = data.get('image_mode', False)
 
+    # Vision Mode payload (base64 data URL, validated)
+    image_data = data.get('image_data') or None
+    if image_data and not str(image_data).startswith('data:image'):
+        image_data = None
+
     doc_id_int = None
     if document_id:
         try:
@@ -310,7 +446,7 @@ def stream_chat(conversation_id):
     # Mode: Normal send
     # -----------------------
     if mode == 'send':
-        if not message_text:
+        if not message_text and not image_data:
             return jsonify({'error': 'Message is required'}), 400
 
         if len(message_text) > 8000:
@@ -319,14 +455,16 @@ def stream_chat(conversation_id):
         user_message = Message(
             conversation_id=conversation.id,
             role='user',
-            content=message_text,
-            document_id=doc_id_int
+            content=message_text or '(image attached)',
+            document_id=doc_id_int,
+            image_data=image_data
         )
 
         db.session.add(user_message)
 
         if conversation.title == 'New Chat':
-            conversation.title = message_text[:60] + ('...' if len(message_text) > 60 else '')
+            title_src = message_text or 'Image analysis'
+            conversation.title = title_src[:60] + ('...' if len(title_src) > 60 else '')
 
         conversation.updated_at = datetime.utcnow()
         db.session.commit()
@@ -513,6 +651,19 @@ Instructions: Answer the user's question using the live web results above. Cite 
     # Capture user settings BEFORE streaming starts
     user_model = current_user.preferred_model
     current_user_id = current_user.id
+
+    # -----------------------
+    # Vision Mode: attach image to the latest user message
+    # -----------------------
+    if image_data and mode == 'send':
+        for m in reversed(ai_messages):
+            if m['role'] == 'user':
+                m['content'] = [
+                    {'type': 'text', 'text': message_text or 'Describe this image in detail.'},
+                    {'type': 'image_url', 'image_url': {'url': image_data}},
+                ]
+                break
+        user_model = os.getenv('GROQ_VISION_MODEL', 'meta-llama/llama-4-scout-17b-16e-instruct')
 
     app = current_app._get_current_object()
 
@@ -744,6 +895,7 @@ def profile():
         current_user.bio = request.form.get('bio', '').strip()
         current_user.preferred_model = request.form.get('preferred_model', 'llama-3.1-8b-instant')
 
+        # Cloud-safe avatar: stored in DB as base64 data URL
         if 'avatar' in request.files:
             file = request.files['avatar']
             if file and file.filename != '':
@@ -824,62 +976,93 @@ def admin_dashboard():
         recent_users=recent_users,
         error_logs=error_logs
     )
-    
-    # -----------------------
-# Folders & Chat History (used by sidebar)
+
+
+# -----------------------
+# Personal API Keys
 # -----------------------
 
-@main.route('/chat/history')
+@main.route('/api-keys')
 @login_required
-def chat_history():
-    conversations = Conversation.query.filter_by(
-        user_id=current_user.id
-    ).order_by(Conversation.updated_at.desc()).all()
-
-    return jsonify({
-        'conversations': [{
-            'id': c.id,
-            'title': c.title,
-            'folder': c.folder,
-            'updated_at': c.updated_at.isoformat()
-        } for c in conversations]
-    })
+def api_keys_page():
+    keys = APIKey.query.filter_by(user_id=current_user.id).order_by(APIKey.created_at.desc()).all()
+    return render_template('api_keys.html', keys=keys)
 
 
-@main.route('/chat/<int:conversation_id>/folder', methods=['POST'])
+@main.route('/api-keys/create', methods=['POST'])
 @login_required
-def update_folder(conversation_id):
-    conversation = get_user_conversation(conversation_id)
+def create_api_key():
+    data = request.get_json(silent=True) or {}
+    name = (data.get('name') or 'Default').strip()[:100] or 'Default'
 
-    if not conversation:
-        return jsonify({'error': 'Conversation not found'}), 404
+    raw = 'irus_' + secrets.token_urlsafe(24)
+    key = APIKey(
+        user_id=current_user.id,
+        name=name,
+        prefix=raw[:10],
+        key_hash=hashlib.sha256(raw.encode()).hexdigest()
+    )
+    db.session.add(key)
+    db.session.commit()
+
+    # The raw key is shown ONCE and never stored
+    return jsonify({'success': True, 'id': key.id, 'key': raw})
+
+
+@main.route('/api-keys/<int:key_id>/revoke', methods=['POST'])
+@login_required
+def revoke_api_key(key_id):
+    key = APIKey.query.filter_by(id=key_id, user_id=current_user.id).first()
+    if key:
+        db.session.delete(key)
+        db.session.commit()
+    return jsonify({'success': True})
+
+
+# -----------------------
+# Public Developer API
+# -----------------------
+
+@main.route('/api/v1/me')
+def api_me():
+    key = _auth_api_key()
+    if not key:
+        return jsonify({'error': 'Invalid API key'}), 401
+    user = User.query.get(key.user_id)
+    return jsonify({'username': user.username, 'email': user.email})
+
+
+@main.route('/api/v1/chat', methods=['POST'])
+@limiter.limit("30 per minute")
+def api_chat():
+    key = _auth_api_key()
+    if not key:
+        return jsonify({'error': 'Invalid API key'}), 401
 
     data = request.get_json(silent=True) or {}
-    folder = (data.get('folder') or '').strip()
+    message = (data.get('message') or '').strip()
+    if not message:
+        return jsonify({'error': 'message is required'}), 400
 
-    conversation.folder = folder if folder else None
-    db.session.commit()
+    context_prompt = ""
+    if data.get('web_search'):
+        results = search_service.search_web(message)
+        if results:
+            context_prompt = "[LIVE WEB SEARCH RESULTS]\n" + search_service.format_search_context(results)
 
-    return jsonify({'success': True, 'folder': conversation.folder})
+    memories = [m.content for m in Memory.query.filter_by(user_id=key.user_id).all()]
 
+    ai_messages = ai_service.build_messages(
+        [{'role': 'user', 'content': message}],
+        extra_context=context_prompt,
+        user_memories=memories
+    )
 
-@main.route('/folders', methods=['GET'])
-@login_required
-def get_folders():
-    folders = db.session.query(Conversation.folder).filter_by(
-        user_id=current_user.id
-    ).distinct().all()
+    chunks = []
+    try:
+        for chunk in ai_service.stream_chat(ai_messages):
+            chunks.append(chunk)
+    except Exception as e:
+        return jsonify({'error': f'AI provider error: {e}'}), 502
 
-    return jsonify(sorted([f[0] for f in folders if f[0]]))
-
-
-@main.route('/folders/<path:folder_name>/delete', methods=['DELETE'])
-@login_required
-def delete_folder(folder_name):
-    Conversation.query.filter_by(
-        user_id=current_user.id,
-        folder=folder_name
-    ).update({'folder': None})
-
-    db.session.commit()
-    return jsonify({'success': True})
+    return jsonify({'success': True, 'reply': ''.join(chunks)})

@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-zinc-950 text-zinc-200 p-4 md:p-8">
+    <div class="max-w-3xl mx-auto">
+
+        <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center gap-4">
+                <a href="{{ url_for('main.profile') }}" class="w-10 h-10 rounded-xl bg-zinc-900 hover:bg-zinc-800 flex items-center justify-center text-zinc-400">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <div>
+                    <h1 class="text-2xl font-bold text-white flex items-center gap-3"><i class="fas fa-key text-indigo-400"></i> API Keys</h1>
+                    <p class="text-xs text-zinc-500 mt-1">Call Irus AI from your own scripts and apps.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create -->
+        <div class="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/60 mb-6">
+            <h2 class="text-sm font-semibold text-white mb-4">Create a new key</h2>
+            <div class="flex gap-2">
+                <input id="key-name" type="text" maxlength="100" placeholder="e.g. My Python Script"
+                    class="flex-1 rounded-xl bg-zinc-950 border border-zinc-800 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <button id="create-key-btn" class="px-5 py-3 rounded-xl bg-white text-black text-sm font-semibold hover:bg-zinc-200 active:scale-95">
+                    <i class="fas fa-plus mr-1"></i> Create
+                </button>
+            </div>
+        </div>
+
+        <!-- List -->
+        <div class="space-y-3">
+            {% for key in keys %}
+            <div class="flex items-center justify-between p-4 rounded-2xl border border-zinc-800 bg-zinc-900/60">
+                <div class="min-w-0">
+                    <p class="text-sm font-semibold text-zinc-200">{{ key.name }}</p>
+                    <p class="text-xs text-zinc-500 font-mono mt-1">{{ key.prefix }}••••••••••••</p>
+                    <p class="text-[10px] text-zinc-600 mt-1">
+                        Created {{ key.created_at.strftime('%b %d, %Y') }}
+                        {% if key.last_used_at %} · Last used {{ key.last_used_at.strftime('%b %d, %Y') }}{% else %} · Never used{% endif %}
+                    </p>
+                </div>
+                <button class="revoke-key-btn px-3 py-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 text-xs font-bold active:scale-95" data-id="{{ key.id }}">
+                    Revoke
+                </button>
+            </div>
+            {% else %}
+            <p class="text-sm text-zinc-600 italic text-center py-8">No API keys yet. Create one above.</p>
+            {% endfor %}
+        </div>
+
+        <!-- Usage example -->
+        <div class="mt-8 p-6 rounded-2xl border border-zinc-800 bg-zinc-950">
+            <h2 class="text-sm font-semibold text-white mb-3"><i class="fas fa-terminal text-indigo-400 mr-2"></i>Quick start</h2>
+            <pre class="text-xs text-zinc-400 overflow-x-auto leading-relaxed">curl -X POST https://YOUR-APP.onrender.com/api/v1/chat \
+  -H "Authorization: Bearer irus_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Hello Irus!", "web_search": false}'</pre>
+        </div>
+    </div>
+</div>
+
+<!-- Show-once modal -->
+<div id="key-modal" class="hidden fixed inset-0 z-[120] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-2xl text-center">
+        <div class="w-14 h-14 mx-auto rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mb-4">
+            <i class="fas fa-key text-emerald-400 text-xl"></i>
+        </div>
+        <h3 class="text-lg font-bold text-white mb-1">Your API key is ready</h3>
+        <p class="text-xs text-red-400 font-semibold mb-4">⚠️ Copy it now — it will NOT be shown again!</p>
+        <div class="flex items-center gap-2 mb-4">
+            <input id="new-key-value" readonly class="flex-1 rounded-xl bg-zinc-950 border border-zinc-800 px-3 py-2.5 text-xs font-mono text-emerald-300 focus:outline-none">
+            <button id="copy-key-btn" class="px-3 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-bold active:scale-95">Copy</button>
+        </div>
+        <button id="key-modal-close" class="w-full px-4 py-3 rounded-xl bg-white text-black text-sm font-semibold hover:bg-zinc-200 active:scale-95">I've saved it</button>
+    </div>
+</div>
+
+<script>
+    const keyModal = document.getElementById("key-modal");
+
+    document.getElementById("create-key-btn").addEventListener("click", async () => {
+        const name = document.getElementById("key-name").value.trim() || "Default";
+        const res = await fetch("/api-keys/create", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            document.getElementById("new-key-value").value = data.key;
+            keyModal.classList.remove("hidden");
+        }
+    });
+
+    document.getElementById("copy-key-btn").addEventListener("click", function () {
+        navigator.clipboard.writeText(document.getElementById("new-key-value").value);
+        this.textContent = "Copied!";
+        setTimeout(() => this.textContent = "Copy", 2000);
+    });
+
+    document.getElementById("key-modal-close").addEventListener("click", () => {
+        keyModal.classList.add("hidden");
+        location.reload();
+    });
+
+    document.querySelectorAll(".revoke-key-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+            if (!confirm("Revoke this key? Scripts using it will stop working.")) return;
+            await fetch(`/api-keys/${btn.dataset.id}/revoke`, { method: "POST" });
+            location.reload();
+        });
+    });
+</script>
+{% endblock %}

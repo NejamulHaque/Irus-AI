@@ -1,16 +1,19 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div id="toast-container" class="fixed top-6 right-6 z-[100] flex flex-col gap-3 pointer-events-none"></div>
+<div id="toast-container" class="fixed top-4 right-4 left-4 md:left-auto md:w-96 z-[100] flex flex-col gap-2 pointer-events-none"></div>
 
-<div class="flex h-screen overflow-hidden bg-zinc-950 text-zinc-200">
+<div class="flex h-screen h-[100dvh] overflow-hidden bg-zinc-950 text-zinc-200">
+
+    <!-- Mobile Overlay -->
+    <div id="mobile-overlay" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-[40] md:hidden"></div>
 
     <!-- Sidebar -->
-    <aside id="sidebar" class="w-72 flex-col border-r border-zinc-900 bg-zinc-950 hidden md:flex">
+    <aside id="sidebar" class="fixed md:relative w-72 flex-col border-r border-zinc-900 bg-zinc-950 z-[50] -translate-x-full md:translate-x-0 transition-transform duration-300 h-full flex">
         <div class="p-4 border-b border-zinc-900">
             <div class="flex items-center gap-3 mb-4">
                 <img src="{{ url_for('static', filename='icons/icon-192.png') }}" class="w-9 h-9 rounded-xl shadow-lg shadow-indigo-500/20 object-cover" alt="Irus AI">
-                <div class="flex-1">
+                <div class="flex-1 min-w-0">
                     <h1 class="font-bold leading-none text-white tracking-tight">Irus AI</h1>
                     <p class="text-[10px] text-zinc-500 mt-1 font-medium uppercase tracking-wider">Pro Assistant</p>
                 </div>
@@ -23,7 +26,7 @@
                 </a>
                 {% endif %}
             </div>
-            <a href="{{ url_for('main.new_chat') }}" class="flex items-center justify-center gap-2 w-full bg-white text-black hover:bg-zinc-200 transition-colors font-semibold rounded-xl px-4 py-2.5 text-sm">
+            <a href="{{ url_for('main.new_chat') }}" class="flex items-center justify-center gap-2 w-full bg-white text-black hover:bg-zinc-200 transition-colors font-semibold rounded-xl px-4 py-2.5 text-sm active:scale-95">
                 <i class="fas fa-plus"></i> New Chat
             </a>
         </div>
@@ -31,7 +34,7 @@
         <div class="px-3 pt-4">
             <div class="relative">
                 <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600 text-xs"></i>
-                <input id="conversation-search" type="text" placeholder="Search history..." class="w-full rounded-lg bg-zinc-900 border border-zinc-800 pl-8 pr-3 py-2 text-xs text-zinc-300 placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-700">
+                <input id="conversation-search" type="text" placeholder="Search history..." class="w-full rounded-lg bg-zinc-900 border border-zinc-800 pl-8 pr-3 py-2.5 text-sm text-zinc-300 placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-700">
             </div>
         </div>
 
@@ -39,7 +42,7 @@
         <div class="px-3 pt-4 border-t border-zinc-900 mt-4">
             <div class="flex items-center justify-between mb-2 px-1">
                 <h3 class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Knowledge Base</h3>
-                <button id="upload-doc-btn" class="text-indigo-400 hover:text-indigo-300 text-[10px] font-bold flex items-center gap-1 uppercase tracking-wider">
+                <button id="upload-doc-btn" class="text-indigo-400 hover:text-indigo-300 text-[10px] font-bold flex items-center gap-1 uppercase tracking-wider active:scale-95">
                     <i class="fas fa-upload"></i> Add
                 </button>
             </div>
@@ -49,7 +52,7 @@
             <input type="file" id="file-input" class="hidden" accept=".pdf,.docx,.txt">
         </div>
 
-        <!-- Chat History (grouped by folders) -->
+        <!-- Chat History -->
         <div id="conversation-list" class="flex-1 overflow-y-auto p-3 mt-2 custom-scrollbar">
             <div id="folders-container"></div>
             <div id="no-search-results" class="hidden text-xs text-zinc-600 px-2 py-3">No chats found.</div>
@@ -58,23 +61,23 @@
         <!-- Footer -->
         <div class="p-4 border-t border-zinc-900">
             <a href="{{ url_for('main.profile') }}" class="flex items-center justify-between group hover:bg-zinc-900 p-2 -m-2 rounded-xl transition-colors">
-                <div class="flex items-center gap-3">
-                        {% if current_user.avatar %}
+                <div class="flex items-center gap-3 min-w-0">
+                    {% if current_user.avatar %}
                         <img src="{% if current_user.avatar.startswith('data:') %}{{ current_user.avatar }}{% else %}{{ url_for('static', filename=current_user.avatar) }}{% endif %}" class="w-8 h-8 rounded-full object-cover border border-zinc-700">
                     {% else %}
                         <div class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs font-bold text-zinc-400 border border-zinc-700">
                             {{ current_user.username[0].upper() }}
                         </div>
                     {% endif %}
-                    <div class="flex flex-col">
-                        <span class="text-xs font-semibold text-zinc-300 group-hover:text-white transition-colors">{{ current_user.username }}</span>
+                    <div class="flex flex-col min-w-0">
+                        <span class="text-xs font-semibold text-zinc-300 group-hover:text-white transition-colors truncate">{{ current_user.username }}</span>
                         <span class="text-[10px] text-zinc-600">Manage Profile</span>
                     </div>
                 </div>
                 <i class="fas fa-chevron-right text-zinc-700 text-[10px] group-hover:text-zinc-400 transition-colors"></i>
             </a>
             <div class="mt-3 pt-3 border-t border-zinc-900 flex items-center justify-between">
-                <button id="open-support-btn" class="flex items-center gap-2 text-xs text-zinc-600 hover:text-amber-400 transition-colors px-2">
+                <button id="open-support-btn" class="flex items-center gap-2 text-xs text-zinc-600 hover:text-amber-400 transition-colors px-2 active:scale-95">
                     <i class="fas fa-mug-hot"></i> Support
                 </button>
                 <a href="{{ url_for('main.logout') }}" class="flex items-center gap-2 text-xs text-zinc-600 hover:text-red-400 transition-colors px-2">
@@ -93,59 +96,69 @@
             <p class="text-sm font-semibold text-white">Drop your document to upload</p>
         </div>
 
-        <header class="h-14 border-b border-zinc-900 bg-zinc-950/80 backdrop-blur-md flex items-center justify-between px-4 md:px-6 z-10">
-            <div class="flex items-center gap-3 min-w-0">
-                <button id="sidebar-toggle" class="md:hidden w-8 h-8 rounded-lg hover:bg-zinc-900 flex items-center justify-center text-zinc-400"><i class="fas fa-bars"></i></button>
+        <header class="h-14 border-b border-zinc-900 bg-zinc-950/80 backdrop-blur-md flex items-center justify-between px-3 md:px-6 z-10">
+            <div class="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
+                <button id="sidebar-toggle" class="w-9 h-9 rounded-lg hover:bg-zinc-900 flex items-center justify-center text-zinc-400 active:scale-95 md:hidden">
+                    <i class="fas fa-bars"></i>
+                </button>
                 <h2 id="conversation-title" class="font-semibold text-sm text-zinc-300 truncate">{{ conversation.title }}</h2>
             </div>
-            <div class="flex items-center gap-2">
-                <button id="theme-toggle" class="w-8 h-8 rounded-lg hover:bg-zinc-900 flex items-center justify-center text-zinc-500 hover:text-white transition-colors" title="Toggle theme">
+            <div class="flex items-center gap-1 md:gap-2">
+                <button id="theme-toggle" class="w-9 h-9 rounded-lg hover:bg-zinc-900 flex items-center justify-center text-zinc-500 hover:text-white transition-colors active:scale-95" title="Toggle theme">
                     <i class="fas fa-sun text-xs sun-icon"></i>
                     <i class="fas fa-moon text-xs moon-icon"></i>
                 </button>
-                <button id="export-chat-btn" class="w-8 h-8 rounded-lg hover:bg-zinc-900 flex items-center justify-center text-zinc-500 hover:text-white transition-colors" title="Export chat as Markdown"><i class="fas fa-download text-xs"></i></button>
+                <button id="share-chat-btn" class="w-9 h-9 rounded-lg hover:bg-zinc-900 flex items-center justify-center text-zinc-500 hover:text-white transition-colors active:scale-95" title="Share chat">
+                    <i class="fas fa-share-nodes text-xs"></i>
+                </button>
+                <button id="export-chat-btn" class="w-9 h-9 rounded-lg hover:bg-zinc-900 flex items-center justify-center text-zinc-500 hover:text-white transition-colors active:scale-95" title="Export chat as Markdown">
+                    <i class="fas fa-download text-xs"></i>
+                </button>
                 <span class="text-[10px] font-bold text-zinc-600 uppercase tracking-widest hidden sm:block">Model:</span>
                 <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest hidden sm:block">{{ config.get('AI_PROVIDER', 'groq') }}</span>
             </div>
         </header>
 
-        <div id="chat-box" class="flex-1 overflow-y-auto px-4 md:px-8 py-6 pb-48 space-y-8 custom-scrollbar">
+        <div id="chat-box" class="flex-1 overflow-y-auto px-3 md:px-8 py-4 md:py-6 pb-32 md:pb-48 space-y-4 md:space-y-8 custom-scrollbar">
             {% for message in messages %}
-                <div class="message-row group flex gap-4 max-w-4xl mx-auto {% if message.role == 'user' %}justify-end{% else %}justify-start{% endif %}"
+                <div class="message-row group flex gap-2 md:gap-4 max-w-4xl mx-auto {% if message.role == 'user' %}justify-end{% else %}justify-start{% endif %}"
                      data-message-id="{{ message.id }}" data-role="{{ message.role }}">
                     {% if message.role == 'assistant' %}
-                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-indigo-500/10 mt-1"><i class="fas fa-robot text-white text-xs"></i></div>
+                    <div class="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-indigo-500/10 mt-1"><i class="fas fa-robot text-white text-[10px] md:text-xs"></i></div>
                     {% endif %}
-                    <div class="flex flex-col max-w-[85%] md:max-w-[75%]">
-                        <div class="px-4 py-3 rounded-2xl {% if message.role == 'user' %}bg-indigo-600 text-white rounded-br-sm{% else %}bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-bl-sm{% endif %}">
+                    <div class="flex flex-col max-w-[88%] md:max-w-[75%] min-w-0">
+                        <div class="px-3 md:px-4 py-2.5 md:py-3 rounded-2xl {% if message.role == 'user' %}bg-indigo-600 text-white rounded-br-sm{% else %}bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-bl-sm{% endif %}">
+                            {% if message.image_data %}
+                            <img src="{{ message.image_data }}" class="max-w-[220px] w-full rounded-xl mb-2 border border-zinc-700" alt="attached image">
+                            {% endif %}
                             <div class="message-content text-sm leading-relaxed" data-content="{{ message.content | e }}"></div>
                         </div>
                     </div>
                     {% if message.role == 'user' %}
-                    <div class="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center flex-shrink-0 mt-1 text-xs font-bold text-zinc-400">{{ current_user.username[0].upper() }}</div>
+                    <div class="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-zinc-800 flex items-center justify-center flex-shrink-0 mt-1 text-[10px] md:text-xs font-bold text-zinc-400">{{ current_user.username[0].upper() }}</div>
                     {% endif %}
                 </div>
             {% else %}
                 <div id="empty-state" class="h-full flex flex-col items-center justify-center px-4">
                     <img src="{{ url_for('static', filename='icons/icon-192.png') }}" class="w-16 h-16 rounded-2xl mb-6 shadow-xl shadow-indigo-500/20 object-cover" alt="Irus AI">
-                    <h3 class="text-2xl font-bold text-white mb-2 tracking-tight">How can I help you today?</h3>
-                    <p class="text-sm text-zinc-500 mb-8 text-center max-w-md">Type <span class="text-indigo-400 font-bold">/</span> for commands, or press <span class="text-indigo-400 font-bold">Ctrl+K</span> for the palette.</p>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-2xl w-full">
-                        <button onclick="usePrompt('Explain quantum computing in simple terms')" class="text-left p-4 rounded-2xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-800/60 hover:border-zinc-700 transition-all group">
-                            <div class="flex items-center gap-2 text-zinc-500 mb-2 group-hover:text-indigo-400 transition-colors"><i class="fas fa-graduation-cap"></i><span class="text-[10px] font-bold uppercase tracking-wider">Learn</span></div>
-                            <p class="text-sm text-zinc-300 font-medium">Explain quantum computing in simple terms.</p>
+                    <h3 class="text-xl md:text-2xl font-bold text-white mb-2 tracking-tight">How can I help you today?</h3>
+                    <p class="text-sm text-zinc-500 mb-6 md:mb-8 text-center max-w-md">Type <span class="text-indigo-400 font-bold">/</span> for commands, or press <span class="text-indigo-400 font-bold">Ctrl+K</span> for the palette.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3 max-w-2xl w-full">
+                        <button onclick="usePrompt('Explain quantum computing in simple terms')" class="text-left p-3 md:p-4 rounded-2xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-800/60 hover:border-zinc-700 transition-all group active:scale-95">
+                            <div class="flex items-center gap-2 text-zinc-500 mb-2 group-hover:text-indigo-400 transition-colors"><i class="fas fa-graduation-cap text-xs"></i><span class="text-[10px] font-bold uppercase tracking-wider">Learn</span></div>
+                            <p class="text-xs md:text-sm text-zinc-300 font-medium">Explain quantum computing in simple terms.</p>
                         </button>
-                        <button onclick="usePrompt('Write a Python script to scrape a website using BeautifulSoup')" class="text-left p-4 rounded-2xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-800/60 hover:border-zinc-700 transition-all group">
-                            <div class="flex items-center gap-2 text-zinc-500 mb-2 group-hover:text-emerald-400 transition-colors"><i class="fas fa-code"></i><span class="text-[10px] font-bold uppercase tracking-wider">Code</span></div>
-                            <p class="text-sm text-zinc-300 font-medium">Write a Python script to scrape a website.</p>
+                        <button onclick="usePrompt('Write a Python script to scrape a website using BeautifulSoup')" class="text-left p-3 md:p-4 rounded-2xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-800/60 hover:border-zinc-700 transition-all group active:scale-95">
+                            <div class="flex items-center gap-2 text-zinc-500 mb-2 group-hover:text-emerald-400 transition-colors"><i class="fas fa-code text-xs"></i><span class="text-[10px] font-bold uppercase tracking-wider">Code</span></div>
+                            <p class="text-xs md:text-sm text-zinc-300 font-medium">Write a Python script to scrape a website.</p>
                         </button>
-                        <button onclick="usePrompt('Search the web for the latest AI news today')" class="text-left p-4 rounded-2xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-800/60 hover:border-zinc-700 transition-all group">
-                            <div class="flex items-center gap-2 text-zinc-500 mb-2 group-hover:text-blue-400 transition-colors"><i class="fas fa-globe"></i><span class="text-[10px] font-bold uppercase tracking-wider">Search</span></div>
-                            <p class="text-sm text-zinc-300 font-medium">Search the web for the latest AI news today.</p>
+                        <button onclick="usePrompt('Search the web for the latest AI news today')" class="text-left p-3 md:p-4 rounded-2xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-800/60 hover:border-zinc-700 transition-all group active:scale-95">
+                            <div class="flex items-center gap-2 text-zinc-500 mb-2 group-hover:text-blue-400 transition-colors"><i class="fas fa-globe text-xs"></i><span class="text-[10px] font-bold uppercase tracking-wider">Search</span></div>
+                            <p class="text-xs md:text-sm text-zinc-300 font-medium">Search the web for the latest AI news today.</p>
                         </button>
-                        <button onclick="usePrompt('Summarize the uploaded document into 5 key bullet points')" class="text-left p-4 rounded-2xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-800/60 hover:border-zinc-700 transition-all group">
-                            <div class="flex items-center gap-2 text-zinc-500 mb-2 group-hover:text-purple-400 transition-colors"><i class="fas fa-file-alt"></i><span class="text-[10px] font-bold uppercase tracking-wider">Analyze</span></div>
-                            <p class="text-sm text-zinc-300 font-medium">Summarize my document into 5 key bullet points.</p>
+                        <button onclick="usePrompt('Summarize the uploaded document into 5 key bullet points')" class="text-left p-3 md:p-4 rounded-2xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-800/60 hover:border-zinc-700 transition-all group active:scale-95">
+                            <div class="flex items-center gap-2 text-zinc-500 mb-2 group-hover:text-purple-400 transition-colors"><i class="fas fa-file-alt text-xs"></i><span class="text-[10px] font-bold uppercase tracking-wider">Analyze</span></div>
+                            <p class="text-xs md:text-sm text-zinc-300 font-medium">Summarize my document into 5 key bullet points.</p>
                         </button>
                     </div>
                 </div>
@@ -153,41 +166,54 @@
         </div>
 
         <!-- Scroll to bottom -->
-        <button id="scroll-bottom-btn" class="hidden absolute bottom-44 left-1/2 -translate-x-1/2 z-20 w-9 h-9 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-white shadow-xl items-center justify-center transition-all" title="Jump to latest">
+        <button id="scroll-bottom-btn" class="hidden absolute bottom-32 md:bottom-44 left-1/2 -translate-x-1/2 z-20 w-9 h-9 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-white shadow-xl items-center justify-center transition-all active:scale-95" title="Jump to latest">
             <i class="fas fa-arrow-down text-xs"></i>
         </button>
 
         <!-- Floating Input -->
-        <div class="absolute bottom-0 left-0 right-0 p-4 md:p-6 bg-gradient-to-t from-zinc-950 via-zinc-950/95 to-transparent pointer-events-none flex justify-center">
+        <div class="absolute bottom-0 left-0 right-0 p-2 md:p-4 lg:p-6 bg-gradient-to-t from-zinc-950 via-zinc-950/95 to-transparent pointer-events-none flex justify-center z-10">
             <div class="max-w-3xl w-full pointer-events-auto relative">
 
                 <!-- Slash Command Menu -->
-                <div id="slash-menu" class="hidden absolute bottom-full mb-3 left-0 right-0 z-30 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden">
+                <div id="slash-menu" class="hidden absolute bottom-full mb-2 left-0 right-0 z-30 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden">
                     <div class="px-4 py-2 text-[10px] font-bold text-zinc-500 uppercase tracking-widest border-b border-zinc-800">Commands</div>
                     <div id="slash-menu-list" class="p-2 space-y-1 max-h-64 overflow-y-auto custom-scrollbar"></div>
                 </div>
 
-                <div class="relative bg-zinc-900 border border-zinc-800 rounded-3xl shadow-2xl shadow-black/50 backdrop-blur-xl p-2 flex items-end gap-2 focus-within:border-zinc-700 transition-all">
-                    <button id="upload-doc-btn-mobile" class="w-10 h-10 rounded-full hover:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-indigo-400 transition-colors flex-shrink-0 mb-0.5" title="Upload Document"><i class="fas fa-paperclip"></i></button>
-                    <textarea id="message-input" rows="1" placeholder='Message Irus... ( type "/" for commands )' class="flex-1 bg-transparent border-none px-2 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none resize-none max-h-40 custom-scrollbar"></textarea>
-                    <button id="mic-btn" class="w-10 h-10 rounded-full hover:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-indigo-400 transition-colors flex-shrink-0 mb-0.5" title="Voice Input"><i class="fas fa-microphone"></i></button>
-                    <button id="web-search-btn" class="w-10 h-10 rounded-full hover:bg-zinc-800 flex items-center justify-center text-zinc-500 transition-colors flex-shrink-0 mb-0.5" title="Search the live web"><i class="fas fa-globe"></i></button>
-                    <button id="stop-btn" class="hidden w-10 h-10 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500/30 flex items-center justify-center flex-shrink-0 mb-0.5 transition-colors" title="Stop"><i class="fas fa-stop text-xs"></i></button>
-                    <button id="send-btn" class="w-10 h-10 rounded-full bg-white text-black hover:bg-zinc-200 flex items-center justify-center flex-shrink-0 mb-0.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed" title="Send" disabled><i class="fas fa-arrow-up text-xs font-bold"></i></button>
+                <!-- Image Preview -->
+                <div id="image-preview-wrap" class="hidden mb-2 flex items-center gap-2">
+                    <div class="relative">
+                        <img id="image-preview" class="w-14 h-14 rounded-xl object-cover border border-zinc-700" alt="preview">
+                        <button id="image-remove" class="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-600 text-white text-[10px] flex items-center justify-center active:scale-95"><i class="fas fa-xmark"></i></button>
+                    </div>
+                    <span class="text-[10px] text-zinc-500">Image attached — Irus will analyze it 👁️</span>
                 </div>
-                <p class="text-center text-[10px] text-zinc-600 mt-3 font-medium">Irus AI can make mistakes. Verify important information.</p>
+
+                <div class="relative bg-zinc-900 border border-zinc-800 rounded-2xl md:rounded-3xl shadow-2xl shadow-black/50 backdrop-blur-xl p-1.5 md:p-2 flex items-end gap-1.5 md:gap-2 focus-within:border-zinc-700 transition-all">
+                    <button id="upload-doc-btn-mobile" class="w-9 h-9 md:w-10 md:h-10 rounded-full hover:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-indigo-400 transition-colors flex-shrink-0 active:scale-95" title="Upload Document"><i class="fas fa-paperclip text-sm"></i></button>
+                    <button id="upload-image-btn" class="w-9 h-9 md:w-10 md:h-10 rounded-full hover:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-purple-400 transition-colors flex-shrink-0 active:scale-95" title="Attach image (Vision)"><i class="fas fa-image text-sm"></i></button>
+                    <input type="file" id="image-input" class="hidden" accept="image/*">
+                    
+                    <textarea id="message-input" rows="1" placeholder='Message Irus... ( type "/" for commands )' class="flex-1 bg-transparent border-none px-1.5 md:px-2 py-2 md:py-2.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none resize-none max-h-32 md:max-h-40 custom-scrollbar"></textarea>
+                    
+                    <button id="mic-btn" class="w-9 h-9 md:w-10 md:h-10 rounded-full hover:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-indigo-400 transition-colors flex-shrink-0 active:scale-95" title="Voice Input"><i class="fas fa-microphone text-sm"></i></button>
+                    <button id="web-search-btn" class="w-9 h-9 md:w-10 md:h-10 rounded-full hover:bg-zinc-800 flex items-center justify-center text-zinc-500 transition-colors flex-shrink-0 active:scale-95" title="Search the live web"><i class="fas fa-globe text-sm"></i></button>
+                    <button id="stop-btn" class="hidden w-9 h-9 md:w-10 md:h-10 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500/30 flex items-center justify-center flex-shrink-0 active:scale-95 transition-colors" title="Stop"><i class="fas fa-stop text-xs"></i></button>
+                    <button id="send-btn" class="w-9 h-9 md:w-10 md:h-10 rounded-full bg-white text-black hover:bg-zinc-200 flex items-center justify-center flex-shrink-0 active:scale-95 transition-colors disabled:opacity-40 disabled:cursor-not-allowed" title="Send" disabled><i class="fas fa-arrow-up text-xs font-bold"></i></button>
+                </div>
+                <p class="text-center text-[9px] md:text-[10px] text-zinc-600 mt-2 md:mt-3 font-medium">Irus AI can make mistakes. Verify important information.</p>
             </div>
         </div>
     </main>
 </div>
 
 <!-- Command Palette -->
-<div id="command-palette" class="hidden fixed inset-0 z-[110] bg-black/70 backdrop-blur-sm flex items-start justify-center pt-[15vh] p-4">
+<div id="command-palette" class="hidden fixed inset-0 z-[110] bg-black/70 backdrop-blur-sm flex items-start justify-center pt-[10vh] md:pt-[15vh] p-4">
     <div class="w-full max-w-lg bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden">
         <div class="flex items-center gap-3 px-4 border-b border-zinc-800">
             <i class="fas fa-terminal text-indigo-400 text-sm"></i>
             <input id="palette-input" type="text" placeholder="Type a command..." class="flex-1 bg-transparent py-4 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none">
-            <kbd class="text-[10px] text-zinc-600 border border-zinc-700 rounded px-1.5 py-0.5">ESC</kbd>
+            <kbd class="text-[10px] text-zinc-600 border border-zinc-700 rounded px-1.5 py-0.5 hidden md:inline">ESC</kbd>
         </div>
         <div id="palette-list" class="p-2 space-y-1 max-h-72 overflow-y-auto custom-scrollbar"></div>
     </div>
@@ -195,41 +221,41 @@
 
 <!-- Rename Modal -->
 <div id="rename-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-    <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-2xl">
+    <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-4 md:p-6 shadow-2xl">
         <h3 class="font-semibold text-lg text-white mb-4">Rename Chat</h3>
         <input id="rename-input" type="text" maxlength="120" class="w-full rounded-xl bg-zinc-800 border border-zinc-700 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-4">
         <div class="flex justify-end gap-3">
-            <button id="rename-cancel" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-sm text-zinc-300">Cancel</button>
-            <button id="rename-save" class="px-4 py-2 rounded-xl bg-white text-black hover:bg-zinc-200 text-sm font-semibold">Save</button>
+            <button id="rename-cancel" class="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-sm text-zinc-300 active:scale-95">Cancel</button>
+            <button id="rename-save" class="px-4 py-2.5 rounded-xl bg-white text-black hover:bg-zinc-200 text-sm font-semibold active:scale-95">Save</button>
         </div>
     </div>
 </div>
 
 <!-- Folder Modal -->
 <div id="folder-modal" class="hidden fixed inset-0 z-[110] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-    <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-2xl">
+    <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-4 md:p-6 shadow-2xl">
         <h3 class="text-lg font-bold text-white mb-1">Move to Folder</h3>
         <p class="text-xs text-zinc-500 mb-4">Leave empty to move back to Uncategorized.</p>
         <input id="folder-input" type="text" maxlength="40" placeholder="e.g. Work, Research, Personal" class="w-full rounded-xl bg-zinc-800 border border-zinc-700 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-3">
         <div id="folder-suggestions" class="flex flex-wrap gap-2 mb-4"></div>
         <div class="flex justify-end gap-3">
-            <button id="folder-cancel" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-sm text-zinc-300">Cancel</button>
-            <button id="folder-save" class="px-4 py-2 rounded-xl bg-white text-black hover:bg-zinc-200 text-sm font-semibold">Save</button>
+            <button id="folder-cancel" class="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-sm text-zinc-300 active:scale-95">Cancel</button>
+            <button id="folder-save" class="px-4 py-2.5 rounded-xl bg-white text-black hover:bg-zinc-200 text-sm font-semibold active:scale-95">Save</button>
         </div>
     </div>
 </div>
 
 <!-- Memory Modal -->
 <div id="memory-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-    <div class="w-full max-w-lg bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-2xl max-h-[80vh] flex flex-col">
+    <div class="w-full max-w-lg bg-zinc-900 border border-zinc-800 rounded-2xl p-4 md:p-6 shadow-2xl max-h-[85vh] flex flex-col">
         <div class="flex items-center justify-between mb-4">
             <h3 class="font-semibold text-lg flex items-center gap-2 text-white"><i class="fas fa-brain text-indigo-400"></i> Long-Term Memory</h3>
-            <button id="memory-close" class="text-zinc-500 hover:text-white"><i class="fas fa-xmark"></i></button>
+            <button id="memory-close" class="text-zinc-500 hover:text-white w-8 h-8 rounded-lg flex items-center justify-center"><i class="fas fa-xmark"></i></button>
         </div>
         <p class="text-xs text-zinc-500 mb-4">Irus remembers these facts across all conversations. Or type "Remember [fact]" in chat.</p>
         <div class="flex gap-2 mb-4">
-            <input id="new-memory-input" type="text" placeholder="e.g., I prefer concise answers" class="flex-1 rounded-xl bg-zinc-800 border border-zinc-700 px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <button id="add-memory-btn" class="px-4 py-2 rounded-xl bg-white text-black hover:bg-zinc-200 text-sm font-semibold">Add</button>
+            <input id="new-memory-input" type="text" placeholder="e.g., I prefer concise answers" class="flex-1 rounded-xl bg-zinc-800 border border-zinc-700 px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <button id="add-memory-btn" class="px-4 py-2.5 rounded-xl bg-white text-black hover:bg-zinc-200 text-sm font-semibold active:scale-95">Add</button>
         </div>
         <div id="memory-list" class="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar"></div>
     </div>
@@ -237,40 +263,54 @@
 
 <!-- Developer Support Modal -->
 <div id="support-modal" class="hidden fixed inset-0 z-[120] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-    <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-8 shadow-2xl text-center">
+    <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-6 md:p-8 shadow-2xl text-center max-h-[90vh] overflow-y-auto">
         <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center mb-4 shadow-lg shadow-pink-500/20">
-            <i class="fas fa-mug-hot text-white"></i>
+            <i class="fas fa-mug-hot text-white text-xl"></i>
         </div>
         <h3 class="text-lg font-bold text-white">Support the Developer</h3>
         <p class="text-xs text-zinc-500 mt-2 mb-6 leading-relaxed">Irus AI is free for everyone, forever.<br>If it helps you, consider fueling its development ☕</p>
 
         <div class="p-4 rounded-2xl bg-zinc-950 border border-zinc-800 mb-3 flex items-center justify-between gap-3">
-            <div class="text-left min-w-0">
+            <div class="text-left min-w-0 flex-1">
                 <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">UPI ID</p>
                 <p class="text-sm text-zinc-200 font-mono truncate">nejamulhaque@upi</p>
             </div>
-            <button id="copy-upi-btn" class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-[10px] font-bold text-zinc-300 uppercase tracking-wider transition-colors flex-shrink-0">Copy</button>
+            <button id="copy-upi-btn" class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-[10px] font-bold text-zinc-300 uppercase tracking-wider transition-colors flex-shrink-0 active:scale-95">Copy</button>
         </div>
 
         <div class="grid grid-cols-2 gap-3 mb-4">
-            <a href="upi://pay?pa=nejamulhaque@upi&pn=Nejamul%20Haque" class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-colors">
+            <a href="upi://pay?pa=nejamulhaque@upi&pn=Nejamul%20Haque" class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-colors active:scale-95">
                 <i class="fas fa-indian-rupee-sign text-xs"></i> Pay via UPI
             </a>
-            <a href="https://www.buymeacoffee.com/nejamulhaque" target="_blank" rel="noopener" class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-sm font-semibold transition-colors">
+            <a href="https://www.buymeacoffee.com/nejamulhaque" target="_blank" rel="noopener" class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-sm font-semibold transition-colors active:scale-95">
                 <i class="fas fa-mug-hot text-xs"></i> Coffee
             </a>
         </div>
 
-        <button id="support-close" class="text-xs text-zinc-600 hover:text-zinc-300 transition-colors">Maybe later</button>
+        <button id="support-close" class="text-xs text-zinc-600 hover:text-zinc-300 transition-colors active:scale-95">Maybe later</button>
     </div>
 </div>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- Share Modal -->
+<div id="share-modal" class="hidden fixed inset-0 z-[120] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-2xl">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="fas fa-share-nodes text-indigo-400"></i> Share Chat</h3>
+            <button id="share-close" class="text-zinc-500 hover:text-white"><i class="fas fa-xmark"></i></button>
+        </div>
+        <p id="share-status" class="text-sm mb-4"></p>
+        <div id="share-url-row" class="hidden flex items-center gap-2 mb-4">
+            <input id="share-url-input" readonly class="flex-1 rounded-xl bg-zinc-950 border border-zinc-800 px-3 py-2.5 text-xs text-zinc-300 focus:outline-none">
+            <button id="share-copy-btn" class="px-3 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 active:scale-95">Copy</button>
+        </div>
+        <button id="share-toggle-btn" class="w-full px-4 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold active:scale-95"></button>
+    </div>
+</div>
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
 <style>
-    body { font-family: 'Inter', sans-serif; }
     .custom-scrollbar::-webkit-scrollbar { width: 6px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
@@ -290,7 +330,7 @@
     .message-content th { background: #18181b; color: #fff; font-weight: 600; }
     .message-content tr:nth-child(even) { background: #09090b; }
     .message-content img { max-width: 100%; border-radius: 0.75rem; margin: 0.5rem 0; border: 1px solid #27272a; }
-    .doc-item { display: flex; align-items: center; justify-content: space-between; padding: 0.4rem 0.5rem; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s; font-size: 0.75rem; color: #a1a1aa; }
+    .doc-item { display: flex; align-items: center; justify-content: space-between; padding: 0.4rem 0.5rem; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s; font-size: 0.75rem; color: #a1a1aa; min-height: 36px; }
     .doc-item:hover { background-color: #18181b; color: #fff; }
     .doc-item.active { background-color: rgba(99, 102, 241, 0.1); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.2); }
     .editing .message-actions { display: none !important; }
@@ -298,6 +338,13 @@
     [data-theme="light"] .sun-icon { display: none; }
     @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.7); } 70% { box-shadow: 0 0 0 10px rgba(239,68,68,0); } 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); } }
     .listening { animation: pulse-red 1.5s infinite; background-color: rgba(239,68,68,0.2) !important; color: #ef4444 !important; }
+    @media (max-width: 768px) {
+        .message-content pre { font-size: 0.75rem; padding: 0.75rem; }
+        .message-content code { font-size: 0.75rem; }
+    }
+    @media (hover: none) {
+        .conversation-item, .doc-item { min-height: 44px; }
+    }
 </style>
 
 <script>
@@ -317,6 +364,8 @@
     const paletteInput = document.getElementById("palette-input");
     const paletteList = document.getElementById("palette-list");
     const foldersContainer = document.getElementById("folders-container");
+    const sidebar = document.getElementById("sidebar");
+    const mobileOverlay = document.getElementById("mobile-overlay");
 
     let isStreaming = false;
     let controller = null;
@@ -326,6 +375,17 @@
     let webSearchEnabled = false;
     let imageMode = false;
     let stickToBottom = true;
+    let attachedImage = null;
+    let shareToken = {{ 'null' if not conversation.share_token else "'" + conversation.share_token + "'" }};
+
+    // ---------- MOBILE SIDEBAR ----------
+    function toggleMobileSidebar() {
+        sidebar.classList.toggle("-translate-x-full");
+        mobileOverlay.classList.toggle("hidden");
+        document.body.style.overflow = sidebar.classList.contains("-translate-x-full") ? "" : "hidden";
+    }
+    document.getElementById("sidebar-toggle").addEventListener("click", toggleMobileSidebar);
+    mobileOverlay.addEventListener("click", toggleMobileSidebar);
 
     // ---------- TOASTS ----------
     function showToast(message, type = 'success') {
@@ -398,7 +458,7 @@
     function autoResizeTextarea() {
         input.style.height = "auto";
         input.style.height = Math.min(input.scrollHeight, 160) + "px";
-        sendBtn.disabled = input.value.trim() === "";
+        sendBtn.disabled = input.value.trim() === "" && !attachedImage;
     }
     function usePrompt(text) { input.value = text; autoResizeTextarea(); input.focus(); }
     function escapeHtml(str) {
@@ -434,21 +494,22 @@
         col.appendChild(m);
     }
 
-    function appendMessage(role, content = "", messageId = null) {
+    function appendMessage(role, content = "", messageId = null, imageData = null) {
         removeEmptyState();
         const row = document.createElement("div");
-        row.className = `message-row group flex gap-4 max-w-4xl mx-auto ${role === "user" ? "justify-end" : "justify-start"}`;
+        row.className = `message-row group flex gap-2 md:gap-4 max-w-4xl mx-auto ${role === "user" ? "justify-end" : "justify-start"}`;
         row.dataset.role = role;
         if (messageId) row.dataset.messageId = messageId;
 
-        const aiAvatar = `<div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-indigo-500/10 mt-1"><i class="fas fa-robot text-white text-xs"></i></div>`;
-        const userAvatar = `<div class="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center flex-shrink-0 mt-1 text-xs font-bold text-zinc-400">{{ current_user.username[0].upper() }}</div>`;
+        const aiAvatar = `<div class="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-indigo-500/10 mt-1"><i class="fas fa-robot text-white text-[10px] md:text-xs"></i></div>`;
+        const userAvatar = `<div class="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-zinc-800 flex items-center justify-center flex-shrink-0 mt-1 text-[10px] md:text-xs font-bold text-zinc-400">{{ current_user.username[0].upper() }}</div>`;
         const bubbleClass = role === "user" ? "bg-indigo-600 text-white rounded-br-sm" : "bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-bl-sm";
 
         row.innerHTML = `
             ${role === "assistant" ? aiAvatar : ""}
-            <div class="flex flex-col max-w-[85%] md:max-w-[75%]">
-                <div class="px-4 py-3 rounded-2xl ${bubbleClass}">
+            <div class="flex flex-col max-w-[88%] md:max-w-[75%] min-w-0">
+                <div class="px-3 md:px-4 py-2.5 md:py-3 rounded-2xl ${bubbleClass}">
+                    ${imageData ? `<img src="${imageData}" class="max-w-[220px] w-full rounded-xl mb-2 border border-zinc-700" alt="attached">` : ""}
                     <div class="message-content text-sm leading-relaxed"></div>
                 </div>
             </div>
@@ -476,7 +537,7 @@
         stopBtn.classList.toggle("hidden", !active);
     }
 
-    // ---------- FOLLOW-UP SUGGESTIONS ----------
+    // ---------- FOLLOW-UPS ----------
     function removeFollowUps() { document.querySelectorAll(".followup-row").forEach(el => el.remove()); }
     function showFollowUps(lastUserText) {
         removeFollowUps();
@@ -491,7 +552,7 @@
         row.className = "followup-row flex flex-wrap gap-2 max-w-4xl mx-auto";
         suggestions.forEach(s => {
             const b = document.createElement("button");
-            b.className = "px-3 py-1.5 rounded-full border border-zinc-800 bg-zinc-900/60 text-xs text-zinc-400 hover:text-white hover:border-indigo-500/50 transition-colors";
+            b.className = "px-3 py-1.5 rounded-full border border-zinc-800 bg-zinc-900/60 text-xs text-zinc-400 hover:text-white hover:border-indigo-500/50 transition-colors active:scale-95";
             b.textContent = s;
             b.onclick = () => { removeFollowUps(); sendChat({ mode: "send", message: s }); };
             row.appendChild(b);
@@ -531,6 +592,82 @@
         showToast(webSearchEnabled ? "Web search enabled" : "Web search disabled", "info");
     });
 
+    // ---------- VISION (IMAGE ATTACH) ----------
+    const imageInput = document.getElementById("image-input");
+    const imagePreviewWrap = document.getElementById("image-preview-wrap");
+    const imagePreview = document.getElementById("image-preview");
+
+    function clearImage() {
+        attachedImage = null;
+        imageInput.value = "";
+        imagePreviewWrap.classList.add("hidden");
+        autoResizeTextarea();
+    }
+    document.getElementById("upload-image-btn").addEventListener("click", () => imageInput.click());
+    document.getElementById("image-remove").addEventListener("click", clearImage);
+
+    imageInput.addEventListener("change", e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (!file.type.startsWith("image/")) { showToast("Please choose an image file.", "error"); return; }
+        const reader = new FileReader();
+        reader.onload = () => {
+            const img = new Image();
+            img.onload = () => {
+                const max = 768;
+                const scale = Math.min(1, max / Math.max(img.width, img.height));
+                const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
+                const canvas = document.createElement("canvas");
+                canvas.width = w; canvas.height = h;
+                canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+                attachedImage = canvas.toDataURL("image/jpeg", 0.85);
+                imagePreview.src = attachedImage;
+                imagePreviewWrap.classList.remove("hidden");
+                showToast("Image attached 👁️", "info");
+                autoResizeTextarea();
+            };
+            img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // ---------- PUBLIC SHARE ----------
+    const shareModal = document.getElementById("share-modal");
+    const shareUrlInput = document.getElementById("share-url-input");
+
+    function renderShareModal() {
+        const on = !!shareToken;
+        document.getElementById("share-status").innerHTML = on
+            ? '<span class="text-emerald-400 font-semibold"><i class="fas fa-circle-check mr-1"></i>Public link active — anyone with the link can read this chat.</span>'
+            : '<span class="text-zinc-500"><i class="fas fa-lock mr-1"></i>Private — no public link.</span>';
+        document.getElementById("share-url-row").classList.toggle("hidden", !on);
+        if (on) shareUrlInput.value = location.origin + "/share/" + shareToken;
+        document.getElementById("share-toggle-btn").innerHTML = on
+            ? '<i class="fas fa-link-slash mr-1"></i> Disable Public Link'
+            : '<i class="fas fa-link mr-1"></i> Create Public Link';
+    }
+
+    document.getElementById("share-chat-btn").addEventListener("click", () => { renderShareModal(); shareModal.classList.remove("hidden"); });
+    document.getElementById("share-close").addEventListener("click", () => shareModal.classList.add("hidden"));
+    shareModal.addEventListener("click", e => { if (e.target === shareModal) shareModal.classList.add("hidden"); });
+
+    document.getElementById("share-toggle-btn").addEventListener("click", async () => {
+        if (shareToken) {
+            if (!confirm("Disable this public link?")) return;
+            const res = await fetch(`/chat/${conversationId}/unshare`, { method: "POST" });
+            if (res.ok) { shareToken = null; showToast("Public link disabled", "info"); renderShareModal(); }
+        } else {
+            const res = await fetch(`/chat/${conversationId}/share`, { method: "POST" });
+            const data = await res.json();
+            if (res.ok) { shareToken = data.token; showToast("Public link created!", "success"); renderShareModal(); }
+        }
+    });
+
+    document.getElementById("share-copy-btn").addEventListener("click", () => {
+        navigator.clipboard.writeText(shareUrlInput.value);
+        showToast("Link copied to clipboard!", "success");
+    });
+
     // ---------- CHAT ENGINE ----------
     async function sendChat({ mode = "send", message = "", message_id = null }) {
         if (isStreaming) return;
@@ -541,8 +678,8 @@
         let aiRow = null;
 
         if (mode === "send") {
-            if (!message) return;
-            const u = appendMessage("user", message);
+            if (!message && !attachedImage) return;
+            const u = appendMessage("user", message, null, attachedImage);
             userRow = u.row;
             const a = appendMessage("assistant", "");
             aiRow = a.row; aiContentElement = a.contentElement;
@@ -561,7 +698,7 @@
             const response = await fetch(`/chat/${conversationId}/stream`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ mode, message, message_id, document_id: activeDocumentId, web_search: webSearchEnabled, image_mode: imageMode }),
+                body: JSON.stringify({ mode, message, message_id, document_id: activeDocumentId, web_search: webSearchEnabled, image_mode: imageMode, image_data: attachedImage }),
                 signal: controller.signal
             });
 
@@ -599,6 +736,7 @@
         } finally {
             setStreaming(false);
             controller = null;
+            clearImage();
             addMeta(aiRow, (performance.now() - streamStart) / 1000);
             const lastUser = Array.from(chatBox.querySelectorAll('.message-row[data-role="user"]')).pop();
             if (lastUser && aiText) showFollowUps(lastUser.querySelector(".message-content").dataset.content || "");
@@ -645,7 +783,7 @@
         sendChat({ mode: "edit", message: newText, message_id: messageId });
     }
 
-    // ---------- EXPORT CHAT ----------
+    // ---------- EXPORT ----------
     function exportChat() {
         const title = document.getElementById('conversation-title').textContent || 'chat';
         let md = `# ${title}\n\n_Exported from Irus AI on ${new Date().toLocaleString()}_\n\n`;
@@ -701,7 +839,7 @@
                     ${escapeHtml(folderName)}
                     <span class="text-zinc-600 font-normal">(${grouped[folderName].length})</span>
                 </span>
-                ${folderName !== "Uncategorized" ? `<button class="delete-folder-btn text-zinc-600 hover:text-red-400 transition-colors" data-folder="${escapeHtml(folderName)}" title="Delete folder"><i class="fas fa-trash text-[10px]"></i></button>` : ""}
+                ${folderName !== "Uncategorized" ? `<button class="delete-folder-btn text-zinc-600 hover:text-red-400 transition-colors p-2" data-folder="${escapeHtml(folderName)}" title="Delete folder"><i class="fas fa-trash text-[10px]"></i></button>` : ""}
             `;
             group.appendChild(header);
 
@@ -712,9 +850,9 @@
                 item.dataset.title = conv.title;
                 item.innerHTML = `
                     <a href="/chat/${conv.id}" class="conversation-title flex-1 min-w-0 px-1 py-1 text-xs text-zinc-400 hover:text-zinc-200 truncate">${escapeHtml(conv.title)}</a>
-                    <button type="button" class="move-to-folder-btn opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-indigo-400 px-1 transition-opacity" title="Move to folder"><i class="fas fa-folder-plus text-[10px]"></i></button>
-                    <button type="button" class="rename-chat-btn opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-indigo-400 px-1" title="Rename"><i class="fas fa-pen text-[10px]"></i></button>
-                    <button type="button" class="delete-chat-btn opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-red-400 px-1" title="Delete"><i class="fas fa-trash text-[10px]"></i></button>
+                    <button type="button" class="move-to-folder-btn opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-indigo-400 px-2 py-1 transition-opacity" title="Move to folder"><i class="fas fa-folder-plus text-[10px]"></i></button>
+                    <button type="button" class="rename-chat-btn opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-indigo-400 px-2 py-1" title="Rename"><i class="fas fa-pen text-[10px]"></i></button>
+                    <button type="button" class="delete-chat-btn opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-red-400 px-2 py-1" title="Delete"><i class="fas fa-trash text-[10px]"></i></button>
                 `;
                 group.appendChild(item);
             });
@@ -723,7 +861,6 @@
         });
     }
 
-    // Folder modal
     const folderModal = document.getElementById("folder-modal");
     const folderInput = document.getElementById("folder-input");
     const folderSuggestions = document.getElementById("folder-suggestions");
@@ -738,7 +875,7 @@
             folders.forEach(f => {
                 const chip = document.createElement("button");
                 chip.type = "button";
-                chip.className = "px-2.5 py-1 rounded-full border border-zinc-700 bg-zinc-800/60 text-[10px] text-zinc-400 hover:text-white hover:border-indigo-500/50 transition-colors";
+                chip.className = "px-2.5 py-1 rounded-full border border-zinc-700 bg-zinc-800/60 text-[10px] text-zinc-400 hover:text-white hover:border-indigo-500/50 transition-colors active:scale-95";
                 chip.textContent = f;
                 chip.onclick = () => { folderInput.value = f; };
                 folderSuggestions.appendChild(chip);
@@ -810,6 +947,11 @@
             loadConversations();
             return;
         }
+
+        // Close mobile sidebar when navigating
+        if (e.target.closest('a[href^="/chat/"]') && window.innerWidth < 768) {
+            toggleMobileSidebar();
+        }
     });
 
     // ---------- SLASH COMMANDS ----------
@@ -852,6 +994,7 @@
         { name: 'Upload Document', icon: 'fa-paperclip', run: () => fileInput.click() },
         { name: 'Open Memories', icon: 'fa-brain', run: () => { memoryModal.classList.remove('hidden'); loadMemories(); } },
         { name: 'Support the Developer', icon: 'fa-mug-hot', run: () => { const m = document.getElementById('support-modal'); if (m) m.classList.remove('hidden'); } },
+        { name: 'API Keys', icon: 'fa-key', run: () => window.location.href = '/api-keys' },
         { name: 'Open Profile Settings', icon: 'fa-user-gear', run: () => window.location.href = '/profile' },
         { name: 'Export Chat as Markdown', icon: 'fa-download', run: exportChat },
     ];
@@ -895,7 +1038,7 @@
         }
     });
 
-    // ---------- DRAG & DROP UPLOAD ----------
+    // ---------- DRAG & DROP ----------
     const mainEl = document.querySelector("main");
     let dragCounter = 0;
     mainEl.addEventListener("dragenter", e => { e.preventDefault(); dragCounter++; dragOverlay.classList.remove("hidden"); dragOverlay.classList.add("flex"); });
@@ -911,7 +1054,7 @@
     // ---------- EVENTS ----------
     sendBtn.addEventListener("click", () => {
         const msg = input.value.trim();
-        if (msg) { input.value = ""; autoResizeTextarea(); slashMenu.classList.add("hidden"); sendChat({ mode: "send", message: msg }); }
+        if (msg || attachedImage) { input.value = ""; autoResizeTextarea(); slashMenu.classList.add("hidden"); sendChat({ mode: "send", message: msg }); }
     });
     stopBtn.addEventListener("click", () => { if (controller) controller.abort(); });
     input.addEventListener("keydown", e => {
@@ -969,13 +1112,7 @@
         else { recognition.start(); micBtn.classList.add('listening'); isListening = true; }
     });
 
-    // ---------- SIDEBAR TOGGLE & SEARCH ----------
-    document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
-        const sb = document.getElementById('sidebar');
-        sb.classList.toggle('hidden'); sb.classList.toggle('flex');
-        sb.classList.toggle('absolute'); sb.classList.toggle('z-50'); sb.classList.toggle('h-full');
-    });
-
+    // ---------- SEARCH ----------
     document.getElementById('conversation-search').addEventListener('input', function () {
         const q = this.value.toLowerCase().trim();
         let visible = 0;
@@ -1026,7 +1163,7 @@
                 div.className = "doc-item"; div.dataset.id = doc.id;
                 div.innerHTML = `
                     <div class="flex items-center gap-2 truncate flex-1"><i class="fas fa-file-alt text-zinc-600"></i><span class="truncate">${escapeHtml(doc.name)}</span></div>
-                    <button class="delete-doc-btn text-zinc-600 hover:text-red-400 ml-2" data-id="${doc.id}"><i class="fas fa-trash text-[10px]"></i></button>`;
+                    <button class="delete-doc-btn text-zinc-600 hover:text-red-400 ml-2 p-2" data-id="${doc.id}"><i class="fas fa-trash text-[10px]"></i></button>`;
                 div.addEventListener("click", e => { if (e.target.closest(".delete-doc-btn")) return; selectDocument(doc.id, doc.name); });
                 docList.appendChild(div);
             });
@@ -1081,7 +1218,7 @@
                 const div = document.createElement("div");
                 div.className = "flex items-center justify-between bg-zinc-800/50 border border-zinc-700 rounded-lg p-3 text-sm";
                 div.innerHTML = `<span class="text-zinc-300 flex-1 mr-2">${escapeHtml(mem.content)}</span>
-                    <button class="delete-memory-btn text-zinc-500 hover:text-red-400" data-id="${mem.id}"><i class="fas fa-trash"></i></button>`;
+                    <button class="delete-memory-btn text-zinc-500 hover:text-red-400 p-2" data-id="${mem.id}"><i class="fas fa-trash"></i></button>`;
                 memoryList.appendChild(div);
             });
         } catch (e) { console.error(e); }
@@ -1103,7 +1240,7 @@
         showToast("Memory deleted", "success");
     });
 
-    // ---------- DEVELOPER SUPPORT ----------
+    // ---------- SUPPORT ----------
     const supportModal = document.getElementById("support-modal");
     const openSupportBtn = document.getElementById("open-support-btn");
     if (supportModal && openSupportBtn) {

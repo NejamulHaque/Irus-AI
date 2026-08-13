@@ -1,8 +1,8 @@
 """initial schema
 
-Revision ID: d432ef9aa518
+Revision ID: 1024cbdd4ba8
 Revises: 
-Create Date: 2026-08-13 14:51:43.961535
+Create Date: 2026-08-13 20:46:59.384095
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'd432ef9aa518'
+revision = '1024cbdd4ba8'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -31,7 +31,7 @@ def upgrade():
     sa.Column('username', sa.String(length=150), nullable=False),
     sa.Column('email', sa.String(length=150), nullable=True),
     sa.Column('password_hash', sa.String(length=256), nullable=False),
-    sa.Column('avatar', sa.String(length=255), nullable=True),
+    sa.Column('avatar', sa.Text(), nullable=True),
     sa.Column('bio', sa.Text(), nullable=True),
     sa.Column('preferred_model', sa.String(length=100), nullable=True),
     sa.Column('is_admin', sa.Boolean(), nullable=True),
@@ -40,15 +40,28 @@ def upgrade():
     sa.UniqueConstraint('email'),
     sa.UniqueConstraint('username')
     )
+    op.create_table('api_key',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('name', sa.String(length=100), nullable=False),
+    sa.Column('prefix', sa.String(length=12), nullable=False),
+    sa.Column('key_hash', sa.String(length=128), nullable=False),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.Column('last_used_at', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
     op.create_table('conversation',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('title', sa.String(length=200), nullable=True),
     sa.Column('folder', sa.String(length=100), nullable=True),
+    sa.Column('share_token', sa.String(length=64), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('share_token')
     )
     op.create_table('document',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -82,6 +95,7 @@ def upgrade():
     sa.Column('conversation_id', sa.Integer(), nullable=False),
     sa.Column('role', sa.String(length=20), nullable=False),
     sa.Column('content', sa.Text(), nullable=False),
+    sa.Column('image_data', sa.Text(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('document_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['conversation_id'], ['conversation.id'], ),
@@ -97,6 +111,7 @@ def downgrade():
     op.drop_table('memory')
     op.drop_table('document')
     op.drop_table('conversation')
+    op.drop_table('api_key')
     op.drop_table('user')
     op.drop_table('error_log')
     # ### end Alembic commands ###
