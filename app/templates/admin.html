@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-zinc-950 text-zinc-200 p-4 md:p-8">
+    <div class="max-w-6xl mx-auto">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center gap-4">
+                <a href="{{ url_for('main.index') }}" class="w-10 h-10 rounded-xl bg-zinc-900 hover:bg-zinc-800 flex items-center justify-center text-zinc-400 transition-colors">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <div>
+                    <h1 class="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
+                        Admin Dashboard
+                        <span class="text-[10px] font-bold px-2 py-1 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 uppercase tracking-widest">Admin</span>
+                    </h1>
+                    <p class="text-xs text-zinc-500 mt-1">System analytics and health monitoring for Irus AI.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stat Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Users</span>
+                    <i class="fas fa-users text-indigo-400 text-xs"></i>
+                </div>
+                <p class="text-2xl font-bold text-white">{{ stats.users }}</p>
+            </div>
+            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Chats</span>
+                    <i class="fas fa-comments text-purple-400 text-xs"></i>
+                </div>
+                <p class="text-2xl font-bold text-white">{{ stats.conversations }}</p>
+            </div>
+            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Messages</span>
+                    <i class="fas fa-paper-plane text-emerald-400 text-xs"></i>
+                </div>
+                <p class="text-2xl font-bold text-white">{{ stats.messages }}</p>
+            </div>
+            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Docs</span>
+                    <i class="fas fa-file-alt text-blue-400 text-xs"></i>
+                </div>
+                <p class="text-2xl font-bold text-white">{{ stats.documents }}</p>
+            </div>
+            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Memories</span>
+                    <i class="fas fa-brain text-pink-400 text-xs"></i>
+                </div>
+                <p class="text-2xl font-bold text-white">{{ stats.memories }}</p>
+            </div>
+            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Errors</span>
+                    <i class="fas fa-triangle-exclamation text-red-400 text-xs"></i>
+                </div>
+                <p class="text-2xl font-bold text-white">{{ stats.errors }}</p>
+            </div>
+        </div>
+
+        <!-- Activity Chart -->
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 mb-8">
+            <h2 class="text-sm font-semibold text-white mb-6">Message Activity (Last 7 Days)</h2>
+            <div class="flex items-end gap-3 h-40">
+                {% for d in activity %}
+                <div class="flex-1 flex flex-col items-center gap-2 h-full justify-end">
+                    <span class="text-[10px] text-zinc-500">{{ d.count }}</span>
+                    <div class="w-full rounded-t-lg bg-gradient-to-t from-indigo-600 to-purple-500 transition-all" style="height: {{ d.height }}%" title="{{ d.count }} messages"></div>
+                    <span class="text-[10px] text-zinc-500">{{ d.label }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- Most Used Documents -->
+            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+                <h2 class="text-sm font-semibold text-white mb-4">Most Used Documents</h2>
+                {% for name, uses in most_used_docs %}
+                <div class="flex items-center justify-between py-2.5 border-b border-zinc-800/60 last:border-0">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <i class="fas fa-file-alt text-indigo-400 text-xs"></i>
+                        <span class="text-xs text-zinc-300 truncate">{{ name }}</span>
+                    </div>
+                    <span class="text-[10px] font-bold text-zinc-500">{{ uses }} queries</span>
+                </div>
+                {% else %}
+                <p class="text-xs text-zinc-600 italic">No document usage yet.</p>
+                {% endfor %}
+            </div>
+
+            <!-- Error Logs -->
+            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+                <h2 class="text-sm font-semibold text-white mb-4">Recent Error Logs</h2>
+                {% for log in error_logs %}
+                <div class="py-2.5 border-b border-zinc-800/60 last:border-0">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-bold text-red-400 uppercase tracking-wider">{{ log.error_type }}</span>
+                        <span class="text-[10px] text-zinc-600">{{ log.created_at.strftime('%b %d, %H:%M') }}</span>
+                    </div>
+                    <p class="text-xs text-zinc-400 mt-1 truncate">{{ log.message }}</p>
+                </div>
+                {% else %}
+                <p class="text-xs text-zinc-600 italic">No errors logged. System is healthy! 🎉</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Recent Users -->
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+            <h2 class="text-sm font-semibold text-white mb-4">Recent Users</h2>
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest border-b border-zinc-800">
+                        <th class="pb-2">User</th>
+                        <th class="pb-2">Joined</th>
+                        <th class="pb-2 text-right">Role</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in recent_users %}
+                    <tr class="border-b border-zinc-800/60 last:border-0">
+                        <td class="py-2.5 text-xs text-zinc-300">{{ u.username }}</td>
+                        <td class="py-2.5 text-xs text-zinc-500">{{ u.created_at.strftime('%b %d, %Y') }}</td>
+                        <td class="py-2.5 text-right">
+                            {% if u.is_admin %}
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">ADMIN</span>
+                            {% else %}
+                            <span class="text-[10px] text-zinc-600">USER</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

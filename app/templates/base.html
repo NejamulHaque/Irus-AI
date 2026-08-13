@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Irus AI Pro</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <!-- HTML sanitizer -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+
+        <!-- PWA -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#6366f1">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Irus AI">
+<script>
+  (function () {
+    var saved = localStorage.getItem('theme');
+    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.setAttribute('data-theme', saved || (prefersDark ? 'dark' : 'light'));
+  })();
+</script>
+
+    <style>
+        .message-content p {
+            margin-bottom: 0.65rem;
+        }
+
+        .message-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        .message-content pre {
+            background: #09090b;
+            border: 1px solid #27272a;
+            border-radius: 0.9rem;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 0.8rem 0;
+        }
+
+        .message-content code {
+            color: #a5b4fc;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        }
+
+        .message-content ul,
+        .message-content ol {
+            padding-left: 1.25rem;
+            margin: 0.6rem 0;
+        }
+
+        .message-content ul {
+            list-style-type: disc;
+        }
+
+        .message-content ol {
+            list-style-type: decimal;
+        }
+
+        .message-content h1,
+        .message-content h2,
+        .message-content h3 {
+            font-weight: 700;
+            margin: 0.9rem 0 0.5rem;
+        }
+
+        .message-content h1 {
+            font-size: 1.25rem;
+        }
+
+        .message-content h2 {
+            font-size: 1.1rem;
+        }
+
+        .message-content h3 {
+            font-size: 1rem;
+        }
+
+        .message-content a {
+            color: #818cf8;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body class="h-full bg-zinc-950 text-zinc-100 antialiased">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="fixed top-4 right-4 z-50 space-y-2">
+                {% for category, message in messages %}
+                    <div class="px-4 py-3 rounded-xl shadow-lg text-sm
+                        {% if category == 'error' %}
+                            bg-red-600 text-white
+                        {% else %}
+                            bg-emerald-600 text-white
+                        {% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+
+</body>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(() => {});
+            });
+        }
+    </script>
+</html>

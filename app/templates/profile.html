@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-zinc-950 text-zinc-200 p-4 md:p-8 font-sans">
+    <div class="max-w-3xl mx-auto">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center gap-4">
+                <a href="{{ url_for('main.index') }}" class="w-10 h-10 rounded-xl bg-zinc-900 hover:bg-zinc-800 flex items-center justify-center text-zinc-400 transition-colors">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <h1 class="text-2xl font-bold text-white tracking-tight">Profile Settings</h1>
+            </div>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="mb-6 p-4 rounded-xl border {% if category == 'success' %}bg-emerald-950/50 border-emerald-800 text-emerald-300{% else %}bg-red-950/50 border-red-800 text-red-300{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" enctype="multipart/form-data" class="space-y-6">
+            
+            <!-- Avatar & Basic Info -->
+            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-xl">
+                <h2 class="text-lg font-semibold text-white mb-4">Public Profile</h2>
+                <div class="flex items-center gap-6 mb-6">
+                    <div class="relative group">
+                        {% if current_user.avatar %}
+                            <img src="{{ url_for('static', filename=current_user.avatar) }}" class="w-20 h-20 rounded-2xl object-cover border-2 border-zinc-700">
+                        {% else %}
+                            <div class="w-20 h-20 rounded-2xl bg-zinc-800 flex items-center justify-center text-2xl font-bold text-zinc-500 border-2 border-zinc-700">
+                                {{ current_user.username[0].upper() }}
+                            </div>
+                        {% endif %}
+                        <label for="avatar-upload" class="absolute inset-0 bg-black/60 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                            <i class="fas fa-camera text-white"></i>
+                        </label>
+                        <input type="file" id="avatar-upload" name="avatar" class="hidden" accept="image/*">
+                    </div>
+                    <div>
+                        <p class="text-white font-semibold">{{ current_user.username }}</p>
+                        <p class="text-xs text-zinc-500">Click the avatar to upload a new image.</p>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Bio</label>
+                        <textarea name="bio" rows="3" class="w-full rounded-xl bg-zinc-950 border border-zinc-800 px-4 py-3 text-sm text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Tell Irus a bit about yourself...">{{ current_user.bio or '' }}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Preferences -->
+            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-xl">
+                <h2 class="text-lg font-semibold text-white mb-4">AI Model Preferences</h2>
+                <div>
+                    <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Default Groq Model</label>
+                    <select name="preferred_model" class="w-full rounded-xl bg-zinc-950 border border-zinc-800 px-4 py-3 text-sm text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="llama-3.1-8b-instant" {% if current_user.preferred_model == 'llama-3.1-8b-instant' %}selected{% endif %}>Llama 3.1 8B (Fastest)</option>
+                        <option value="llama-3.3-70b-versatile" {% if current_user.preferred_model == 'llama-3.3-70b-versatile' %}selected{% endif %}>Llama 3.3 70B (Smartest)</option>
+                        <option value="mixtral-8x7b-32768" {% if current_user.preferred_model == 'mixtral-8x7b-32768' %}selected{% endif %}>Mixtral 8x7B (Balanced)</option>
+                        <option value="gemma2-9b-it" {% if current_user.preferred_model == 'gemma2-9b-it' %}selected{% endif %}>Gemma 2 9B (Google)</option>
+                    </select>
+                    <p class="text-xs text-zinc-600 mt-2">Note: If your AI Provider is set to Ollama in the .env file, this setting will be ignored.</p>
+                </div>
+            </div>
+
+            <!-- Security -->
+            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-xl">
+                <h2 class="text-lg font-semibold text-white mb-4">Security</h2>
+                <div>
+                    <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">New Password</label>
+                    <input type="password" name="new_password" class="w-full rounded-xl bg-zinc-950 border border-zinc-800 px-4 py-3 text-sm text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Leave blank to keep current password">
+                </div>
+            </div>
+
+            <!-- Save Button -->
+            <div class="flex justify-end">
+                <button type="submit" class="px-6 py-3 rounded-xl bg-white text-black hover:bg-zinc-200 font-semibold transition-colors shadow-lg">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

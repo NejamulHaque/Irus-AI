@@ -1,0 +1,1133 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div id="toast-container" class="fixed top-6 right-6 z-[100] flex flex-col gap-3 pointer-events-none"></div>
+
+<div class="flex h-screen overflow-hidden bg-zinc-950 text-zinc-200">
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-72 flex-col border-r border-zinc-900 bg-zinc-950 hidden md:flex">
+        <div class="p-4 border-b border-zinc-900">
+            <div class="flex items-center gap-3 mb-4">
+                <img src="{{ url_for('static', filename='icons/icon-192.png') }}" class="w-9 h-9 rounded-xl shadow-lg shadow-indigo-500/20 object-cover" alt="Irus AI">
+                <div class="flex-1">
+                    <h1 class="font-bold leading-none text-white tracking-tight">Irus AI</h1>
+                    <p class="text-[10px] text-zinc-500 mt-1 font-medium uppercase tracking-wider">Pro Assistant</p>
+                </div>
+                <button id="open-memory-btn" class="w-8 h-8 rounded-lg hover:bg-zinc-900 flex items-center justify-center text-zinc-500 hover:text-indigo-400 transition-colors" title="Memories">
+                    <i class="fas fa-brain text-sm"></i>
+                </button>
+                {% if current_user.is_admin %}
+                <a href="{{ url_for('main.admin_dashboard') }}" class="w-8 h-8 rounded-lg hover:bg-zinc-900 flex items-center justify-center text-zinc-500 hover:text-red-400 transition-colors" title="Admin Dashboard">
+                    <i class="fas fa-shield-halved text-sm"></i>
+                </a>
+                {% endif %}
+            </div>
+            <a href="{{ url_for('main.new_chat') }}" class="flex items-center justify-center gap-2 w-full bg-white text-black hover:bg-zinc-200 transition-colors font-semibold rounded-xl px-4 py-2.5 text-sm">
+                <i class="fas fa-plus"></i> New Chat
+            </a>
+        </div>
+
+        <div class="px-3 pt-4">
+            <div class="relative">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600 text-xs"></i>
+                <input id="conversation-search" type="text" placeholder="Search history..." class="w-full rounded-lg bg-zinc-900 border border-zinc-800 pl-8 pr-3 py-2 text-xs text-zinc-300 placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-700">
+            </div>
+        </div>
+
+        <!-- Documents -->
+        <div class="px-3 pt-4 border-t border-zinc-900 mt-4">
+            <div class="flex items-center justify-between mb-2 px-1">
+                <h3 class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Knowledge Base</h3>
+                <button id="upload-doc-btn" class="text-indigo-400 hover:text-indigo-300 text-[10px] font-bold flex items-center gap-1 uppercase tracking-wider">
+                    <i class="fas fa-upload"></i> Add
+                </button>
+            </div>
+            <div id="document-list" class="space-y-1 max-h-32 overflow-y-auto pr-1 custom-scrollbar">
+                <div class="text-xs text-zinc-600 italic px-1">No documents yet.</div>
+            </div>
+            <input type="file" id="file-input" class="hidden" accept=".pdf,.docx,.txt">
+        </div>
+
+        <!-- Chat History (grouped by folders) -->
+        <div id="conversation-list" class="flex-1 overflow-y-auto p-3 mt-2 custom-scrollbar">
+            <div id="folders-container"></div>
+            <div id="no-search-results" class="hidden text-xs text-zinc-600 px-2 py-3">No chats found.</div>
+        </div>
+
+        <!-- Footer -->
+        <div class="p-4 border-t border-zinc-900">
+            <a href="{{ url_for('main.profile') }}" class="flex items-center justify-between group hover:bg-zinc-900 p-2 -m-2 rounded-xl transition-colors">
+                <div class="flex items-center gap-3">
+                        {% if current_user.avatar %}
+                        <img src="{% if current_user.avatar.startswith('data:') %}{{ current_user.avatar }}{% else %}{{ url_for('static', filename=current_user.avatar) }}{% endif %}" class="w-8 h-8 rounded-full object-cover border border-zinc-700">
+                    {% else %}
+                        <div class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs font-bold text-zinc-400 border border-zinc-700">
+                            {{ current_user.username[0].upper() }}
+                        </div>
+                    {% endif %}
+                    <div class="flex flex-col">
+                        <span class="text-xs font-semibold text-zinc-300 group-hover:text-white transition-colors">{{ current_user.username }}</span>
+                        <span class="text-[10px] text-zinc-600">Manage Profile</span>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right text-zinc-700 text-[10px] group-hover:text-zinc-400 transition-colors"></i>
+            </a>
+            <div class="mt-3 pt-3 border-t border-zinc-900 flex items-center justify-between">
+                <button id="open-support-btn" class="flex items-center gap-2 text-xs text-zinc-600 hover:text-amber-400 transition-colors px-2">
+                    <i class="fas fa-mug-hot"></i> Support
+                </button>
+                <a href="{{ url_for('main.logout') }}" class="flex items-center gap-2 text-xs text-zinc-600 hover:text-red-400 transition-colors px-2">
+                    <i class="fas fa-sign-out-alt"></i> Log out
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="flex-1 flex flex-col min-w-0 relative bg-zinc-950">
+
+        <!-- Drag & Drop Overlay -->
+        <div id="drag-overlay" class="hidden absolute inset-0 z-[60] bg-indigo-600/20 backdrop-blur-sm border-2 border-dashed border-indigo-500 flex-col items-center justify-center pointer-events-none">
+            <i class="fas fa-file-upload text-4xl text-indigo-400 mb-3"></i>
+            <p class="text-sm font-semibold text-white">Drop your document to upload</p>
+        </div>
+
+        <header class="h-14 border-b border-zinc-900 bg-zinc-950/80 backdrop-blur-md flex items-center justify-between px-4 md:px-6 z-10">
+            <div class="flex items-center gap-3 min-w-0">
+                <button id="sidebar-toggle" class="md:hidden w-8 h-8 rounded-lg hover:bg-zinc-900 flex items-center justify-center text-zinc-400"><i class="fas fa-bars"></i></button>
+                <h2 id="conversation-title" class="font-semibold text-sm text-zinc-300 truncate">{{ conversation.title }}</h2>
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="theme-toggle" class="w-8 h-8 rounded-lg hover:bg-zinc-900 flex items-center justify-center text-zinc-500 hover:text-white transition-colors" title="Toggle theme">
+                    <i class="fas fa-sun text-xs sun-icon"></i>
+                    <i class="fas fa-moon text-xs moon-icon"></i>
+                </button>
+                <button id="export-chat-btn" class="w-8 h-8 rounded-lg hover:bg-zinc-900 flex items-center justify-center text-zinc-500 hover:text-white transition-colors" title="Export chat as Markdown"><i class="fas fa-download text-xs"></i></button>
+                <span class="text-[10px] font-bold text-zinc-600 uppercase tracking-widest hidden sm:block">Model:</span>
+                <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest hidden sm:block">{{ config.get('AI_PROVIDER', 'groq') }}</span>
+            </div>
+        </header>
+
+        <div id="chat-box" class="flex-1 overflow-y-auto px-4 md:px-8 py-6 pb-48 space-y-8 custom-scrollbar">
+            {% for message in messages %}
+                <div class="message-row group flex gap-4 max-w-4xl mx-auto {% if message.role == 'user' %}justify-end{% else %}justify-start{% endif %}"
+                     data-message-id="{{ message.id }}" data-role="{{ message.role }}">
+                    {% if message.role == 'assistant' %}
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-indigo-500/10 mt-1"><i class="fas fa-robot text-white text-xs"></i></div>
+                    {% endif %}
+                    <div class="flex flex-col max-w-[85%] md:max-w-[75%]">
+                        <div class="px-4 py-3 rounded-2xl {% if message.role == 'user' %}bg-indigo-600 text-white rounded-br-sm{% else %}bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-bl-sm{% endif %}">
+                            <div class="message-content text-sm leading-relaxed" data-content="{{ message.content | e }}"></div>
+                        </div>
+                    </div>
+                    {% if message.role == 'user' %}
+                    <div class="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center flex-shrink-0 mt-1 text-xs font-bold text-zinc-400">{{ current_user.username[0].upper() }}</div>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div id="empty-state" class="h-full flex flex-col items-center justify-center px-4">
+                    <img src="{{ url_for('static', filename='icons/icon-192.png') }}" class="w-16 h-16 rounded-2xl mb-6 shadow-xl shadow-indigo-500/20 object-cover" alt="Irus AI">
+                    <h3 class="text-2xl font-bold text-white mb-2 tracking-tight">How can I help you today?</h3>
+                    <p class="text-sm text-zinc-500 mb-8 text-center max-w-md">Type <span class="text-indigo-400 font-bold">/</span> for commands, or press <span class="text-indigo-400 font-bold">Ctrl+K</span> for the palette.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-2xl w-full">
+                        <button onclick="usePrompt('Explain quantum computing in simple terms')" class="text-left p-4 rounded-2xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-800/60 hover:border-zinc-700 transition-all group">
+                            <div class="flex items-center gap-2 text-zinc-500 mb-2 group-hover:text-indigo-400 transition-colors"><i class="fas fa-graduation-cap"></i><span class="text-[10px] font-bold uppercase tracking-wider">Learn</span></div>
+                            <p class="text-sm text-zinc-300 font-medium">Explain quantum computing in simple terms.</p>
+                        </button>
+                        <button onclick="usePrompt('Write a Python script to scrape a website using BeautifulSoup')" class="text-left p-4 rounded-2xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-800/60 hover:border-zinc-700 transition-all group">
+                            <div class="flex items-center gap-2 text-zinc-500 mb-2 group-hover:text-emerald-400 transition-colors"><i class="fas fa-code"></i><span class="text-[10px] font-bold uppercase tracking-wider">Code</span></div>
+                            <p class="text-sm text-zinc-300 font-medium">Write a Python script to scrape a website.</p>
+                        </button>
+                        <button onclick="usePrompt('Search the web for the latest AI news today')" class="text-left p-4 rounded-2xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-800/60 hover:border-zinc-700 transition-all group">
+                            <div class="flex items-center gap-2 text-zinc-500 mb-2 group-hover:text-blue-400 transition-colors"><i class="fas fa-globe"></i><span class="text-[10px] font-bold uppercase tracking-wider">Search</span></div>
+                            <p class="text-sm text-zinc-300 font-medium">Search the web for the latest AI news today.</p>
+                        </button>
+                        <button onclick="usePrompt('Summarize the uploaded document into 5 key bullet points')" class="text-left p-4 rounded-2xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-800/60 hover:border-zinc-700 transition-all group">
+                            <div class="flex items-center gap-2 text-zinc-500 mb-2 group-hover:text-purple-400 transition-colors"><i class="fas fa-file-alt"></i><span class="text-[10px] font-bold uppercase tracking-wider">Analyze</span></div>
+                            <p class="text-sm text-zinc-300 font-medium">Summarize my document into 5 key bullet points.</p>
+                        </button>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Scroll to bottom -->
+        <button id="scroll-bottom-btn" class="hidden absolute bottom-44 left-1/2 -translate-x-1/2 z-20 w-9 h-9 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-white shadow-xl items-center justify-center transition-all" title="Jump to latest">
+            <i class="fas fa-arrow-down text-xs"></i>
+        </button>
+
+        <!-- Floating Input -->
+        <div class="absolute bottom-0 left-0 right-0 p-4 md:p-6 bg-gradient-to-t from-zinc-950 via-zinc-950/95 to-transparent pointer-events-none flex justify-center">
+            <div class="max-w-3xl w-full pointer-events-auto relative">
+
+                <!-- Slash Command Menu -->
+                <div id="slash-menu" class="hidden absolute bottom-full mb-3 left-0 right-0 z-30 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden">
+                    <div class="px-4 py-2 text-[10px] font-bold text-zinc-500 uppercase tracking-widest border-b border-zinc-800">Commands</div>
+                    <div id="slash-menu-list" class="p-2 space-y-1 max-h-64 overflow-y-auto custom-scrollbar"></div>
+                </div>
+
+                <div class="relative bg-zinc-900 border border-zinc-800 rounded-3xl shadow-2xl shadow-black/50 backdrop-blur-xl p-2 flex items-end gap-2 focus-within:border-zinc-700 transition-all">
+                    <button id="upload-doc-btn-mobile" class="w-10 h-10 rounded-full hover:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-indigo-400 transition-colors flex-shrink-0 mb-0.5" title="Upload Document"><i class="fas fa-paperclip"></i></button>
+                    <textarea id="message-input" rows="1" placeholder='Message Irus... ( type "/" for commands )' class="flex-1 bg-transparent border-none px-2 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none resize-none max-h-40 custom-scrollbar"></textarea>
+                    <button id="mic-btn" class="w-10 h-10 rounded-full hover:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-indigo-400 transition-colors flex-shrink-0 mb-0.5" title="Voice Input"><i class="fas fa-microphone"></i></button>
+                    <button id="web-search-btn" class="w-10 h-10 rounded-full hover:bg-zinc-800 flex items-center justify-center text-zinc-500 transition-colors flex-shrink-0 mb-0.5" title="Search the live web"><i class="fas fa-globe"></i></button>
+                    <button id="stop-btn" class="hidden w-10 h-10 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500/30 flex items-center justify-center flex-shrink-0 mb-0.5 transition-colors" title="Stop"><i class="fas fa-stop text-xs"></i></button>
+                    <button id="send-btn" class="w-10 h-10 rounded-full bg-white text-black hover:bg-zinc-200 flex items-center justify-center flex-shrink-0 mb-0.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed" title="Send" disabled><i class="fas fa-arrow-up text-xs font-bold"></i></button>
+                </div>
+                <p class="text-center text-[10px] text-zinc-600 mt-3 font-medium">Irus AI can make mistakes. Verify important information.</p>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Command Palette -->
+<div id="command-palette" class="hidden fixed inset-0 z-[110] bg-black/70 backdrop-blur-sm flex items-start justify-center pt-[15vh] p-4">
+    <div class="w-full max-w-lg bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden">
+        <div class="flex items-center gap-3 px-4 border-b border-zinc-800">
+            <i class="fas fa-terminal text-indigo-400 text-sm"></i>
+            <input id="palette-input" type="text" placeholder="Type a command..." class="flex-1 bg-transparent py-4 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none">
+            <kbd class="text-[10px] text-zinc-600 border border-zinc-700 rounded px-1.5 py-0.5">ESC</kbd>
+        </div>
+        <div id="palette-list" class="p-2 space-y-1 max-h-72 overflow-y-auto custom-scrollbar"></div>
+    </div>
+</div>
+
+<!-- Rename Modal -->
+<div id="rename-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-2xl">
+        <h3 class="font-semibold text-lg text-white mb-4">Rename Chat</h3>
+        <input id="rename-input" type="text" maxlength="120" class="w-full rounded-xl bg-zinc-800 border border-zinc-700 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-4">
+        <div class="flex justify-end gap-3">
+            <button id="rename-cancel" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-sm text-zinc-300">Cancel</button>
+            <button id="rename-save" class="px-4 py-2 rounded-xl bg-white text-black hover:bg-zinc-200 text-sm font-semibold">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- Folder Modal -->
+<div id="folder-modal" class="hidden fixed inset-0 z-[110] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-2xl">
+        <h3 class="text-lg font-bold text-white mb-1">Move to Folder</h3>
+        <p class="text-xs text-zinc-500 mb-4">Leave empty to move back to Uncategorized.</p>
+        <input id="folder-input" type="text" maxlength="40" placeholder="e.g. Work, Research, Personal" class="w-full rounded-xl bg-zinc-800 border border-zinc-700 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-3">
+        <div id="folder-suggestions" class="flex flex-wrap gap-2 mb-4"></div>
+        <div class="flex justify-end gap-3">
+            <button id="folder-cancel" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-sm text-zinc-300">Cancel</button>
+            <button id="folder-save" class="px-4 py-2 rounded-xl bg-white text-black hover:bg-zinc-200 text-sm font-semibold">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- Memory Modal -->
+<div id="memory-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div class="w-full max-w-lg bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-2xl max-h-[80vh] flex flex-col">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-lg flex items-center gap-2 text-white"><i class="fas fa-brain text-indigo-400"></i> Long-Term Memory</h3>
+            <button id="memory-close" class="text-zinc-500 hover:text-white"><i class="fas fa-xmark"></i></button>
+        </div>
+        <p class="text-xs text-zinc-500 mb-4">Irus remembers these facts across all conversations. Or type "Remember [fact]" in chat.</p>
+        <div class="flex gap-2 mb-4">
+            <input id="new-memory-input" type="text" placeholder="e.g., I prefer concise answers" class="flex-1 rounded-xl bg-zinc-800 border border-zinc-700 px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <button id="add-memory-btn" class="px-4 py-2 rounded-xl bg-white text-black hover:bg-zinc-200 text-sm font-semibold">Add</button>
+        </div>
+        <div id="memory-list" class="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar"></div>
+    </div>
+</div>
+
+<!-- Developer Support Modal -->
+<div id="support-modal" class="hidden fixed inset-0 z-[120] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-8 shadow-2xl text-center">
+        <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center mb-4 shadow-lg shadow-pink-500/20">
+            <i class="fas fa-mug-hot text-white"></i>
+        </div>
+        <h3 class="text-lg font-bold text-white">Support the Developer</h3>
+        <p class="text-xs text-zinc-500 mt-2 mb-6 leading-relaxed">Irus AI is free for everyone, forever.<br>If it helps you, consider fueling its development ☕</p>
+
+        <div class="p-4 rounded-2xl bg-zinc-950 border border-zinc-800 mb-3 flex items-center justify-between gap-3">
+            <div class="text-left min-w-0">
+                <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">UPI ID</p>
+                <p class="text-sm text-zinc-200 font-mono truncate">nejamulhaque@upi</p>
+            </div>
+            <button id="copy-upi-btn" class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-[10px] font-bold text-zinc-300 uppercase tracking-wider transition-colors flex-shrink-0">Copy</button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 mb-4">
+            <a href="upi://pay?pa=nejamulhaque@upi&pn=Nejamul%20Haque" class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-colors">
+                <i class="fas fa-indian-rupee-sign text-xs"></i> Pay via UPI
+            </a>
+            <a href="https://www.buymeacoffee.com/nejamulhaque" target="_blank" rel="noopener" class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-sm font-semibold transition-colors">
+                <i class="fas fa-mug-hot text-xs"></i> Coffee
+            </a>
+        </div>
+
+        <button id="support-close" class="text-xs text-zinc-600 hover:text-zinc-300 transition-colors">Maybe later</button>
+    </div>
+</div>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+<style>
+    body { font-family: 'Inter', sans-serif; }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
+    .message-content p { margin-bottom: 0.75rem; line-height: 1.6; }
+    .message-content p:last-child { margin-bottom: 0; }
+    .message-content ul, .message-content ol { padding-left: 1.5rem; margin: 0.75rem 0; }
+    .message-content ul { list-style-type: disc; }
+    .message-content ol { list-style-type: decimal; }
+    .message-content h1, .message-content h2, .message-content h3 { font-weight: 600; margin: 1.25rem 0 0.5rem; color: #fff; }
+    .message-content a { color: #818cf8; text-decoration: underline; text-underline-offset: 2px; }
+    .message-content strong { color: #fff; }
+    .message-content pre { background: #09090b !important; border: 1px solid #27272a; border-radius: 0.75rem; padding: 1rem; overflow-x: auto; margin: 1rem 0; font-size: 0.85rem; }
+    .message-content code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem; }
+    .message-content p code { background: #27272a; padding: 0.15rem 0.4rem; border-radius: 0.25rem; color: #f472b6; font-size: 0.8rem; }
+    .message-content table { width: 100%; border-collapse: collapse; margin: 0.75rem 0; font-size: 0.8rem; }
+    .message-content th, .message-content td { border: 1px solid #27272a; padding: 0.5rem 0.75rem; text-align: left; }
+    .message-content th { background: #18181b; color: #fff; font-weight: 600; }
+    .message-content tr:nth-child(even) { background: #09090b; }
+    .message-content img { max-width: 100%; border-radius: 0.75rem; margin: 0.5rem 0; border: 1px solid #27272a; }
+    .doc-item { display: flex; align-items: center; justify-content: space-between; padding: 0.4rem 0.5rem; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s; font-size: 0.75rem; color: #a1a1aa; }
+    .doc-item:hover { background-color: #18181b; color: #fff; }
+    .doc-item.active { background-color: rgba(99, 102, 241, 0.1); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.2); }
+    .editing .message-actions { display: none !important; }
+    [data-theme="dark"] .moon-icon { display: none; }
+    [data-theme="light"] .sun-icon { display: none; }
+    @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.7); } 70% { box-shadow: 0 0 0 10px rgba(239,68,68,0); } 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); } }
+    .listening { animation: pulse-red 1.5s infinite; background-color: rgba(239,68,68,0.2) !important; color: #ef4444 !important; }
+</style>
+
+<script>
+    const conversationId = "{{ conversation.id }}";
+    const isAdmin = {{ 'true' if current_user.is_admin else 'false' }};
+    const chatBox = document.getElementById("chat-box");
+    const input = document.getElementById("message-input");
+    const sendBtn = document.getElementById("send-btn");
+    const stopBtn = document.getElementById("stop-btn");
+    const micBtn = document.getElementById("mic-btn");
+    const webSearchBtn = document.getElementById("web-search-btn");
+    const scrollBtn = document.getElementById("scroll-bottom-btn");
+    const dragOverlay = document.getElementById("drag-overlay");
+    const slashMenu = document.getElementById("slash-menu");
+    const slashList = document.getElementById("slash-menu-list");
+    const palette = document.getElementById("command-palette");
+    const paletteInput = document.getElementById("palette-input");
+    const paletteList = document.getElementById("palette-list");
+    const foldersContainer = document.getElementById("folders-container");
+
+    let isStreaming = false;
+    let controller = null;
+    let activeDocumentId = null;
+    let renameConversationId = null;
+    let folderTargetId = null;
+    let webSearchEnabled = false;
+    let imageMode = false;
+    let stickToBottom = true;
+
+    // ---------- TOASTS ----------
+    function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl border text-sm font-medium transition-all duration-300 transform translate-x-10 opacity-0 pointer-events-auto ${
+            type === 'success' ? 'bg-emerald-950/90 border-emerald-800 text-emerald-200' :
+            type === 'error' ? 'bg-red-950/90 border-red-800 text-red-200' : 'bg-zinc-900 border-zinc-800 text-zinc-200'
+        }`;
+        toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle text-emerald-400' : type === 'error' ? 'fa-exclamation-circle text-red-400' : 'fa-info-circle text-blue-400'}"></i> ${message}`;
+        document.getElementById('toast-container').appendChild(toast);
+        requestAnimationFrame(() => toast.classList.remove('translate-x-10', 'opacity-0'));
+        setTimeout(() => { toast.classList.add('translate-x-10', 'opacity-0'); setTimeout(() => toast.remove(), 300); }, 3000);
+    }
+
+    // ---------- THEME TOGGLE ----------
+    const themeToggleBtn = document.getElementById("theme-toggle");
+    if (themeToggleBtn) {
+        themeToggleBtn.addEventListener("click", () => {
+            const current = document.documentElement.getAttribute("data-theme") || "dark";
+            const next = current === "dark" ? "light" : "dark";
+            document.documentElement.setAttribute("data-theme", next);
+            localStorage.setItem("theme", next);
+            showToast(`Switched to ${next} mode`, "info");
+        });
+    }
+
+    // ---------- MARKDOWN ----------
+    if (window.marked) marked.setOptions({ breaks: true, gfm: true });
+
+    function renderMarkdown(element, text) {
+        if (window.marked && window.DOMPurify) {
+            element.innerHTML = DOMPurify.sanitize(marked.parse(text || ""));
+        } else { element.textContent = text || ""; }
+
+        element.querySelectorAll('pre code').forEach(block => { if (window.hljs) hljs.highlightElement(block); });
+
+        element.querySelectorAll('pre').forEach(pre => {
+            if (pre.parentElement.classList.contains('code-wrapper')) return;
+            const wrapper = document.createElement('div');
+            wrapper.className = 'code-wrapper relative group my-3';
+            pre.parentNode.insertBefore(wrapper, pre);
+            wrapper.appendChild(pre);
+            const btn = document.createElement('button');
+            btn.className = 'absolute top-3 right-3 px-2 py-1 rounded-md bg-zinc-800 text-zinc-400 opacity-0 group-hover:opacity-100 transition-all hover:text-white text-[10px] font-bold uppercase tracking-wider border border-zinc-700';
+            btn.innerHTML = '<i class="fas fa-copy mr-1"></i> Copy';
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                navigator.clipboard.writeText(pre.innerText);
+                btn.innerHTML = '<i class="fas fa-check mr-1 text-emerald-400"></i> Copied';
+                showToast('Code copied to clipboard!', 'success');
+                setTimeout(() => btn.innerHTML = '<i class="fas fa-copy mr-1"></i> Copy', 2000);
+            };
+            wrapper.appendChild(btn);
+        });
+    }
+
+    // ---------- SMART SCROLL ----------
+    chatBox.addEventListener("scroll", () => {
+        const dist = chatBox.scrollHeight - chatBox.scrollTop - chatBox.clientHeight;
+        stickToBottom = dist < 150;
+        scrollBtn.classList.toggle("hidden", dist < 200);
+        scrollBtn.classList.toggle("flex", dist >= 200);
+    });
+    scrollBtn.addEventListener("click", () => { chatBox.scrollTop = chatBox.scrollHeight; });
+
+    function scrollToBottom(force = false) {
+        if (force || stickToBottom) chatBox.scrollTop = chatBox.scrollHeight;
+    }
+    function removeEmptyState() { const e = document.getElementById("empty-state"); if (e) e.remove(); }
+    function autoResizeTextarea() {
+        input.style.height = "auto";
+        input.style.height = Math.min(input.scrollHeight, 160) + "px";
+        sendBtn.disabled = input.value.trim() === "";
+    }
+    function usePrompt(text) { input.value = text; autoResizeTextarea(); input.focus(); }
+    function escapeHtml(str) {
+        const div = document.createElement("div");
+        div.textContent = str || "";
+        return div.innerHTML;
+    }
+
+    function addMessageActions(row) {
+        if (row.querySelector(".message-actions")) return;
+        const role = row.dataset.role;
+        const actions = document.createElement("div");
+        actions.className = "message-actions flex items-center gap-3 mt-2 opacity-0 group-hover:opacity-100 transition-opacity";
+        if (role === "user") {
+            actions.innerHTML = `<button class="edit-message-btn text-zinc-600 hover:text-zinc-300 text-[10px] font-bold uppercase tracking-wider"><i class="fas fa-pen mr-1"></i>Edit</button>`;
+        } else {
+            actions.innerHTML = `
+                <button class="speak-message-btn text-zinc-600 hover:text-zinc-300 text-[10px] font-bold uppercase tracking-wider"><i class="fas fa-volume-up mr-1"></i>Read</button>
+                <button class="regenerate-message-btn text-zinc-600 hover:text-zinc-300 text-[10px] font-bold uppercase tracking-wider"><i class="fas fa-rotate mr-1"></i>Retry</button>`;
+        }
+        actions.innerHTML += `<button class="copy-message-btn text-zinc-600 hover:text-zinc-300 text-[10px] font-bold uppercase tracking-wider"><i class="fas fa-copy mr-1"></i>Copy</button>`;
+        const col = row.querySelector(".flex.flex-col");
+        if (col) col.appendChild(actions);
+    }
+
+    function addMeta(row, seconds) {
+        if (!row) return;
+        const col = row.querySelector(".flex.flex-col");
+        if (!col || col.querySelector(".message-meta")) return;
+        const m = document.createElement("div");
+        m.className = "message-meta text-[10px] text-zinc-600 mt-1.5";
+        m.innerHTML = `<i class="fas fa-bolt text-indigo-500/70"></i> ${seconds.toFixed(1)}s · Irus`;
+        col.appendChild(m);
+    }
+
+    function appendMessage(role, content = "", messageId = null) {
+        removeEmptyState();
+        const row = document.createElement("div");
+        row.className = `message-row group flex gap-4 max-w-4xl mx-auto ${role === "user" ? "justify-end" : "justify-start"}`;
+        row.dataset.role = role;
+        if (messageId) row.dataset.messageId = messageId;
+
+        const aiAvatar = `<div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-indigo-500/10 mt-1"><i class="fas fa-robot text-white text-xs"></i></div>`;
+        const userAvatar = `<div class="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center flex-shrink-0 mt-1 text-xs font-bold text-zinc-400">{{ current_user.username[0].upper() }}</div>`;
+        const bubbleClass = role === "user" ? "bg-indigo-600 text-white rounded-br-sm" : "bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-bl-sm";
+
+        row.innerHTML = `
+            ${role === "assistant" ? aiAvatar : ""}
+            <div class="flex flex-col max-w-[85%] md:max-w-[75%]">
+                <div class="px-4 py-3 rounded-2xl ${bubbleClass}">
+                    <div class="message-content text-sm leading-relaxed"></div>
+                </div>
+            </div>
+            ${role === "user" ? userAvatar : ""}`;
+
+        const contentElement = row.querySelector(".message-content");
+        contentElement.dataset.content = content;
+        if (content) renderMarkdown(contentElement, content);
+        addMessageActions(row);
+        chatBox.appendChild(row);
+        scrollToBottom(true);
+        return { row, contentElement };
+    }
+
+    function removeMessagesFrom(messageId, include = false) {
+        const rows = Array.from(chatBox.querySelectorAll(".message-row[data-message-id]"));
+        const index = rows.findIndex(r => r.dataset.messageId == messageId);
+        if (index === -1) return;
+        rows.slice(include ? index : index + 1).forEach(r => r.remove());
+    }
+
+    function setStreaming(active) {
+        isStreaming = active;
+        sendBtn.classList.toggle("hidden", active);
+        stopBtn.classList.toggle("hidden", !active);
+    }
+
+    // ---------- FOLLOW-UP SUGGESTIONS ----------
+    function removeFollowUps() { document.querySelectorAll(".followup-row").forEach(el => el.remove()); }
+    function showFollowUps(lastUserText) {
+        removeFollowUps();
+        const topic = lastUserText.replace(/\s+/g, ' ').trim().split(' ').slice(0, 6).join(' ');
+        if (!topic) return;
+        const suggestions = [
+            `Tell me more about ${topic}`,
+            'Give me a practical example',
+            'Explain it in simpler terms'
+        ];
+        const row = document.createElement("div");
+        row.className = "followup-row flex flex-wrap gap-2 max-w-4xl mx-auto";
+        suggestions.forEach(s => {
+            const b = document.createElement("button");
+            b.className = "px-3 py-1.5 rounded-full border border-zinc-800 bg-zinc-900/60 text-xs text-zinc-400 hover:text-white hover:border-indigo-500/50 transition-colors";
+            b.textContent = s;
+            b.onclick = () => { removeFollowUps(); sendChat({ mode: "send", message: s }); };
+            row.appendChild(b);
+        });
+        chatBox.appendChild(row);
+        scrollToBottom(true);
+    }
+
+    // ---------- WEB SEARCH SOURCES ----------
+    function renderSources(contentElement, sources) {
+        const bubble = contentElement.parentNode;
+        if (bubble.querySelector(".sources-row")) return;
+        const row = document.createElement("div");
+        row.className = "sources-row flex flex-wrap gap-2 mb-3";
+        sources.forEach(s => {
+            const a = document.createElement("a");
+            a.href = s.url; a.target = "_blank"; a.rel = "noopener"; a.title = s.title;
+            a.className = "flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-800/80 border border-zinc-700 text-[10px] font-medium text-zinc-400 hover:text-white hover:border-indigo-500/50 transition-colors max-w-[180px]";
+            a.innerHTML = `<i class="fas fa-globe text-indigo-400 flex-shrink-0"></i><span class="truncate">${escapeHtml(s.title)}</span>`;
+            row.appendChild(a);
+        });
+        bubble.insertBefore(row, contentElement);
+    }
+
+    // ---------- IMAGE MODE ----------
+    function toggleImageMode() {
+        imageMode = !imageMode;
+        input.placeholder = imageMode ? "Describe the image you want to create..." : 'Message Irus... ( type "/" for commands )';
+        showToast(imageMode ? "Image generation enabled 🎨" : "Image generation disabled", "info");
+    }
+
+    webSearchBtn.addEventListener("click", () => {
+        webSearchEnabled = !webSearchEnabled;
+        webSearchBtn.classList.toggle("text-indigo-400", webSearchEnabled);
+        webSearchBtn.classList.toggle("bg-indigo-500/10", webSearchEnabled);
+        webSearchBtn.classList.toggle("text-zinc-500", !webSearchEnabled);
+        showToast(webSearchEnabled ? "Web search enabled" : "Web search disabled", "info");
+    });
+
+    // ---------- CHAT ENGINE ----------
+    async function sendChat({ mode = "send", message = "", message_id = null }) {
+        if (isStreaming) return;
+        removeFollowUps();
+        const streamStart = performance.now();
+        let userRow = null;
+        let aiContentElement = null;
+        let aiRow = null;
+
+        if (mode === "send") {
+            if (!message) return;
+            const u = appendMessage("user", message);
+            userRow = u.row;
+            const a = appendMessage("assistant", "");
+            aiRow = a.row; aiContentElement = a.contentElement;
+            aiContentElement.innerHTML = '<div class="flex gap-1.5 py-2 px-1"><div class="w-2 h-2 bg-zinc-600 rounded-full animate-bounce"></div><div class="w-2 h-2 bg-zinc-600 rounded-full animate-bounce" style="animation-delay:150ms"></div><div class="w-2 h-2 bg-zinc-600 rounded-full animate-bounce" style="animation-delay:300ms"></div></div>';
+        } else {
+            const a = appendMessage("assistant", "");
+            aiRow = a.row; aiContentElement = a.contentElement;
+            aiContentElement.innerHTML = '<div class="flex gap-1.5 py-2 px-1"><div class="w-2 h-2 bg-zinc-600 rounded-full animate-bounce"></div></div>';
+        }
+
+        setStreaming(true);
+        controller = new AbortController();
+        let aiText = "";
+
+        try {
+            const response = await fetch(`/chat/${conversationId}/stream`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ mode, message, message_id, document_id: activeDocumentId, web_search: webSearchEnabled, image_mode: imageMode }),
+                signal: controller.signal
+            });
+
+            if (!response.ok) {
+                let err = "Request failed.";
+                try { err = (await response.json()).error || err; } catch (e) {}
+                throw new Error(err);
+            }
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = "";
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+                const parts = buffer.split("\n\n");
+                buffer = parts.pop();
+                for (const part of parts) {
+                    if (!part.trim() || !part.startsWith("data:")) continue;
+                    try {
+                        const payload = JSON.parse(part.slice(5).trim());
+                        if (payload.type === "meta" && payload.user_message_id && userRow) userRow.dataset.messageId = payload.user_message_id;
+                        if (payload.type === "meta" && payload.sources && payload.sources.length && aiContentElement) renderSources(aiContentElement, payload.sources);
+                        if (payload.type === "chunk") { aiText += payload.content; renderMarkdown(aiContentElement, aiText); scrollToBottom(); }
+                        if (payload.type === "done" && payload.assistant_message_id && aiRow) aiRow.dataset.messageId = payload.assistant_message_id;
+                    } catch (e) {}
+                }
+            }
+            renderMarkdown(aiContentElement, aiText);
+        } catch (error) {
+            if (error.name !== "AbortError") { renderMarkdown(aiContentElement, `**Error:** ${error.message}`); showToast(error.message, 'error'); }
+            else if (aiText) renderMarkdown(aiContentElement, aiText);
+        } finally {
+            setStreaming(false);
+            controller = null;
+            addMeta(aiRow, (performance.now() - streamStart) / 1000);
+            const lastUser = Array.from(chatBox.querySelectorAll('.message-row[data-role="user"]')).pop();
+            if (lastUser && aiText) showFollowUps(lastUser.querySelector(".message-content").dataset.content || "");
+        }
+    }
+
+    // ---------- EDIT ----------
+    function startEdit(row) {
+        if (isStreaming) return;
+        const messageId = row.dataset.messageId;
+        if (!messageId) { showToast("Reload the page to edit this message.", "error"); return; }
+        const contentElement = row.querySelector(".message-content");
+        const original = contentElement.dataset.content || "";
+        row.classList.add("editing");
+        contentElement.innerHTML = "";
+        const ta = document.createElement("textarea");
+        ta.rows = 3; ta.value = original;
+        ta.className = "w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500";
+        const editActions = document.createElement("div");
+        editActions.className = "flex gap-2 mt-2";
+        editActions.innerHTML = `
+            <button class="save-edit-btn px-3 py-1.5 rounded-lg bg-white text-black text-xs font-bold">Save</button>
+            <button class="cancel-edit-btn px-3 py-1.5 rounded-lg bg-zinc-800 text-zinc-300 text-xs font-bold">Cancel</button>`;
+        contentElement.appendChild(ta);
+        contentElement.appendChild(editActions);
+        ta.focus();
+    }
+    function cancelEdit(row) {
+        const contentElement = row.querySelector(".message-content");
+        renderMarkdown(contentElement, contentElement.dataset.content || "");
+        row.classList.remove("editing");
+    }
+    function saveEdit(row) {
+        const ta = row.querySelector("textarea");
+        if (!ta) return;
+        const newText = ta.value.trim();
+        if (!newText) return;
+        const messageId = row.dataset.messageId;
+        const contentElement = row.querySelector(".message-content");
+        contentElement.dataset.content = newText;
+        renderMarkdown(contentElement, newText);
+        row.classList.remove("editing");
+        removeMessagesFrom(messageId, false);
+        sendChat({ mode: "edit", message: newText, message_id: messageId });
+    }
+
+    // ---------- EXPORT CHAT ----------
+    function exportChat() {
+        const title = document.getElementById('conversation-title').textContent || 'chat';
+        let md = `# ${title}\n\n_Exported from Irus AI on ${new Date().toLocaleString()}_\n\n`;
+        document.querySelectorAll('#chat-box .message-row').forEach(row => {
+            const role = row.dataset.role === 'user' ? '👤 User' : '🤖 Irus AI';
+            const text = row.querySelector('.message-content').dataset.content || '';
+            md += `### ${role}\n\n${text}\n\n---\n\n`;
+        });
+        const blob = new Blob([md], { type: 'text/markdown' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `irus-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.md`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        showToast('Chat exported as Markdown!', 'success');
+    }
+    document.getElementById('export-chat-btn').addEventListener('click', exportChat);
+
+    // ---------- FOLDERS ----------
+    async function loadConversations() {
+        try {
+            const res = await fetch("/chat/history");
+            const data = await res.json();
+            renderConversations(data.conversations || []);
+        } catch (e) { console.error(e); }
+    }
+
+    function renderConversations(conversations) {
+        foldersContainer.innerHTML = "";
+
+        const grouped = {};
+        conversations.forEach(conv => {
+            const folder = conv.folder || "Uncategorized";
+            if (!grouped[folder]) grouped[folder] = [];
+            grouped[folder].push(conv);
+        });
+
+        const folders = Object.keys(grouped).sort((a, b) => {
+            if (a === "Uncategorized") return 1;
+            if (b === "Uncategorized") return -1;
+            return a.localeCompare(b);
+        });
+
+        folders.forEach(folderName => {
+            const group = document.createElement("div");
+            group.className = "folder-group mb-3";
+
+            const header = document.createElement("div");
+            header.className = "flex items-center justify-between px-2 mb-1";
+            header.innerHTML = `
+                <span class="flex items-center gap-2 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+                    <i class="fas ${folderName === "Uncategorized" ? "fa-inbox" : "fa-folder"} text-xs"></i>
+                    ${escapeHtml(folderName)}
+                    <span class="text-zinc-600 font-normal">(${grouped[folderName].length})</span>
+                </span>
+                ${folderName !== "Uncategorized" ? `<button class="delete-folder-btn text-zinc-600 hover:text-red-400 transition-colors" data-folder="${escapeHtml(folderName)}" title="Delete folder"><i class="fas fa-trash text-[10px]"></i></button>` : ""}
+            `;
+            group.appendChild(header);
+
+            grouped[folderName].forEach(conv => {
+                const item = document.createElement("div");
+                item.className = `conversation-item group flex items-center gap-1 rounded-lg px-2 py-1.5 ${conv.id == conversationId ? "bg-zinc-900" : "hover:bg-zinc-900/60"}`;
+                item.dataset.conversationId = conv.id;
+                item.dataset.title = conv.title;
+                item.innerHTML = `
+                    <a href="/chat/${conv.id}" class="conversation-title flex-1 min-w-0 px-1 py-1 text-xs text-zinc-400 hover:text-zinc-200 truncate">${escapeHtml(conv.title)}</a>
+                    <button type="button" class="move-to-folder-btn opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-indigo-400 px-1 transition-opacity" title="Move to folder"><i class="fas fa-folder-plus text-[10px]"></i></button>
+                    <button type="button" class="rename-chat-btn opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-indigo-400 px-1" title="Rename"><i class="fas fa-pen text-[10px]"></i></button>
+                    <button type="button" class="delete-chat-btn opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-red-400 px-1" title="Delete"><i class="fas fa-trash text-[10px]"></i></button>
+                `;
+                group.appendChild(item);
+            });
+
+            foldersContainer.appendChild(group);
+        });
+    }
+
+    // Folder modal
+    const folderModal = document.getElementById("folder-modal");
+    const folderInput = document.getElementById("folder-input");
+    const folderSuggestions = document.getElementById("folder-suggestions");
+
+    async function showFolderModal(convId) {
+        folderTargetId = convId;
+        folderInput.value = "";
+        folderSuggestions.innerHTML = "";
+        try {
+            const res = await fetch("/folders");
+            const folders = await res.json();
+            folders.forEach(f => {
+                const chip = document.createElement("button");
+                chip.type = "button";
+                chip.className = "px-2.5 py-1 rounded-full border border-zinc-700 bg-zinc-800/60 text-[10px] text-zinc-400 hover:text-white hover:border-indigo-500/50 transition-colors";
+                chip.textContent = f;
+                chip.onclick = () => { folderInput.value = f; };
+                folderSuggestions.appendChild(chip);
+            });
+        } catch (e) {}
+        folderModal.classList.remove("hidden");
+        folderInput.focus();
+    }
+    function closeFolderModal() { folderModal.classList.add("hidden"); folderTargetId = null; }
+
+    document.getElementById("folder-cancel").addEventListener("click", closeFolderModal);
+    folderModal.addEventListener("click", e => { if (e.target === folderModal) closeFolderModal(); });
+    document.getElementById("folder-save").addEventListener("click", async () => {
+        if (!folderTargetId) return;
+        const folder = folderInput.value.trim();
+        try {
+            const res = await fetch(`/chat/${folderTargetId}/folder`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ folder })
+            });
+            if (res.ok) {
+                showToast(folder ? `Moved to "${folder}"` : "Moved to Uncategorized", "success");
+                closeFolderModal();
+                loadConversations();
+            }
+        } catch (e) { showToast("Failed to move conversation", "error"); }
+    });
+    folderInput.addEventListener("keydown", e => {
+        if (e.key === "Enter") document.getElementById("folder-save").click();
+        if (e.key === "Escape") closeFolderModal();
+    });
+
+    // Conversation list delegation
+    document.getElementById("conversation-list").addEventListener("click", async e => {
+        const renameBtn = e.target.closest(".rename-chat-btn");
+        if (renameBtn) {
+            const item = renameBtn.closest(".conversation-item");
+            renameConversationId = item.dataset.conversationId;
+            renameInput.value = item.dataset.title || "";
+            renameModal.classList.remove("hidden");
+            renameInput.focus();
+            return;
+        }
+
+        const moveBtn = e.target.closest(".move-to-folder-btn");
+        if (moveBtn) {
+            showFolderModal(moveBtn.closest(".conversation-item").dataset.conversationId);
+            return;
+        }
+
+        const deleteBtn = e.target.closest(".delete-chat-btn");
+        if (deleteBtn) {
+            if (!confirm("Delete this chat?")) return;
+            const id = deleteBtn.closest(".conversation-item").dataset.conversationId;
+            await fetch(`/chat/${id}/delete`, { method: "POST" });
+            showToast("Chat deleted", "success");
+            if (String(id) === String(conversationId)) window.location.href = "/";
+            else loadConversations();
+            return;
+        }
+
+        const deleteFolderBtn = e.target.closest(".delete-folder-btn");
+        if (deleteFolderBtn) {
+            const folder = deleteFolderBtn.dataset.folder;
+            if (!confirm(`Delete folder "${folder}"? Chats will move to Uncategorized.`)) return;
+            await fetch(`/folders/${encodeURIComponent(folder)}/delete`, { method: "DELETE" });
+            showToast(`Folder "${folder}" deleted`, "success");
+            loadConversations();
+            return;
+        }
+    });
+
+    // ---------- SLASH COMMANDS ----------
+    const SLASH_COMMANDS = [
+        { cmd: '/web', icon: 'fa-globe', desc: 'Toggle live web search', action: () => webSearchBtn.click() },
+        { cmd: '/image', icon: 'fa-wand-magic-sparkles', desc: 'Toggle AI image generation', action: toggleImageMode },
+        { cmd: '/doc', icon: 'fa-paperclip', desc: 'Upload a document', action: () => fileInput.click() },
+        { cmd: '/remember', icon: 'fa-brain', desc: 'Save a memory', action: () => { input.value = 'Remember that '; input.focus(); } },
+        { cmd: '/code', icon: 'fa-code', desc: 'Generate code', action: () => { input.value = 'Write clean, well-commented code for: '; input.focus(); } },
+        { cmd: '/summarize', icon: 'fa-file-alt', desc: 'Summarize text or document', action: () => { input.value = 'Summarize this in 5 bullet points: '; input.focus(); } },
+        { cmd: '/export', icon: 'fa-download', desc: 'Export chat as Markdown', action: exportChat },
+        { cmd: '/help', icon: 'fa-circle-question', desc: 'Keyboard shortcuts', action: () => showToast('Ctrl+K palette · Enter send · Shift+Enter newline · Esc stop', 'info') },
+    ];
+
+    function renderSlashMenu(filter) {
+        const q = filter.toLowerCase();
+        const matches = SLASH_COMMANDS.filter(c => c.cmd.includes(q) || c.desc.toLowerCase().includes(q));
+        if (!matches.length) { slashMenu.classList.add("hidden"); return; }
+        slashList.innerHTML = "";
+        matches.forEach(c => {
+            const b = document.createElement("button");
+            b.className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-zinc-800 text-left transition-colors";
+            b.innerHTML = `<i class="fas ${c.icon} text-indigo-400 w-4 text-xs"></i><span class="text-xs font-bold text-zinc-200">${c.cmd}</span><span class="text-[11px] text-zinc-500 truncate">${c.desc}</span>`;
+            b.onclick = () => {
+                c.action();
+                slashMenu.classList.add("hidden");
+                if (input.value.startsWith("/")) { input.value = ""; autoResizeTextarea(); }
+            };
+            slashList.appendChild(b);
+        });
+        slashMenu.classList.remove("hidden");
+    }
+
+    // ---------- COMMAND PALETTE ----------
+    const paletteActions = [
+        { name: 'New Chat', icon: 'fa-plus', run: () => window.location.href = '/chat/new' },
+        { name: 'Toggle Web Search', icon: 'fa-globe', run: () => webSearchBtn.click() },
+        { name: 'Toggle Image Generation', icon: 'fa-wand-magic-sparkles', run: toggleImageMode },
+        { name: 'Toggle Theme', icon: 'fa-circle-half-stroke', run: () => document.getElementById('theme-toggle').click() },
+        { name: 'Upload Document', icon: 'fa-paperclip', run: () => fileInput.click() },
+        { name: 'Open Memories', icon: 'fa-brain', run: () => { memoryModal.classList.remove('hidden'); loadMemories(); } },
+        { name: 'Support the Developer', icon: 'fa-mug-hot', run: () => { const m = document.getElementById('support-modal'); if (m) m.classList.remove('hidden'); } },
+        { name: 'Open Profile Settings', icon: 'fa-user-gear', run: () => window.location.href = '/profile' },
+        { name: 'Export Chat as Markdown', icon: 'fa-download', run: exportChat },
+    ];
+    if (isAdmin) paletteActions.push({ name: 'Open Admin Dashboard', icon: 'fa-shield-halved', run: () => window.location.href = '/admin' });
+
+    function renderPalette(filter) {
+        const q = filter.toLowerCase();
+        const matches = paletteActions.filter(a => a.name.toLowerCase().includes(q));
+        paletteList.innerHTML = "";
+        matches.forEach(a => {
+            const b = document.createElement("button");
+            b.className = "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-zinc-800 text-left transition-colors";
+            b.innerHTML = `<i class="fas ${a.icon} text-zinc-500 w-4 text-xs"></i><span class="text-sm text-zinc-200">${a.name}</span>`;
+            b.onclick = () => { closePalette(); a.run(); };
+            paletteList.appendChild(b);
+        });
+        if (!matches.length) paletteList.innerHTML = '<p class="text-xs text-zinc-600 italic px-3 py-2">No matching commands.</p>';
+    }
+    function openPalette() { palette.classList.remove("hidden"); paletteInput.value = ""; renderPalette(""); paletteInput.focus(); }
+    function closePalette() { palette.classList.add("hidden"); }
+    paletteInput.addEventListener("input", () => renderPalette(paletteInput.value));
+    palette.addEventListener("click", e => { if (e.target === palette) closePalette(); });
+
+    // ---------- GLOBAL KEYBOARD SHORTCUTS ----------
+    document.addEventListener("keydown", e => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+            e.preventDefault();
+            palette.classList.contains("hidden") ? openPalette() : closePalette();
+            return;
+        }
+        if (e.key === "Escape") {
+            if (!palette.classList.contains("hidden")) { closePalette(); return; }
+            slashMenu.classList.add("hidden");
+            if (isStreaming && controller) controller.abort();
+            return;
+        }
+        if (!palette.classList.contains("hidden") && e.key === "Enter") {
+            e.preventDefault();
+            const first = paletteList.querySelector("button");
+            if (first) first.click();
+        }
+    });
+
+    // ---------- DRAG & DROP UPLOAD ----------
+    const mainEl = document.querySelector("main");
+    let dragCounter = 0;
+    mainEl.addEventListener("dragenter", e => { e.preventDefault(); dragCounter++; dragOverlay.classList.remove("hidden"); dragOverlay.classList.add("flex"); });
+    mainEl.addEventListener("dragover", e => e.preventDefault());
+    mainEl.addEventListener("dragleave", () => { dragCounter--; if (dragCounter <= 0) { dragCounter = 0; dragOverlay.classList.add("hidden"); dragOverlay.classList.remove("flex"); } });
+    mainEl.addEventListener("drop", e => {
+        e.preventDefault();
+        dragCounter = 0; dragOverlay.classList.add("hidden"); dragOverlay.classList.remove("flex");
+        const file = e.dataTransfer.files[0];
+        if (file) uploadFile(file);
+    });
+
+    // ---------- EVENTS ----------
+    sendBtn.addEventListener("click", () => {
+        const msg = input.value.trim();
+        if (msg) { input.value = ""; autoResizeTextarea(); slashMenu.classList.add("hidden"); sendChat({ mode: "send", message: msg }); }
+    });
+    stopBtn.addEventListener("click", () => { if (controller) controller.abort(); });
+    input.addEventListener("keydown", e => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            if (!slashMenu.classList.contains("hidden")) {
+                const first = slashList.querySelector("button");
+                if (first) { first.click(); return; }
+            }
+            sendBtn.click();
+        }
+    });
+    input.addEventListener("input", () => {
+        autoResizeTextarea();
+        if (input.value.startsWith("/")) renderSlashMenu(input.value.slice(1));
+        else slashMenu.classList.add("hidden");
+    });
+
+    chatBox.addEventListener("click", e => {
+        const row = e.target.closest(".message-row");
+        if (!row) return;
+        const text = row.querySelector(".message-content").innerText;
+        const id = row.dataset.messageId;
+
+        if (e.target.closest(".save-edit-btn")) { saveEdit(row); return; }
+        if (e.target.closest(".cancel-edit-btn")) { cancelEdit(row); return; }
+        if (e.target.closest(".edit-message-btn")) { startEdit(row); return; }
+        if (e.target.closest(".regenerate-message-btn")) { removeMessagesFrom(id, true); sendChat({ mode: "regenerate", message_id: id }); return; }
+        if (e.target.closest(".copy-message-btn")) { navigator.clipboard.writeText(text); showToast("Copied to clipboard!", "success"); return; }
+        if (e.target.closest(".speak-message-btn")) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                window.speechSynthesis.speak(new SpeechSynthesisUtterance(text.replace(/(\*|_|#|`)/g, '')));
+            }
+            return;
+        }
+    });
+
+    // ---------- VOICE ----------
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition = null, isListening = false;
+    if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.continuous = false; recognition.interimResults = true; recognition.lang = 'en-US';
+        recognition.onresult = (event) => {
+            let t = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) t += event.results[i][0].transcript;
+            input.value = t; autoResizeTextarea();
+        };
+        recognition.onend = () => { micBtn.classList.remove('listening'); isListening = false; };
+    } else { micBtn.style.display = 'none'; }
+    micBtn.addEventListener('click', () => {
+        if (!recognition) return;
+        if (isListening) recognition.stop();
+        else { recognition.start(); micBtn.classList.add('listening'); isListening = true; }
+    });
+
+    // ---------- SIDEBAR TOGGLE & SEARCH ----------
+    document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
+        const sb = document.getElementById('sidebar');
+        sb.classList.toggle('hidden'); sb.classList.toggle('flex');
+        sb.classList.toggle('absolute'); sb.classList.toggle('z-50'); sb.classList.toggle('h-full');
+    });
+
+    document.getElementById('conversation-search').addEventListener('input', function () {
+        const q = this.value.toLowerCase().trim();
+        let visible = 0;
+        document.querySelectorAll('.conversation-item').forEach(item => {
+            const show = (item.dataset.title || "").toLowerCase().includes(q);
+            item.classList.toggle('hidden', !show);
+            if (show) visible++;
+        });
+        document.querySelectorAll('.folder-group').forEach(group => {
+            const anyVisible = group.querySelectorAll('.conversation-item:not(.hidden)').length > 0;
+            group.classList.toggle('hidden', !anyVisible);
+        });
+        document.getElementById('no-search-results').classList.toggle('hidden', visible !== 0);
+    });
+
+    // ---------- RENAME ----------
+    const renameModal = document.getElementById('rename-modal');
+    const renameInput = document.getElementById('rename-input');
+    document.getElementById('rename-cancel').addEventListener('click', () => renameModal.classList.add('hidden'));
+    renameModal.addEventListener('click', e => { if (e.target === renameModal) renameModal.classList.add('hidden'); });
+    document.getElementById('rename-save').addEventListener('click', async () => {
+        const title = renameInput.value.trim();
+        if (!title || !renameConversationId) return;
+        try {
+            const res = await fetch(`/chat/${renameConversationId}/rename`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title }) });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Rename failed");
+            if (String(renameConversationId) === String(conversationId)) document.getElementById('conversation-title').textContent = data.title;
+            renameModal.classList.add('hidden');
+            showToast("Chat renamed!", "success");
+            loadConversations();
+        } catch (err) { showToast(err.message, "error"); }
+    });
+    renameInput.addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById('rename-save').click(); });
+
+    // ---------- DOCUMENTS ----------
+    const docList = document.getElementById('document-list');
+    const fileInput = document.getElementById('file-input');
+
+    async function loadDocuments() {
+        try {
+            const res = await fetch("/documents");
+            const docs = await res.json();
+            docList.innerHTML = "";
+            if (!docs.length) { docList.innerHTML = '<div class="text-xs text-zinc-600 italic px-1">No documents yet.</div>'; return; }
+            docs.forEach(doc => {
+                const div = document.createElement("div");
+                div.className = "doc-item"; div.dataset.id = doc.id;
+                div.innerHTML = `
+                    <div class="flex items-center gap-2 truncate flex-1"><i class="fas fa-file-alt text-zinc-600"></i><span class="truncate">${escapeHtml(doc.name)}</span></div>
+                    <button class="delete-doc-btn text-zinc-600 hover:text-red-400 ml-2" data-id="${doc.id}"><i class="fas fa-trash text-[10px]"></i></button>`;
+                div.addEventListener("click", e => { if (e.target.closest(".delete-doc-btn")) return; selectDocument(doc.id, doc.name); });
+                docList.appendChild(div);
+            });
+        } catch (e) { console.error(e); }
+    }
+    function selectDocument(id, name) {
+        activeDocumentId = id;
+        document.querySelectorAll(".doc-item").forEach(el => el.classList.remove("active"));
+        const el = document.querySelector(`.doc-item[data-id="${id}"]`);
+        if (el) el.classList.add("active");
+        input.placeholder = `Ask about "${name}"...`;
+    }
+    function clearDocumentSelection() {
+        activeDocumentId = null;
+        document.querySelectorAll(".doc-item").forEach(el => el.classList.remove("active"));
+        input.placeholder = 'Message Irus... ( type "/" for commands )';
+    }
+    async function uploadFile(file) {
+        const fd = new FormData(); fd.append("file", file);
+        showToast("Uploading document...", "info");
+        try {
+            const res = await fetch("/documents/upload", { method: "POST", body: fd });
+            const data = await res.json();
+            if (data.success) { loadDocuments(); selectDocument(data.id, data.name); showToast("Document ready!", "success"); }
+            else showToast(data.error || "Upload failed", "error");
+        } catch (err) { showToast("Upload error", "error"); }
+    }
+    document.getElementById('upload-doc-btn').addEventListener('click', () => fileInput.click());
+    document.getElementById('upload-doc-btn-mobile').addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', e => { const f = e.target.files[0]; if (f) uploadFile(f); fileInput.value = ""; });
+    docList.addEventListener('click', async e => {
+        const btn = e.target.closest('.delete-doc-btn');
+        if (!btn || !confirm("Delete this document?")) return;
+        await fetch(`/documents/${btn.dataset.id}/delete`, { method: "POST" });
+        if (activeDocumentId == btn.dataset.id) clearDocumentSelection();
+        loadDocuments();
+        showToast("Document deleted", "success");
+    });
+
+    // ---------- MEMORIES ----------
+    const memoryModal = document.getElementById('memory-modal');
+    const memoryList = document.getElementById('memory-list');
+    const newMemoryInput = document.getElementById('new-memory-input');
+
+    async function loadMemories() {
+        try {
+            const res = await fetch("/memories");
+            const memories = await res.json();
+            memoryList.innerHTML = "";
+            if (!memories.length) { memoryList.innerHTML = '<div class="text-sm text-zinc-500 italic text-center py-4">No memories yet.</div>'; return; }
+            memories.forEach(mem => {
+                const div = document.createElement("div");
+                div.className = "flex items-center justify-between bg-zinc-800/50 border border-zinc-700 rounded-lg p-3 text-sm";
+                div.innerHTML = `<span class="text-zinc-300 flex-1 mr-2">${escapeHtml(mem.content)}</span>
+                    <button class="delete-memory-btn text-zinc-500 hover:text-red-400" data-id="${mem.id}"><i class="fas fa-trash"></i></button>`;
+                memoryList.appendChild(div);
+            });
+        } catch (e) { console.error(e); }
+    }
+    document.getElementById('open-memory-btn').addEventListener('click', () => { memoryModal.classList.remove('hidden'); loadMemories(); });
+    document.getElementById('memory-close').addEventListener('click', () => memoryModal.classList.add('hidden'));
+    memoryModal.addEventListener('click', e => { if (e.target === memoryModal) memoryModal.classList.add('hidden'); });
+    document.getElementById('add-memory-btn').addEventListener('click', async () => {
+        const content = newMemoryInput.value.trim();
+        if (!content) return;
+        const res = await fetch("/memories", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content }) });
+        if (res.ok) { newMemoryInput.value = ""; loadMemories(); showToast("Memory saved!", "success"); }
+    });
+    memoryList.addEventListener('click', async e => {
+        const btn = e.target.closest('.delete-memory-btn');
+        if (!btn) return;
+        await fetch(`/memories/${btn.dataset.id}`, { method: "DELETE" });
+        loadMemories();
+        showToast("Memory deleted", "success");
+    });
+
+    // ---------- DEVELOPER SUPPORT ----------
+    const supportModal = document.getElementById("support-modal");
+    const openSupportBtn = document.getElementById("open-support-btn");
+    if (supportModal && openSupportBtn) {
+        openSupportBtn.addEventListener("click", () => supportModal.classList.remove("hidden"));
+        document.getElementById("support-close").addEventListener("click", () => supportModal.classList.add("hidden"));
+        supportModal.addEventListener("click", e => { if (e.target === supportModal) supportModal.classList.add("hidden"); });
+        document.getElementById("copy-upi-btn").addEventListener("click", function () {
+            navigator.clipboard.writeText("nejamulhaque@upi");
+            this.textContent = "Copied!";
+            setTimeout(() => { this.textContent = "Copy"; }, 2000);
+        });
+    }
+
+    // ---------- INIT ----------
+    document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll(".message-row").forEach(row => {
+            const c = row.querySelector(".message-content");
+            renderMarkdown(c, c.dataset.content || "");
+            addMessageActions(row);
+        });
+        scrollToBottom(true);
+        autoResizeTextarea();
+        loadDocuments();
+        loadConversations();
+    });
+</script>
+{% endblock %}

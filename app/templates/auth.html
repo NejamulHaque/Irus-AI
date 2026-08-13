@@ -1,0 +1,473 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-screen flex flex-col bg-zinc-950 text-zinc-200" style="font-family: 'Inter', sans-serif;">
+
+    <!-- ============ TOP NAVBAR ============ -->
+    <nav class="relative z-20 flex items-center justify-between px-6 md:px-10 h-16 border-b border-zinc-900/70 bg-zinc-950/80 backdrop-blur-md">
+        <a href="{{ url_for('main.index') }}" class="flex items-center gap-3">
+            <img src="{{ url_for('static', filename='icons/icon-192.png') }}" class="w-9 h-9 rounded-xl shadow-lg shadow-indigo-500/25 object-cover" alt="Irus AI">
+            <div>
+                <h1 class="font-bold text-white leading-none tracking-tight text-sm">Irus AI</h1>
+                <p class="text-[9px] text-zinc-500 font-medium uppercase tracking-widest mt-0.5">Pro Assistant</p>
+            </div>
+        </a>
+        <div class="flex items-center gap-1 md:gap-2">
+            <a href="{{ url_for('main.index') }}" class="nav-btn">Home</a>
+            <button type="button" id="services-btn" class="nav-btn">Services</button>
+            <button type="button" id="contact-btn" class="nav-btn">Contact Us</button>
+            <button type="button" id="open-support-btn" class="nav-btn" style="color:#fbbf24;"><i class="fas fa-heart mr-1"></i> Support</button>
+            <a href="https://digital-lens.vercel.app/" target="_blank" class="nav-btn">Digital Lens</a>
+            <button type="button" id="theme-toggle" class="nav-btn" title="Toggle theme">
+                <i class="fas fa-sun sun-icon"></i>
+                <i class="fas fa-moon moon-icon"></i>
+            </button>
+        </div>
+    </nav>
+
+    <div class="flex flex-1">
+
+        <!-- ============ BRANDING PANEL ============ -->
+        <div class="hidden lg:flex lg:w-1/2 relative overflow-hidden flex-col justify-between p-12 border-r border-zinc-900">
+            <div class="absolute inset-0 pointer-events-none">
+                <div class="absolute -top-32 -left-32 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl"></div>
+                <div class="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-3xl"></div>
+                <div class="absolute inset-0 opacity-[0.04]" style="background-image: linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px); background-size: 48px 48px;"></div>
+            </div>
+
+            <div class="relative max-w-lg">
+                <h2 class="text-4xl xl:text-5xl font-bold text-white tracking-tight leading-tight mb-8">
+                    Your personal AI
+                    <span class="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">command center.</span>
+                </h2>
+                <div class="space-y-5">
+                    <div class="flex items-center gap-4">
+                        <div class="w-9 h-9 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-indigo-400"><i class="fas fa-globe text-sm"></i></div>
+                        <div><p class="text-sm font-semibold text-zinc-200">Live web search</p><p class="text-xs text-zinc-500">Real-time answers with cited sources.</p></div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="w-9 h-9 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-purple-400"><i class="fas fa-file-alt text-sm"></i></div>
+                        <div><p class="text-sm font-semibold text-zinc-200">Document intelligence</p><p class="text-xs text-zinc-500">Chat with PDFs using semantic search.</p></div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="w-9 h-9 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-pink-400"><i class="fas fa-brain text-sm"></i></div>
+                        <div><p class="text-sm font-semibold text-zinc-200">Long-term memory</p><p class="text-xs text-zinc-500">Irus remembers you across every conversation.</p></div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="w-9 h-9 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-emerald-400"><i class="fas fa-wand-magic-sparkles text-sm"></i></div>
+                        <div><p class="text-sm font-semibold text-zinc-200">Image generation</p><p class="text-xs text-zinc-500">Create AI art, free, right inside your chat.</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="relative flex items-center gap-8 text-xs text-zinc-500">
+                <div><span class="text-white font-bold text-lg block">8+</span> AI superpowers</div>
+                <div class="w-px h-8 bg-zinc-800"></div>
+                <div><span class="text-white font-bold text-lg block">100%</span> Free AI providers</div>
+                <div class="w-px h-8 bg-zinc-800"></div>
+                <div><span class="text-white font-bold text-lg block">🔒</span> Private by design</div>
+            </div>
+        </div>
+
+        <!-- ============ FORM PANEL ============ -->
+        <div class="w-full lg:w-1/2 flex items-center justify-center p-6">
+            <div class="w-full max-w-md">
+
+                <div class="lg:hidden flex items-center justify-center gap-3 mb-8">
+                    <img src="{{ url_for('static', filename='icons/icon-192.png') }}" class="w-10 h-10 rounded-xl shadow-lg shadow-indigo-500/25 object-cover" alt="Irus AI">
+                    <div>
+                        <h1 class="font-bold text-white leading-none tracking-tight">Irus AI</h1>
+                        <p class="text-[10px] text-zinc-500 font-medium uppercase tracking-widest mt-1">Pro Assistant</p>
+                    </div>
+                </div>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                        <div class="mb-4 flex items-center gap-3 px-4 py-3 rounded-xl border text-sm {{ 'bg-red-950/50 border-red-900 text-red-300' if category == 'error' else 'bg-emerald-950/50 border-emerald-900 text-emerald-300' }}">
+                            <i class="fas {{ 'fa-exclamation-circle' if category == 'error' else 'fa-check-circle' }}"></i>
+                            {{ message }}
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <div class="bg-zinc-900/70 backdrop-blur-xl border border-zinc-800 rounded-3xl p-8 shadow-2xl shadow-black/40">
+
+                    <!-- Tabs -->
+                    <div class="relative grid grid-cols-2 bg-zinc-950 border border-zinc-800 rounded-xl p-1 mb-8">
+                        <div id="tab-pill" class="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] bg-zinc-800 rounded-lg transition-transform duration-300"></div>
+                        <button type="button" id="tab-login" class="relative z-10 py-2 text-sm font-semibold text-white transition-colors">Sign In</button>
+                        <button type="button" id="tab-register" class="relative z-10 py-2 text-sm font-semibold text-zinc-500 transition-colors">Create Account</button>
+                    </div>
+
+                    <h3 id="form-title" class="text-xl font-bold text-white mb-1">Welcome back</h3>
+                    <p id="form-subtitle" class="text-xs text-zinc-500 mb-6">Sign in to continue to your workspace.</p>
+
+                    <form method="POST" id="auth-form" novalidate>
+                        <input type="hidden" name="action" id="action-input" value="login">
+
+                        <!-- Honeypot -->
+                        <input type="text" name="website" class="absolute -left-[9999px] h-0 w-0 opacity-0" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+                        <div class="mb-4">
+                            <label for="username" id="username-label" class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Username or Email</label>
+                            <div class="relative">
+                                <i class="fas fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-600 text-xs"></i>
+                                <input id="username" name="username" type="text" class="auth-input" placeholder="e.g. nejamul" autocomplete="username" required>
+                            </div>
+                            <p id="username-error" class="hidden text-xs text-red-400 mt-1.5"></p>
+                        </div>
+
+                        <!-- Email (register only) -->
+                        <div id="email-wrap" class="hidden mb-4">
+                            <label for="email" class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Email Address</label>
+                            <div class="relative">
+                                <i class="fas fa-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-600 text-xs"></i>
+                                <input id="email" name="email" type="email" class="auth-input" placeholder="you@example.com" autocomplete="email">
+                            </div>
+                            <p id="email-error" class="hidden text-xs text-red-400 mt-1.5"></p>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="password" class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Password</label>
+                            <div class="relative">
+                                <i class="fas fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-600 text-xs"></i>
+                                <input id="password" name="password" type="password" class="auth-input" style="padding-right: 2.8rem;" placeholder="••••••••" autocomplete="current-password" required>
+                                <button type="button" id="toggle-password" class="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-zinc-300 transition-colors" title="Show password">
+                                    <i class="fas fa-eye text-xs"></i>
+                                </button>
+                            </div>
+                            <p id="caps-warning" class="hidden text-xs text-amber-400 mt-1.5"><i class="fas fa-arrow-up mr-1"></i>Caps Lock is on</p>
+                            <p id="password-error" class="hidden text-xs text-red-400 mt-1.5"></p>
+
+                            <div id="strength-wrap" class="hidden mt-3">
+                                <div class="flex gap-1.5">
+                                    <div class="strength-bar h-1 flex-1 rounded-full bg-zinc-800"></div>
+                                    <div class="strength-bar h-1 flex-1 rounded-full bg-zinc-800"></div>
+                                    <div class="strength-bar h-1 flex-1 rounded-full bg-zinc-800"></div>
+                                    <div class="strength-bar h-1 flex-1 rounded-full bg-zinc-800"></div>
+                                </div>
+                                <p id="strength-label" class="text-[10px] text-zinc-500 mt-1.5">Password strength</p>
+                            </div>
+                        </div>
+
+                        <div id="confirm-wrap" class="hidden mb-4">
+                            <label for="confirm" class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Confirm Password</label>
+                            <div class="relative">
+                                <i class="fas fa-shield-halved absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-600 text-xs"></i>
+                                <input id="confirm" type="password" class="auth-input" placeholder="••••••••" autocomplete="new-password">
+                            </div>
+                            <p id="confirm-error" class="hidden text-xs text-red-400 mt-1.5"></p>
+                        </div>
+
+                        <button type="submit" id="submit-btn" class="w-full flex items-center justify-center gap-2 bg-white text-black hover:bg-zinc-200 font-semibold rounded-xl px-4 py-3 text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+                            <span id="submit-text">Sign In</span>
+                            <i id="submit-arrow" class="fas fa-arrow-right text-xs"></i>
+                            <i id="submit-spinner" class="hidden fas fa-circle-notch fa-spin text-xs"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <p class="text-center text-[11px] text-zinc-600 mt-6 leading-relaxed">
+                    Protected by rate limiting, hashed passwords & security headers.<br>
+                    By continuing, you agree to use Irus AI responsibly.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ SERVICES MODAL ============ -->
+<div id="services-modal" class="hidden fixed inset-0 z-[110] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div class="w-full max-w-lg bg-zinc-900 border border-zinc-800 rounded-3xl p-8 shadow-2xl max-h-[85vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="fas fa-layer-group text-indigo-400"></i> Our Services</h3>
+            <button id="services-close" class="text-zinc-500 hover:text-white"><i class="fas fa-xmark"></i></button>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="p-4 rounded-2xl bg-zinc-950 border border-zinc-800"><i class="fas fa-comments text-indigo-400 mb-2"></i><p class="text-sm font-semibold text-zinc-200">AI Chat</p><p class="text-xs text-zinc-500 mt-1">Streaming answers from top open models.</p></div>
+            <div class="p-4 rounded-2xl bg-zinc-950 border border-zinc-800"><i class="fas fa-globe text-blue-400 mb-2"></i><p class="text-sm font-semibold text-zinc-200">Web Search</p><p class="text-xs text-zinc-500 mt-1">Live results with cited sources.</p></div>
+            <div class="p-4 rounded-2xl bg-zinc-950 border border-zinc-800"><i class="fas fa-file-alt text-purple-400 mb-2"></i><p class="text-sm font-semibold text-zinc-200">Document AI</p><p class="text-xs text-zinc-500 mt-1">Chat & summarize PDFs semantically.</p></div>
+            <div class="p-4 rounded-2xl bg-zinc-950 border border-zinc-800"><i class="fas fa-wand-magic-sparkles text-emerald-400 mb-2"></i><p class="text-sm font-semibold text-zinc-200">Image Generation</p><p class="text-xs text-zinc-500 mt-1">Free AI art inside your chat.</p></div>
+            <div class="p-4 rounded-2xl bg-zinc-950 border border-zinc-800"><i class="fas fa-brain text-pink-400 mb-2"></i><p class="text-sm font-semibold text-zinc-200">Memory</p><p class="text-xs text-zinc-500 mt-1">Personalized, persistent context.</p></div>
+            <div class="p-4 rounded-2xl bg-zinc-950 border border-zinc-800"><i class="fas fa-microphone text-amber-400 mb-2"></i><p class="text-sm font-semibold text-zinc-200">Voice Mode</p><p class="text-xs text-zinc-500 mt-1">Speak to Irus, hear it reply.</p></div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ CONTACT MODAL ============ -->
+<div id="contact-modal" class="hidden fixed inset-0 z-[110] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-8 shadow-2xl">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="fas fa-paper-plane text-indigo-400"></i> Contact Us</h3>
+            <button id="contact-close" class="text-zinc-500 hover:text-white"><i class="fas fa-xmark"></i></button>
+        </div>
+        <p class="text-sm text-zinc-400 mb-6">Questions, feedback or partnership ideas? We usually reply within 24 hours.</p>
+        <div class="space-y-3">
+            <div class="flex items-center justify-between p-4 rounded-2xl bg-zinc-950 border border-zinc-800">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-envelope text-indigo-400"></i>
+                    <span class="text-sm text-zinc-300">contact@irus.ai</span>
+                </div>
+                <button id="copy-email-btn" class="text-xs font-bold text-zinc-500 hover:text-white transition-colors uppercase tracking-wider">Copy</button>
+            </div>
+
+            <a href="https://nejamulhaque.vercel.app" target="_blank" rel="noopener" class="flex items-center gap-3 p-4 rounded-2xl bg-zinc-950 border border-zinc-800 hover:border-zinc-600 transition-colors">
+                <i class="fab fa-user text-zinc-300"></i>
+                <span class="text-sm text-zinc-300">View My Portfolio</span>
+            </a>
+
+            <a href="https://github.com/NejamulHaque/Irus-AI" target="_blank" rel="noopener" class="flex items-center gap-3 p-4 rounded-2xl bg-zinc-950 border border-zinc-800 hover:border-zinc-600 transition-colors">
+                <i class="fab fa-github text-zinc-300"></i>
+                <span class="text-sm text-zinc-300">Star us on GitHub</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- ============ DEVELOPER SUPPORT MODAL ============ -->
+<div id="support-modal" class="hidden fixed inset-0 z-[120] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-8 shadow-2xl text-center">
+        <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center mb-4 shadow-lg shadow-pink-500/20">
+            <i class="fas fa-mug-hot text-white"></i>
+        </div>
+        <h3 class="text-lg font-bold text-white">Support the Developer</h3>
+        <p class="text-xs text-zinc-500 mt-2 mb-6 leading-relaxed">Irus AI is free for everyone, forever.<br>If it helps you, consider fueling its development ☕</p>
+
+        <div class="p-4 rounded-2xl bg-zinc-950 border border-zinc-800 mb-3 flex items-center justify-between gap-3">
+            <div class="text-left min-w-0">
+                <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">UPI ID</p>
+                <p class="text-sm text-zinc-200 font-mono truncate">nejamulhaque@upi</p>
+            </div>
+            <button id="copy-upi-btn" class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-[10px] font-bold text-zinc-300 uppercase tracking-wider transition-colors flex-shrink-0">Copy</button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 mb-4">
+            <a href="upi://pay?pa=nejamulhaque@upi&pn=Nejamul%20Haque" class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-colors">
+                <i class="fas fa-indian-rupee-sign text-xs"></i> Pay via UPI
+            </a>
+            <a href="https://www.buymeacoffee.com/nejamulhaque" target="_blank" rel="noopener" class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-sm font-semibold transition-colors">
+                <i class="fas fa-mug-hot text-xs"></i> Coffee
+            </a>
+        </div>
+
+        <button id="support-close" class="text-xs text-zinc-600 hover:text-zinc-300 transition-colors">Maybe later</button>
+    </div>
+</div>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+    .nav-btn {
+        padding: 0.5rem 0.9rem;
+        border-radius: 0.6rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #a1a1aa;
+        transition: all 0.2s;
+    }
+    .nav-btn:hover { color: #fff; background: #18181b; }
+    .auth-input {
+        width: 100%;
+        background: #09090b;
+        border: 1px solid #27272a;
+        border-radius: 0.75rem;
+        padding: 0.7rem 1rem 0.7rem 2.6rem;
+        font-size: 0.875rem;
+        color: #f4f4f5;
+        outline: none;
+        transition: all 0.2s;
+    }
+    .auth-input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15); }
+    .auth-input::placeholder { color: #52525b; }
+    [data-theme="dark"] .moon-icon { display: none; }
+    [data-theme="light"] .sun-icon { display: none; }
+</style>
+
+<script>
+    const tabLogin = document.getElementById("tab-login");
+    const tabRegister = document.getElementById("tab-register");
+    const tabPill = document.getElementById("tab-pill");
+    const actionInput = document.getElementById("action-input");
+    const formTitle = document.getElementById("form-title");
+    const formSubtitle = document.getElementById("form-subtitle");
+    const usernameLabel = document.getElementById("username-label");
+    const emailWrap = document.getElementById("email-wrap");
+    const emailInput = document.getElementById("email");
+    const confirmWrap = document.getElementById("confirm-wrap");
+    const strengthWrap = document.getElementById("strength-wrap");
+    const strengthBars = document.querySelectorAll(".strength-bar");
+    const strengthLabel = document.getElementById("strength-label");
+    const usernameInput = document.getElementById("username");
+    const passwordInput = document.getElementById("password");
+    const confirmInput = document.getElementById("confirm");
+    const togglePassword = document.getElementById("toggle-password");
+    const capsWarning = document.getElementById("caps-warning");
+    const form = document.getElementById("auth-form");
+    const submitBtn = document.getElementById("submit-btn");
+    const submitText = document.getElementById("submit-text");
+    const submitArrow = document.getElementById("submit-arrow");
+    const submitSpinner = document.getElementById("submit-spinner");
+
+    let mode = "login";
+
+    // ---------- TAB SWITCHING ----------
+    function setMode(m) {
+        mode = m;
+        actionInput.value = m;
+        const isLogin = m === "login";
+
+        tabLogin.classList.toggle("text-white", isLogin);
+        tabLogin.classList.toggle("text-zinc-500", !isLogin);
+        tabRegister.classList.toggle("text-white", !isLogin);
+        tabRegister.classList.toggle("text-zinc-500", isLogin);
+        tabPill.style.transform = isLogin ? "translateX(0)" : "translateX(100%)";
+
+        emailWrap.classList.toggle("hidden", isLogin);
+        confirmWrap.classList.toggle("hidden", isLogin);
+        strengthWrap.classList.toggle("hidden", isLogin);
+
+        usernameLabel.textContent = isLogin ? "Username or Email" : "Username";
+        formTitle.textContent = isLogin ? "Welcome back" : "Create your account";
+        formSubtitle.textContent = isLogin ? "Sign in to continue to your workspace." : "Join Irus AI — it takes less than a minute.";
+        submitText.textContent = isLogin ? "Sign In" : "Create Account";
+        passwordInput.autocomplete = isLogin ? "current-password" : "new-password";
+        clearErrors();
+    }
+    tabLogin.addEventListener("click", () => setMode("login"));
+    tabRegister.addEventListener("click", () => setMode("register"));
+
+    // ---------- THEME TOGGLE ----------
+    document.getElementById("theme-toggle").addEventListener("click", function () {
+        const cur = document.documentElement.getAttribute("data-theme") || "dark";
+        const next = cur === "dark" ? "light" : "dark";
+        document.documentElement.setAttribute("data-theme", next);
+        localStorage.setItem("theme", next);
+    });
+
+    // ---------- NAVBAR MODALS ----------
+    const servicesModal = document.getElementById("services-modal");
+    const contactModal = document.getElementById("contact-modal");
+    document.getElementById("services-btn").addEventListener("click", () => servicesModal.classList.remove("hidden"));
+    document.getElementById("contact-btn").addEventListener("click", () => contactModal.classList.remove("hidden"));
+    document.getElementById("services-close").addEventListener("click", () => servicesModal.classList.add("hidden"));
+    document.getElementById("contact-close").addEventListener("click", () => contactModal.classList.add("hidden"));
+    servicesModal.addEventListener("click", e => { if (e.target === servicesModal) servicesModal.classList.add("hidden"); });
+    contactModal.addEventListener("click", e => { if (e.target === contactModal) contactModal.classList.add("hidden"); });
+
+    document.getElementById("copy-email-btn").addEventListener("click", function () {
+        navigator.clipboard.writeText("contact@irus.ai");
+        this.textContent = "Copied!";
+        setTimeout(() => { this.textContent = "Copy"; }, 2000);
+    });
+
+    // ---------- SUPPORT MODAL ----------
+    const supportModal = document.getElementById("support-modal");
+    const openSupportBtn = document.getElementById("open-support-btn");
+    if (supportModal && openSupportBtn) {
+        openSupportBtn.addEventListener("click", () => supportModal.classList.remove("hidden"));
+        document.getElementById("support-close").addEventListener("click", () => supportModal.classList.add("hidden"));
+        supportModal.addEventListener("click", e => { if (e.target === supportModal) supportModal.classList.add("hidden"); });
+        document.getElementById("copy-upi-btn").addEventListener("click", function () {
+            navigator.clipboard.writeText("nejamulhaque@upi");
+            this.textContent = "Copied!";
+            setTimeout(() => { this.textContent = "Copy"; }, 2000);
+        });
+    }
+
+    document.addEventListener("keydown", e => {
+        if (e.key === "Escape") {
+            servicesModal.classList.add("hidden");
+            contactModal.classList.add("hidden");
+            supportModal.classList.add("hidden");
+        }
+    });
+
+    // ---------- PASSWORD VISIBILITY ----------
+    togglePassword.addEventListener("click", () => {
+        const isHidden = passwordInput.type === "password";
+        passwordInput.type = isHidden ? "text" : "password";
+        togglePassword.querySelector("i").className = isHidden ? "fas fa-eye-slash text-xs" : "fas fa-eye text-xs";
+    });
+
+    // ---------- CAPS LOCK WARNING ----------
+    ["keydown", "keyup"].forEach(evt =>
+        passwordInput.addEventListener(evt, e => {
+            if (e.getModifierState) capsWarning.classList.toggle("hidden", !e.getModifierState("CapsLock"));
+        })
+    );
+
+    // ---------- STRENGTH METER ----------
+    passwordInput.addEventListener("input", () => {
+        if (mode !== "register") return;
+        const v = passwordInput.value;
+        let score = 0;
+        if (v.length >= 8) score++;
+        if (v.length >= 12) score++;
+        if (/[A-Z]/.test(v) && /[a-z]/.test(v)) score++;
+        if (/\d/.test(v)) score++;
+        if (/[^A-Za-z0-9]/.test(v)) score++;
+
+        const level = v.length === 0 ? 0 : Math.min(4, Math.max(1, score));
+        const colors = ["bg-zinc-800", "bg-red-500", "bg-orange-500", "bg-yellow-500", "bg-emerald-500"];
+        const labels = ["Password strength", "Weak", "Fair", "Good", "Strong"];
+
+        strengthBars.forEach((bar, i) => {
+            bar.className = `strength-bar h-1 flex-1 rounded-full ${i < level ? colors[level] : "bg-zinc-800"}`;
+        });
+        strengthLabel.textContent = labels[level];
+    });
+
+    // ---------- VALIDATION ----------
+    function setError(id, msg) {
+        const el = document.getElementById(id);
+        el.textContent = msg;
+        el.classList.remove("hidden");
+    }
+    function clearErrors() {
+        ["username-error", "email-error", "password-error", "confirm-error"].forEach(id => {
+            const el = document.getElementById(id);
+            el.classList.add("hidden");
+            el.textContent = "";
+        });
+    }
+
+    form.addEventListener("submit", e => {
+        clearErrors();
+        const username = usernameInput.value.trim();
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+        let ok = true;
+
+        if (mode === "login") {
+            if (!username) { setError("username-error", "Username or email is required."); ok = false; }
+            if (!password) { setError("password-error", "Password is required."); ok = false; }
+        } else {
+            if (!/^[a-zA-Z0-9_.-]{3,30}$/.test(username)) {
+                setError("username-error", "3–30 characters: letters, numbers, dots, dashes or underscores.");
+                ok = false;
+            }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                setError("email-error", "Please enter a valid email address.");
+                ok = false;
+            }
+            if (password.length < 8 || !/[A-Za-z]/.test(password) || !/\d/.test(password)) {
+                setError("password-error", "Minimum 8 characters with at least one letter and one number.");
+                ok = false;
+            }
+            if (confirmInput.value !== password) {
+                setError("confirm-error", "Passwords do not match.");
+                ok = false;
+            }
+        }
+
+        if (!ok) { e.preventDefault(); return; }
+
+        submitBtn.disabled = true;
+        submitText.textContent = mode === "login" ? "Signing in..." : "Creating account...";
+        submitArrow.classList.add("hidden");
+        submitSpinner.classList.remove("hidden");
+    });
+</script>
+{% endblock %}
