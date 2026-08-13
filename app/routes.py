@@ -61,7 +61,9 @@ def get_user_conversation(conversation_id):
         id=conversation_id,
         user_id=current_user.id
     ).first()
-
+@main.route('/health')
+def health():
+    return jsonify({'status': 'ok'}), 200
 
 # -----------------------
 # Auth
