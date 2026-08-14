@@ -2,33 +2,49 @@
 
 {% block content %}
 <div class="min-h-screen bg-zinc-950 text-zinc-200 p-4 md:p-8">
-    <div class="max-w-3xl mx-auto">
+    <div class="max-w-5xl mx-auto space-y-6">
 
-        <div class="flex items-center justify-between mb-8">
+        <!-- Header -->
+        <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
-                <a href="{{ url_for('main.profile') }}" class="w-10 h-10 rounded-xl bg-zinc-900 hover:bg-zinc-800 flex items-center justify-center text-zinc-400">
-                    <i class="fas fa-arrow-left"></i>
-                </a>
+                <a href="{{ url_for('main.profile') }}" class="w-10 h-10 rounded-xl bg-zinc-900 hover:bg-zinc-800 flex items-center justify-center text-zinc-400 active:scale-95"><i class="fas fa-arrow-left"></i></a>
                 <div>
-                    <h1 class="text-2xl font-bold text-white flex items-center gap-3"><i class="fas fa-key text-indigo-400"></i> API Keys</h1>
-                    <p class="text-xs text-zinc-500 mt-1">Call Irus AI from your own scripts and apps.</p>
+                    <h1 class="text-xl md:text-2xl font-bold text-white flex items-center gap-3"><i class="fas fa-key text-indigo-400"></i> Developer API</h1>
+                    <p class="text-xs text-zinc-500 mt-1">Create keys, call Irus from your own apps, and monitor usage in real time.</p>
                 </div>
+            </div>
+            <span class="hidden md:inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-widest"><i class="fas fa-circle text-[6px]"></i> Live</span>
+        </div>
+
+        <!-- My stats -->
+        <div class="grid grid-cols-3 gap-3">
+            <div class="p-4 rounded-2xl border border-zinc-800 bg-zinc-900/60">
+                <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">My Keys</p>
+                <p class="text-2xl font-bold text-white">{{ keys|length }}</p>
+            </div>
+            <div class="p-4 rounded-2xl border border-zinc-800 bg-zinc-900/60">
+                <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">API Requests</p>
+                <p class="text-2xl font-bold text-white">{{ total_requests }}</p>
+            </div>
+            <div class="p-4 rounded-2xl border border-zinc-800 bg-zinc-900/60">
+                <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">Errors</p>
+                <p class="text-2xl font-bold {{ 'text-red-400' if total_errors else 'text-emerald-400' }}">{{ total_errors }}</p>
             </div>
         </div>
 
-        <!-- Create -->
-        <div class="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/60 mb-6">
-            <h2 class="text-sm font-semibold text-white mb-4">Create a new key</h2>
-            <div class="flex gap-2">
-                <input id="key-name" type="text" maxlength="100" placeholder="e.g. My Python Script"
+        <!-- Create key -->
+        <div class="p-5 md:p-6 rounded-2xl border border-zinc-800 bg-zinc-900/60">
+            <h2 class="text-sm font-semibold text-white mb-4"><i class="fas fa-plus text-indigo-400 mr-2"></i>Create a new key</h2>
+            <div class="flex flex-col sm:flex-row gap-2">
+                <input id="key-name" type="text" maxlength="100" placeholder="e.g. My Python Script / Telegram Bot"
                     class="flex-1 rounded-xl bg-zinc-950 border border-zinc-800 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 <button id="create-key-btn" class="px-5 py-3 rounded-xl bg-white text-black text-sm font-semibold hover:bg-zinc-200 active:scale-95">
-                    <i class="fas fa-plus mr-1"></i> Create
+                    <i class="fas fa-key mr-1"></i> Create Key
                 </button>
             </div>
         </div>
 
-        <!-- List -->
+        <!-- Keys list -->
         <div class="space-y-3">
             {% for key in keys %}
             <div class="flex items-center justify-between p-4 rounded-2xl border border-zinc-800 bg-zinc-900/60">
@@ -37,7 +53,8 @@
                     <p class="text-xs text-zinc-500 font-mono mt-1">{{ key.prefix }}••••••••••••</p>
                     <p class="text-[10px] text-zinc-600 mt-1">
                         Created {{ key.created_at.strftime('%b %d, %Y') }}
-                        {% if key.last_used_at %} · Last used {{ key.last_used_at.strftime('%b %d, %Y') }}{% else %} · Never used{% endif %}
+                        {% if key.last_used_at %} · Last used {{ key.last_used_at.strftime('%b %d, %H:%M') }}{% else %} · Never used{% endif %}
+                        · {{ key.logs|length }} requests
                     </p>
                 </div>
                 <button class="revoke-key-btn px-3 py-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 text-xs font-bold active:scale-95" data-id="{{ key.id }}">
@@ -45,22 +62,96 @@
                 </button>
             </div>
             {% else %}
-            <p class="text-sm text-zinc-600 italic text-center py-8">No API keys yet. Create one above.</p>
+            <p class="text-sm text-zinc-600 italic text-center py-6">No API keys yet. Create one above to start building.</p>
             {% endfor %}
         </div>
 
-        <!-- Usage example -->
-        <div class="mt-8 p-6 rounded-2xl border border-zinc-800 bg-zinc-950">
-            <h2 class="text-sm font-semibold text-white mb-3"><i class="fas fa-terminal text-indigo-400 mr-2"></i>Quick start</h2>
-            <pre class="text-xs text-zinc-400 overflow-x-auto leading-relaxed">curl -X POST https://YOUR-APP.onrender.com/api/v1/chat \
-  -H "Authorization: Bearer irus_YOUR_KEY" \
+        <!-- Usage docs -->
+        <div class="p-5 md:p-6 rounded-2xl border border-zinc-800 bg-zinc-950">
+            <h2 class="text-sm font-semibold text-white mb-4"><i class="fas fa-book text-indigo-400 mr-2"></i>Quick start & endpoints</h2>
+
+            <div class="grid md:grid-cols-2 gap-3 mb-5">
+                <div class="p-4 rounded-xl bg-zinc-900 border border-zinc-800">
+                    <p class="text-xs font-bold text-emerald-400 font-mono mb-1">GET /api/v1/me</p>
+                    <p class="text-xs text-zinc-500">Validate your key & get account info.</p>
+                </div>
+                <div class="p-4 rounded-xl bg-zinc-900 border border-zinc-800">
+                    <p class="text-xs font-bold text-indigo-400 font-mono mb-1">POST /api/v1/chat</p>
+                    <p class="text-xs text-zinc-500">Body: <code class="text-pink-400">{"message": "...", "web_search": false}</code> → returns <code class="text-pink-400">{"reply": "..."}</code>. Limit: 30 req/min.</p>
+                </div>
+            </div>
+
+            <div class="flex gap-2 mb-3">
+                <button class="code-tab px-3 py-1.5 rounded-lg text-xs font-bold bg-zinc-800 text-white" data-tab="curl">cURL</button>
+                <button class="code-tab px-3 py-1.5 rounded-lg text-xs font-bold bg-zinc-900 text-zinc-500" data-tab="python">Python</button>
+                <button class="code-tab px-3 py-1.5 rounded-lg text-xs font-bold bg-zinc-900 text-zinc-500" data-tab="js">JavaScript</button>
+            </div>
+
+            <div id="code-curl" class="code-panel relative">
+                <button class="copy-code absolute top-2 right-2 px-2 py-1 rounded-md bg-zinc-800 text-zinc-400 hover:text-white text-[10px] font-bold"><i class="fas fa-copy mr-1"></i>Copy</button>
+<pre class="text-xs text-zinc-400 overflow-x-auto leading-relaxed p-4 rounded-xl bg-zinc-900 border border-zinc-800">curl -X POST {{ url_for('main.api_chat', _external=True) }} \
+  -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"message": "Hello Irus!", "web_search": false}'</pre>
+            </div>
+            <div id="code-python" class="code-panel hidden relative">
+                <button class="copy-code absolute top-2 right-2 px-2 py-1 rounded-md bg-zinc-800 text-zinc-400 hover:text-white text-[10px] font-bold"><i class="fas fa-copy mr-1"></i>Copy</button>
+<pre class="text-xs text-zinc-400 overflow-x-auto leading-relaxed p-4 rounded-xl bg-zinc-900 border border-zinc-800">import requests
+
+r = requests.post(
+    "{{ url_for('main.api_chat', _external=True) }}",
+    headers={"Authorization": "Bearer YOUR_API_KEY"},
+    json={"message": "Hello Irus!", "web_search": False},
+)
+print(r.json()["reply"])</pre>
+            </div>
+            <div id="code-js" class="code-panel hidden relative">
+                <button class="copy-code absolute top-2 right-2 px-2 py-1 rounded-md bg-zinc-800 text-zinc-400 hover:text-white text-[10px] font-bold"><i class="fas fa-copy mr-1"></i>Copy</button>
+<pre class="text-xs text-zinc-400 overflow-x-auto leading-relaxed p-4 rounded-xl bg-zinc-900 border border-zinc-800">const r = await fetch("{{ url_for('main.api_chat', _external=True) }}", {
+  method: "POST",
+  headers: { "Authorization": "Bearer YOUR_API_KEY",
+             "Content-Type": "application/json" },
+  body: JSON.stringify({ message: "Hello Irus!" })
+});
+console.log((await r.json()).reply);</pre>
+            </div>
+        </div>
+
+        <!-- Request logs -->
+        <div class="p-5 md:p-6 rounded-2xl border border-zinc-800 bg-zinc-900/60">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-sm font-semibold text-white"><i class="fas fa-chart-line text-indigo-400 mr-2"></i>Request logs</h2>
+                <button id="refresh-logs" class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-300 active:scale-95"><i class="fas fa-rotate mr-1"></i>Refresh</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead>
+                        <tr class="text-zinc-500 uppercase tracking-widest text-[10px] border-b border-zinc-800">
+                            <th class="py-2 pr-3">Time</th><th class="py-2 pr-3">Key</th><th class="py-2 pr-3">Endpoint</th>
+                            <th class="py-2 pr-3">Status</th><th class="py-2 pr-3">Latency</th><th class="py-2">IP</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logs-body">
+                        {% for l in logs %}
+                        <tr class="border-b border-zinc-800/50 text-zinc-400">
+                            <td class="py-2 pr-3 whitespace-nowrap">{{ l.created_at.strftime('%m-%d %H:%M:%S') }}</td>
+                            <td class="py-2 pr-3 font-mono">{{ l.api_key.prefix if l.api_key else '—' }}</td>
+                            <td class="py-2 pr-3 font-mono">{{ l.endpoint }}</td>
+                            <td class="py-2 pr-3"><span class="px-2 py-0.5 rounded-full {{ 'bg-emerald-500/10 text-emerald-400' if l.status_code < 400 else 'bg-red-500/10 text-red-400' }}">{{ l.status_code }}</span></td>
+                            <td class="py-2 pr-3">{{ l.latency_ms or '—' }} ms</td>
+                            <td class="py-2">{{ l.ip }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="6" class="py-4 text-center text-zinc-600 italic">No API requests yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Show-once modal -->
+<!-- Show-once key modal -->
 <div id="key-modal" class="hidden fixed inset-0 z-[120] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
     <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-2xl text-center">
         <div class="w-14 h-14 mx-auto rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mb-4">
@@ -82,8 +173,7 @@
     document.getElementById("create-key-btn").addEventListener("click", async () => {
         const name = document.getElementById("key-name").value.trim() || "Default";
         const res = await fetch("/api-keys/create", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
+            method: "POST", headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ name })
         });
         const data = await res.json();
@@ -98,11 +188,7 @@
         this.textContent = "Copied!";
         setTimeout(() => this.textContent = "Copy", 2000);
     });
-
-    document.getElementById("key-modal-close").addEventListener("click", () => {
-        keyModal.classList.add("hidden");
-        location.reload();
-    });
+    document.getElementById("key-modal-close").addEventListener("click", () => { keyModal.classList.add("hidden"); location.reload(); });
 
     document.querySelectorAll(".revoke-key-btn").forEach(btn => {
         btn.addEventListener("click", async () => {
@@ -111,5 +197,40 @@
             location.reload();
         });
     });
+
+    // Code tabs
+    document.querySelectorAll(".code-tab").forEach(tab => {
+        tab.addEventListener("click", () => {
+            document.querySelectorAll(".code-tab").forEach(t => { t.className = "code-tab px-3 py-1.5 rounded-lg text-xs font-bold bg-zinc-900 text-zinc-500"; });
+            tab.className = "code-tab px-3 py-1.5 rounded-lg text-xs font-bold bg-zinc-800 text-white";
+            document.querySelectorAll(".code-panel").forEach(p => p.classList.add("hidden"));
+            document.getElementById("code-" + tab.dataset.tab).classList.remove("hidden");
+        });
+    });
+    document.querySelectorAll(".copy-code").forEach(btn => {
+        btn.addEventListener("click", () => {
+            navigator.clipboard.writeText(btn.parentElement.querySelector("pre").innerText);
+            showToast("Code copied!", "success");
+        });
+    });
+
+    // Live logs refresh
+    async function loadLogs() {
+        const res = await fetch("/api-keys/logs");
+        const logs = await res.json();
+        const body = document.getElementById("logs-body");
+        if (!logs.length) return;
+        body.innerHTML = logs.map(l => `
+            <tr class="border-b border-zinc-800/50 text-zinc-400">
+                <td class="py-2 pr-3 whitespace-nowrap">${l.time}</td>
+                <td class="py-2 pr-3 font-mono">${l.key}</td>
+                <td class="py-2 pr-3 font-mono">${l.endpoint}</td>
+                <td class="py-2 pr-3"><span class="px-2 py-0.5 rounded-full ${l.status < 400 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}">${l.status}</span></td>
+                <td class="py-2 pr-3">${l.latency_ms ?? '—'} ms</td>
+                <td class="py-2">${l.ip}</td>
+            </tr>`).join("");
+    }
+    document.getElementById("refresh-logs").addEventListener("click", loadLogs);
+    setInterval(loadLogs, 20000);
 </script>
 {% endblock %}

@@ -1,94 +1,165 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="min-h-screen bg-zinc-950 text-zinc-200 p-4 md:p-8 font-sans">
-    <div class="max-w-3xl mx-auto">
-        
-        <!-- Header -->
-        <div class="flex items-center justify-between mb-8">
-            <div class="flex items-center gap-4">
-                <a href="{{ url_for('main.index') }}" class="w-10 h-10 rounded-xl bg-zinc-900 hover:bg-zinc-800 flex items-center justify-center text-zinc-400 transition-colors">
-                    <i class="fas fa-arrow-left"></i>
-                </a>
-                <h1 class="text-2xl font-bold text-white tracking-tight">Profile Settings</h1>
+<div class="min-h-screen bg-zinc-950 text-zinc-200 pb-20">
+
+    <!-- Cover banner -->
+    <div class="h-40 md:h-52 relative bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600">
+        <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 22px 22px;"></div>
+        <a href="{{ url_for('main.index') }}" class="absolute top-4 left-4 flex items-center gap-2 px-3 py-2 rounded-xl bg-black/30 backdrop-blur-md text-white text-xs font-semibold hover:bg-black/50 transition-colors active:scale-95">
+            <i class="fas fa-arrow-left"></i> Back to Chat
+        </a>
+        {% if current_user.is_admin %}
+        <a href="{{ url_for('main.admin_dashboard') }}" class="absolute top-4 right-4 flex items-center gap-2 px-3 py-2 rounded-xl bg-black/30 backdrop-blur-md text-red-300 text-xs font-semibold hover:bg-black/50 transition-colors active:scale-95">
+            <i class="fas fa-shield-halved"></i> Admin
+        </a>
+        {% endif %}
+    </div>
+
+    <div class="max-w-5xl mx-auto px-4">
+
+        <!-- Identity card -->
+        <div class="relative -mt-10 md:-mt-12 p-5 md:p-6 rounded-3xl border border-zinc-800 bg-zinc-900/90 backdrop-blur-xl shadow-2xl">
+            <div class="flex flex-col md:flex-row md:items-center gap-5">
+                <div class="relative w-24 h-24 md:w-28 md:h-28 flex-shrink-0 mx-auto md:mx-0">
+                    {% if current_user.avatar %}
+                    <img id="avatar-preview" src="{% if current_user.avatar.startswith('data:') %}{{ current_user.avatar }}{% else %}{{ url_for('static', filename=current_user.avatar) }}{% endif %}" class="w-24 h-24 md:w-28 md:h-28 rounded-2xl object-cover border-2 border-indigo-500/50 shadow-xl" alt="avatar">
+                    {% else %}
+                    <div id="avatar-preview" class="w-24 h-24 md:w-28 md:h-28 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-3xl font-bold text-white border-2 border-indigo-500/50 shadow-xl">{{ current_user.username[0].upper() }}</div>
+                    {% endif %}
+                    <label for="avatar-input" class="absolute -bottom-2 -right-2 w-9 h-9 rounded-xl bg-white text-black flex items-center justify-center cursor-pointer hover:bg-zinc-200 active:scale-95 shadow-lg" title="Change avatar">
+                        <i class="fas fa-camera text-xs"></i>
+                    </label>
+                </div>
+
+                <div class="flex-1 text-center md:text-left min-w-0">
+                    <h1 class="text-2xl font-bold text-white flex items-center justify-center md:justify-start gap-2 flex-wrap">
+                        {{ current_user.username }}
+                        {% if current_user.is_admin %}
+                        <span class="px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/30 text-red-400 text-[10px] font-bold uppercase tracking-widest">Admin</span>
+                        {% endif %}
+                    </h1>
+                    <p class="text-sm text-zinc-500 mt-1 flex items-center justify-center md:justify-start gap-2">
+                        <i class="fas fa-envelope text-xs"></i> {{ current_user.email or 'no email set' }}
+                        <button type="button" id="copy-email" class="text-zinc-600 hover:text-white transition-colors" title="Copy email"><i class="fas fa-copy text-xs"></i></button>
+                    </p>
+                    <p class="text-xs text-zinc-600 mt-2"><i class="fas fa-cake-candles mr-1"></i> Member since {{ current_user.created_at.strftime('%B %Y') }}</p>
+                </div>
+            </div>
+
+            <!-- Stats strip -->
+            <div class="grid grid-cols-3 md:grid-cols-6 gap-2 mt-5">
+                <div class="p-3 rounded-2xl bg-zinc-950 border border-zinc-800 text-center"><p class="text-lg font-bold text-white">{{ stats.conversations }}</p><p class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Chats</p></div>
+                <div class="p-3 rounded-2xl bg-zinc-950 border border-zinc-800 text-center"><p class="text-lg font-bold text-white">{{ stats.messages }}</p><p class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Messages</p></div>
+                <div class="p-3 rounded-2xl bg-zinc-950 border border-zinc-800 text-center"><p class="text-lg font-bold text-white">{{ stats.documents }}</p><p class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Docs</p></div>
+                <div class="p-3 rounded-2xl bg-zinc-950 border border-zinc-800 text-center"><p class="text-lg font-bold text-white">{{ stats.memories }}</p><p class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Memories</p></div>
+                <div class="p-3 rounded-2xl bg-zinc-950 border border-zinc-800 text-center"><p class="text-lg font-bold text-amber-400">{{ stats.api_keys }}</p><p class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">API Keys</p></div>
+                <div class="p-3 rounded-2xl bg-zinc-950 border border-zinc-800 text-center"><p class="text-lg font-bold text-amber-400">{{ stats.api_requests }}</p><p class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">API Calls</p></div>
             </div>
         </div>
 
-        <!-- Flash Messages -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="mb-6 p-4 rounded-xl border {% if category == 'success' %}bg-emerald-950/50 border-emerald-800 text-emerald-300{% else %}bg-red-950/50 border-red-800 text-red-300{% endif %}">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+        <!-- Settings form -->
+        <form method="POST" enctype="multipart/form-data" class="mt-6 grid md:grid-cols-2 gap-5">
+            <input type="file" name="avatar" id="avatar-input" accept="image/*" class="hidden">
 
-        <form method="POST" enctype="multipart/form-data" class="space-y-6">
-            
-            <!-- Avatar & Basic Info -->
-            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-xl">
-                <h2 class="text-lg font-semibold text-white mb-4">Public Profile</h2>
-                <div class="flex items-center gap-6 mb-6">
-                    <div class="relative group">
-                        {% if current_user.avatar %}
-                            <img src="{{ url_for('static', filename=current_user.avatar) }}" class="w-20 h-20 rounded-2xl object-cover border-2 border-zinc-700">
-                        {% else %}
-                            <div class="w-20 h-20 rounded-2xl bg-zinc-800 flex items-center justify-center text-2xl font-bold text-zinc-500 border-2 border-zinc-700">
-                                {{ current_user.username[0].upper() }}
-                            </div>
-                        {% endif %}
-                        <label for="avatar-upload" class="absolute inset-0 bg-black/60 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                            <i class="fas fa-camera text-white"></i>
-                        </label>
-                        <input type="file" id="avatar-upload" name="avatar" class="hidden" accept="image/*">
-                    </div>
-                    <div>
-                        <p class="text-white font-semibold">{{ current_user.username }}</p>
-                        <p class="text-xs text-zinc-500">Click the avatar to upload a new image.</p>
-                    </div>
-                </div>
+            <!-- Profile settings -->
+            <div class="p-5 rounded-3xl border border-zinc-800 bg-zinc-900/60">
+                <h2 class="text-sm font-bold text-white mb-4 flex items-center gap-2"><i class="fas fa-user-pen text-indigo-400"></i> Profile Settings</h2>
+                <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Bio</label>
+                <textarea name="bio" rows="3" class="w-full rounded-xl bg-zinc-950 border border-zinc-800 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Tell Irus about yourself...">{{ current_user.bio or '' }}</textarea>
 
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Bio</label>
-                        <textarea name="bio" rows="3" class="w-full rounded-xl bg-zinc-950 border border-zinc-800 px-4 py-3 text-sm text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Tell Irus a bit about yourself...">{{ current_user.bio or '' }}</textarea>
-                    </div>
-                </div>
-            </div>
-
-            <!-- AI Preferences -->
-            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-xl">
-                <h2 class="text-lg font-semibold text-white mb-4">AI Model Preferences</h2>
-                <div>
-                    <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Default Groq Model</label>
-                    <select name="preferred_model" class="w-full rounded-xl bg-zinc-950 border border-zinc-800 px-4 py-3 text-sm text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <option value="llama-3.1-8b-instant" {% if current_user.preferred_model == 'llama-3.1-8b-instant' %}selected{% endif %}>Llama 3.1 8B (Fastest)</option>
-                        <option value="llama-3.3-70b-versatile" {% if current_user.preferred_model == 'llama-3.3-70b-versatile' %}selected{% endif %}>Llama 3.3 70B (Smartest)</option>
-                        <option value="mixtral-8x7b-32768" {% if current_user.preferred_model == 'mixtral-8x7b-32768' %}selected{% endif %}>Mixtral 8x7B (Balanced)</option>
-                        <option value="gemma2-9b-it" {% if current_user.preferred_model == 'gemma2-9b-it' %}selected{% endif %}>Gemma 2 9B (Google)</option>
-                    </select>
-                    <p class="text-xs text-zinc-600 mt-2">Note: If your AI Provider is set to Ollama in the .env file, this setting will be ignored.</p>
-                </div>
+                <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 mt-4">Preferred AI Model</label>
+                <select name="preferred_model" class="w-full rounded-xl bg-zinc-950 border border-zinc-800 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="llama-3.1-8b-instant" {{ 'selected' if current_user.preferred_model == 'llama-3.1-8b-instant' }}>⚡ Llama 3.1 8B — Fast</option>
+                    <option value="llama-3.3-70b-versatile" {{ 'selected' if current_user.preferred_model == 'llama-3.3-70b-versatile' }}>🧠 Llama 3.3 70B — Smart</option>
+                    <option value="qwen/qwen3.6-27b" {{ 'selected' if current_user.preferred_model == 'qwen/qwen3.6-27b' }}>👁️ Qwen 3.6 27B — Vision</option>
+                </select>
+                <p class="text-[10px] text-zinc-600 mt-2">Used for everyday chat. Vision & compare modes pick their own models automatically.</p>
             </div>
 
             <!-- Security -->
-            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-xl">
-                <h2 class="text-lg font-semibold text-white mb-4">Security</h2>
-                <div>
-                    <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">New Password</label>
-                    <input type="password" name="new_password" class="w-full rounded-xl bg-zinc-950 border border-zinc-800 px-4 py-3 text-sm text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Leave blank to keep current password">
+            <div class="p-5 rounded-3xl border border-zinc-800 bg-zinc-900/60">
+                <h2 class="text-sm font-bold text-white mb-4 flex items-center gap-2"><i class="fas fa-lock text-emerald-400"></i> Security</h2>
+                <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">New Password</label>
+                <div class="relative">
+                    <input type="password" name="new_password" id="new-password" class="w-full rounded-xl bg-zinc-950 border border-zinc-800 px-4 py-3 pr-12 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Leave blank to keep current" autocomplete="new-password">
+                    <button type="button" id="eye-btn" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-zinc-600 hover:text-zinc-300"><i class="fas fa-eye text-xs"></i></button>
+                </div>
+                <div class="flex gap-1.5 mt-3">
+                    <div class="pw-bar h-1 flex-1 rounded-full bg-zinc-800"></div>
+                    <div class="pw-bar h-1 flex-1 rounded-full bg-zinc-800"></div>
+                    <div class="pw-bar h-1 flex-1 rounded-full bg-zinc-800"></div>
+                    <div class="pw-bar h-1 flex-1 rounded-full bg-zinc-800"></div>
+                </div>
+                <p id="pw-label" class="text-[10px] text-zinc-600 mt-1.5">Minimum 8 chars with a letter + number.</p>
+            </div>
+
+            <!-- Developer console -->
+            <div class="p-5 rounded-3xl border border-amber-500/20 bg-gradient-to-br from-zinc-900/80 to-amber-500/5 md:col-span-2">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-sm font-bold text-white flex items-center gap-2"><i class="fas fa-key text-amber-400"></i> Developer Console</h2>
+                        <p class="text-xs text-zinc-500 mt-1">{{ stats.api_keys }} active key(s) · {{ stats.api_requests }} requests. Build bots, scripts & apps on top of Irus.</p>
+                    </div>
+                    <a href="{{ url_for('main.api_keys_page') }}" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white text-black text-sm font-semibold hover:bg-zinc-200 active:scale-95">
+                        Open API Console <i class="fas fa-arrow-right text-xs"></i>
+                    </a>
                 </div>
             </div>
 
-            <!-- Save Button -->
-            <div class="flex justify-end">
-                <button type="submit" class="px-6 py-3 rounded-xl bg-white text-black hover:bg-zinc-200 font-semibold transition-colors shadow-lg">
-                    Save Changes
-                </button>
+            <!-- Save bar -->
+            <div class="md:col-span-2 flex items-center justify-between">
+                <a href="{{ url_for('main.logout') }}" class="text-xs text-zinc-600 hover:text-red-400 transition-colors"><i class="fas fa-sign-out-alt mr-1"></i> Log out</a>
+                <button type="submit" class="px-6 py-3 rounded-xl bg-white text-black font-semibold text-sm hover:bg-zinc-200 active:scale-95"><i class="fas fa-floppy-disk mr-2"></i>Save Changes</button>
             </div>
         </form>
     </div>
 </div>
+
+<script>
+    // Live avatar preview
+    document.getElementById("avatar-input").addEventListener("change", e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            const prev = document.getElementById("avatar-preview");
+            if (prev.tagName === "DIV") {
+                const img = document.createElement("img");
+                img.id = "avatar-preview";
+                img.className = prev.className;
+                prev.replaceWith(img);
+            }
+            document.getElementById("avatar-preview").src = reader.result;
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // Copy email
+    document.getElementById("copy-email").addEventListener("click", () => {
+        navigator.clipboard.writeText("{{ current_user.email or '' }}");
+    });
+
+    // Password eye + strength
+    const pw = document.getElementById("new-password");
+    document.getElementById("eye-btn").addEventListener("click", () => {
+        pw.type = pw.type === "password" ? "text" : "password";
+    });
+    pw.addEventListener("input", () => {
+        const v = pw.value;
+        let s = 0;
+        if (v.length >= 8) s++;
+        if (v.length >= 12) s++;
+        if (/[A-Z]/.test(v) && /[a-z]/.test(v)) s++;
+        if (/\d/.test(v)) s++;
+        if (/[^A-Za-z0-9]/.test(v)) s++;
+        const level = v.length === 0 ? 0 : Math.min(4, Math.max(1, s));
+        const colors = ["bg-zinc-800", "bg-red-500", "bg-orange-500", "bg-yellow-500", "bg-emerald-500"];
+        const labels = ["Minimum 8 chars with a letter + number.", "Weak", "Fair", "Good", "Strong 💪"];
+        document.querySelectorAll(".pw-bar").forEach((bar, i) => {
+            bar.className = `pw-bar h-1 flex-1 rounded-full ${i < level ? colors[level] : "bg-zinc-800"}`;
+        });
+        document.getElementById("pw-label").textContent = labels[level];
+    });
+</script>
 {% endblock %}

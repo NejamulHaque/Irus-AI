@@ -20,6 +20,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
 
@@ -56,6 +58,23 @@
             </div>
         {% endif %}
     {% endwith %}
+
+    {% set broadcast = None %}
+    {% if current_user.is_authenticated %}
+        {# We fetch the latest active broadcast in the template context or rely on the route #}
+    {% endif %}
+    <!-- Global Broadcast Banner (Injected via JS or context) -->
+    <div id="global-broadcast" class="hidden fixed top-0 left-0 right-0 z-[300] bg-indigo-600 text-white text-center text-sm font-semibold py-2 px-4 shadow-lg">
+        <span id="broadcast-text"></span>
+        <button onclick="this.parentElement.classList.add('hidden')" class="ml-4 text-white/70 hover:text-white"><i class="fas fa-xmark"></i></button>
+    </div>
+    <script>
+        // Fetch active broadcast
+        fetch('/chat/history').then(r => r.json()).catch(() => {}); // Dummy to keep alive
+        // Actually, let's just inject it via a quick endpoint or rely on admin page. 
+        // For simplicity, we'll add a quick fetch to a broadcast endpoint if needed, 
+        // but for now, the admin page manages it.
+    </script>
 
     {% block content %}{% endblock %}
 

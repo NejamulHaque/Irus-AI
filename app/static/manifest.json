@@ -1,7 +1,7 @@
 {
   "name": "Irus AI — Personal AI Assistant",
   "short_name": "Irus AI",
-  "description": "Chat, live web search, document intelligence, image generation and long-term memory. Free for everyone.",
+  "description": "Chat, live web search, document intelligence, vision, image generation and long-term memory. Free for everyone.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

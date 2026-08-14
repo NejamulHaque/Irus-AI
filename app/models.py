@@ -10,19 +10,14 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(150), unique=True, nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=True)
     password_hash = db.Column(db.String(256), nullable=False)
-
     avatar = db.Column(db.Text, nullable=True)
     bio = db.Column(db.Text, nullable=True)
     preferred_model = db.Column(db.String(100), default='llama-3.1-8b-instant')
     is_admin = db.Column(db.Boolean, default=False)
+    is_banned = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    conversations = db.relationship(
-        'Conversation', backref='user', lazy=True, cascade='all, delete-orphan'
-    )
-    api_keys = db.relationship(
-        'APIKey', backref='owner', lazy=True, cascade='all, delete-orphan'
-    )
+    conversations = db.relationship('Conversation', backref='user', lazy=True, cascade='all, delete-orphan')
 
 
 class Conversation(db.Model):
@@ -30,14 +25,12 @@ class Conversation(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     title = db.Column(db.String(200), default='New Chat')
     folder = db.Column(db.String(100), nullable=True)
-    share_token = db.Column(db.String(64), unique=True, nullable=True)  # Public share link
+    share_token = db.Column(db.String(64), unique=True, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    messages = db.relationship(
-        'Message', backref='conversation', lazy=True,
-        cascade='all, delete-orphan', order_by='Message.created_at'
-    )
+    messages = db.relationship('Message', backref='conversation', lazy=True,
+                               cascade='all, delete-orphan', order_by='Message.created_at')
 
 
 class Message(db.Model):
@@ -45,7 +38,7 @@ class Message(db.Model):
     conversation_id = db.Column(db.Integer, db.ForeignKey('conversation.id'), nullable=False)
     role = db.Column(db.String(20), nullable=False)
     content = db.Column(db.Text, nullable=False)
-    image_data = db.Column(db.Text, nullable=True)  # Vision mode (base64 data URL)
+    image_data = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     document_id = db.Column(db.Integer, nullable=True)
 
@@ -58,9 +51,7 @@ class Document(db.Model):
     file_path = db.Column(db.String(500), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    chunks = db.relationship(
-        'DocumentChunk', backref='document', lazy=True, cascade='all, delete-orphan'
-    )
+    chunks = db.relationship('DocumentChunk', backref='document', lazy=True, cascade='all, delete-orphan')
 
 
 class DocumentChunk(db.Model):
@@ -94,3 +85,35 @@ class APIKey(db.Model):
     key_hash = db.Column(db.String(128), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_used_at = db.Column(db.DateTime, nullable=True)
+
+    owner = db.relationship('User', backref='api_keys')
+    logs = db.relationship('APIRequestLog', backref='api_key', lazy=True, cascade='all, delete-orphan')
+
+
+class APIRequestLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    api_key_id = db.Column(db.Integer, db.ForeignKey('api_key.id'), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    endpoint = db.Column(db.String(100), nullable=False)
+    method = db.Column(db.String(10), nullable=False)
+    status_code = db.Column(db.Integer, nullable=False)
+    latency_ms = db.Column(db.Integer, nullable=True)
+    ip = db.Column(db.String(64), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class LoginAudit(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    ip = db.Column(db.String(64), nullable=True)
+    user_agent = db.Column(db.String(200), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User', backref='logins')
+
+
+class Broadcast(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    message = db.Column(db.Text, nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
