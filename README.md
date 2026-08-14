@@ -179,12 +179,12 @@ Generate a personal API key from `/api-keys` (or `Ctrl+K → "API Keys"`).
 | `POST` | `/api/v1/chat` | Send a message, get a reply |
 
 ### Example — cURL
-```bash
+export IRUS_API_KEY="paste_your_key_here"   # never commit real keys!
+
 curl -X POST https://irus-ai.onrender.com/api/v1/chat \
-  -H "Authorization: Bearer irus_YOUR_KEY" \
+  -H "Authorization: Bearer ${IRUS_API_KEY}" \
   -H "Content-Type: application/json" \
-  -d '{"message": "Hello from my terminal!", "web_search": false}'
-```
+  -d '{"message": "Hello Irus!", "web_search": false}'
 
 ### Example — Python
 ```python
