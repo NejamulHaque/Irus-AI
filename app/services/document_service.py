@@ -5,7 +5,7 @@ import json
 import requests
 import numpy as np
 from werkzeug.utils import secure_filename
-from PyPDF2 import PdfReader
+from pypdf import PdfReader
 from docx import Document as DocxDocument
 
 from app.models import db, Document, DocumentChunk
