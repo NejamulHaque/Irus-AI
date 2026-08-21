@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div id="toast-container" class="fixed top-4 right-4 left-4 md:left-auto md:w-96 z-[100] flex flex-col gap-2 pointer-events-none"></div>
+<div id="toast-container" class="fixed top-4 right-4 left-4 md:left-auto md:w-96 z-[300] flex flex-col gap-2 pointer-events-none"></div>
 
 <div class="flex h-screen h-[100dvh] overflow-hidden bg-zinc-950 text-zinc-200">
 
     <div id="mobile-overlay" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-[40] md:hidden"></div>
 
-    <!-- Sidebar -->
+    <!-- ============ SIDEBAR ============ -->
     <aside id="sidebar" class="fixed md:relative w-72 flex-col border-r border-zinc-900 bg-zinc-950 z-[50] -translate-x-full md:translate-x-0 transition-transform duration-300 h-full flex">
         <div class="p-4 border-b border-zinc-900">
             <div class="flex items-center gap-3 mb-4">
@@ -21,13 +21,13 @@
                 <a href="{{ url_for('main.admin_dashboard') }}" class="w-8 h-8 rounded-lg hover:bg-zinc-900 flex items-center justify-center text-zinc-500 hover:text-red-400 transition-colors" title="Admin"><i class="fas fa-shield-halved text-sm"></i></a>
                 {% endif %}
             </div>
-            <a href="{{ url_for('main.new_chat') }}" class="flex items-center justify-center gap-2 w-full bg-white text-black hover:bg-zinc-200 transition-colors font-semibold rounded-xl px-4 py-2.5 text-sm active:scale-95"><i class="fas fa-plus"></i> New Chat</a>
+            <a href="{{ url_for('main.new_chat') }}" class="btn btn-primary w-full text-sm"><i class="fas fa-plus"></i> New Chat</a>
         </div>
 
         <div class="px-3 pt-4">
             <div class="relative">
                 <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600 text-xs"></i>
-                <input id="conversation-search" type="text" placeholder="Search history..." class="w-full rounded-lg bg-zinc-900 border border-zinc-800 pl-8 pr-3 py-2.5 text-sm text-zinc-300 placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-zinc-700">
+                <input id="conversation-search" type="text" placeholder="Search history..." class="w-full rounded-lg bg-zinc-900 border border-zinc-800 pl-8 pr-3 py-2.5 text-sm text-zinc-300 placeholder-zinc-600 focus:outline-none focus:ring-1 focus:ring-indigo-500">
             </div>
         </div>
 
@@ -48,6 +48,7 @@
         </div>
 
         <div class="p-4 border-t border-zinc-900">
+            <button id="install-app-btn" class="hidden w-full mb-3 btn btn-ghost !min-h-0 !py-2 text-xs"><i class="fas fa-download"></i> Install Irus App</button>
             <a href="{{ url_for('main.profile') }}" class="flex items-center justify-between group hover:bg-zinc-900 p-2 -m-2 rounded-xl transition-colors">
                 <div class="flex items-center gap-3 min-w-0">
                     {% if current_user.avatar %}
@@ -60,7 +61,7 @@
                         <span class="text-[10px] text-zinc-600">Manage Profile</span>
                     </div>
                 </div>
-                <i class="fas fa-chevron-right text-zinc-700 text-[10px] group-hover:text-zinc-400 transition-colors"></i>
+                <i class="fas fa-chevron-right text-zinc-700 text-[10px] group-hover:text-zinc-400"></i>
             </a>
             <div class="mt-3 pt-3 border-t border-zinc-900 flex items-center justify-between">
                 <button id="open-support-btn" class="flex items-center gap-2 text-xs text-zinc-600 hover:text-amber-400 transition-colors px-2 active:scale-95"><i class="fas fa-mug-hot"></i> Support</button>
@@ -69,7 +70,7 @@
         </div>
     </aside>
 
-    <!-- Main -->
+    <!-- ============ MAIN ============ -->
     <main class="flex-1 flex flex-col min-w-0 relative bg-zinc-950">
 
         <div id="drag-overlay" class="hidden absolute inset-0 z-[60] bg-indigo-600/20 backdrop-blur-sm border-2 border-dashed border-indigo-500 flex-col items-center justify-center pointer-events-none">
@@ -77,63 +78,65 @@
             <p class="text-sm font-semibold text-white">Drop your document to upload</p>
         </div>
 
-        <!-- Broadcast banner -->
-        <div id="broadcast-banner" class="hidden items-center justify-center gap-3 px-4 py-2 bg-indigo-600/90 text-white text-xs font-semibold">
-            <i class="fas fa-bullhorn"></i><span id="broadcast-text"></span>
-            <button id="broadcast-close" class="ml-2 text-white/70 hover:text-white"><i class="fas fa-xmark"></i></button>
-        </div>
-
         <header class="h-14 border-b border-zinc-900 bg-zinc-950/80 backdrop-blur-md flex items-center justify-between px-3 md:px-6 z-10">
             <div class="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
                 <button id="sidebar-toggle" class="w-9 h-9 rounded-lg hover:bg-zinc-900 flex items-center justify-center text-zinc-400 active:scale-95 md:hidden"><i class="fas fa-bars"></i></button>
                 <span id="conn-dot" class="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" title="Online"></span>
-                <h2 id="conversation-title" class="font-semibold text-sm text-zinc-300 truncate">{{ conversation.title }}</h2>
+                <button id="conversation-title" class="font-semibold text-sm text-zinc-300 truncate hover:text-white transition-colors active:scale-95 max-w-[45vw] md:max-w-md" title="Click to rename">
+                    <span id="conversation-title-text">{{ conversation.title }}</span>
+                    <i class="fas fa-pen text-[9px] text-zinc-600 ml-1"></i>
+                </button>
             </div>
             <div class="flex items-center gap-1 md:gap-2">
                 <button id="shortcuts-btn" class="w-9 h-9 rounded-lg hover:bg-zinc-900 flex items-center justify-center text-zinc-500 hover:text-white transition-colors active:scale-95" title="Shortcuts (?)"><i class="fas fa-keyboard text-xs"></i></button>
-                <button id="theme-toggle" class="w-9 h-9 rounded-lg hover:bg-zinc-900 flex items-center justify-center text-zinc-500 hover:text-white transition-colors active:scale-95" title="Toggle theme"><i class="fas fa-sun text-xs sun-icon"></i><i class="fas fa-moon text-xs moon-icon"></i></button>
-                <button id="share-chat-btn" class="w-9 h-9 rounded-lg hover:bg-zinc-900 flex items-center justify-center text-zinc-500 hover:text-white transition-colors active:scale-95" title="Share chat"><i class="fas fa-share-nodes text-xs"></i></button>
+                <button id="theme-toggle" class="w-9 h-9 rounded-lg hover:bg-zinc-900 flex items-center justify-center text-zinc-500 hover:text-white transition-colors active:scale-95" title="Theme"><i class="fas fa-sun text-xs sun-icon"></i><i class="fas fa-moon text-xs moon-icon"></i></button>
+                <button id="share-chat-btn" class="w-9 h-9 rounded-lg hover:bg-zinc-900 flex items-center justify-center text-zinc-500 hover:text-white transition-colors active:scale-95" title="Share"><i class="fas fa-share-nodes text-xs"></i></button>
                 <button id="export-chat-btn" class="w-9 h-9 rounded-lg hover:bg-zinc-900 flex items-center justify-center text-zinc-500 hover:text-white transition-colors active:scale-95" title="Export Markdown"><i class="fas fa-download text-xs"></i></button>
-                <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest hidden sm:block">{{ config.get('AI_PROVIDER', 'groq') }}</span>
+                <span class="badge badge-indigo hidden sm:inline-flex">{{ config.get('AI_PROVIDER', 'groq') }}</span>
             </div>
         </header>
 
-        <div id="chat-box" class="flex-1 overflow-y-auto px-3 md:px-8 py-4 md:py-6 pb-32 md:pb-48 space-y-4 md:space-y-8 custom-scrollbar">
+        <div id="chat-box" class="flex-1 overflow-y-auto px-3 md:px-8 py-4 md:py-6 pb-36 md:pb-52 space-y-4 md:space-y-8 custom-scrollbar">
             {% for message in messages %}
-                <div class="message-row group flex gap-2 md:gap-4 max-w-4xl mx-auto {% if message.role == 'user' %}justify-end{% else %}justify-start{% endif %}" data-message-id="{{ message.id }}" data-role="{{ message.role }}">
+                <div class="message-row group flex gap-3 max-w-4xl mx-auto {% if message.role == 'user' %}justify-end{% else %}justify-start{% endif %}" data-message-id="{{ message.id }}" data-role="{{ message.role }}">
                     {% if message.role == 'assistant' %}
-                    <img src="{{ url_for('static', filename='icons/icon-192.png') }}" class="w-7 h-7 md:w-8 md:h-8 rounded-lg object-cover flex-shrink-0 shadow-lg shadow-indigo-500/10 mt-1" alt="Irus AI">
+                    <img src="{{ url_for('static', filename='icons/icon-192.png') }}" class="msg-avatar mt-5" alt="Irus AI">
                     {% endif %}
-                    <div class="flex flex-col max-w-[88%] md:max-w-[75%] min-w-0">
-                        <div class="px-3 md:px-4 py-2.5 md:py-3 rounded-2xl {% if message.role == 'user' %}bg-indigo-600 text-white rounded-br-sm{% else %}bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-bl-sm{% endif %}">
+                    <div class="flex flex-col max-w-[88%] md:max-w-[78%] min-w-0 {% if message.role == 'user' %}items-end{% endif %}">
+                        <div class="msg-head {% if message.role == 'user' %}flex-row-reverse{% endif %}">
+                            <span>{{ 'You' if message.role == 'user' else 'Irus' }}</span>
+                            <span class="dot"></span>
+                            <span>{{ message.created_at.strftime('%H:%M') }}</span>
+                        </div>
+                        <div class="msg-bubble {{ 'user' if message.role == 'user' else 'ai' }}">
                             {% if message.image_data %}<img src="{{ message.image_data }}" class="max-w-[220px] w-full rounded-xl mb-2 border border-zinc-700" alt="attached">{% endif %}
-                            <div class="message-content text-sm leading-relaxed" data-content="{{ message.content | e }}"></div>
+                            <div class="message-content" data-content="{{ message.content | e }}"></div>
                         </div>
                     </div>
                     {% if message.role == 'user' %}
-                    <div class="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-zinc-800 flex items-center justify-center flex-shrink-0 mt-1 text-[10px] md:text-xs font-bold text-zinc-400">{{ current_user.username[0].upper() }}</div>
+                    <div class="msg-avatar user-init mt-5">{{ current_user.username[0].upper() }}</div>
                     {% endif %}
                 </div>
             {% else %}
                 <div id="empty-state" class="h-full flex flex-col items-center justify-center px-4">
                     <img src="{{ url_for('static', filename='icons/icon-192.png') }}" class="w-16 h-16 rounded-2xl mb-6 shadow-xl shadow-indigo-500/20 object-cover animate-float" alt="Irus AI">
                     <h3 class="text-xl md:text-2xl font-bold text-white mb-2 tracking-tight">How can I help you today?</h3>
-                    <p class="text-sm text-zinc-500 mb-6 md:mb-8 text-center max-w-md">Type <span class="text-indigo-400 font-bold">/</span> for commands, or press <span class="text-indigo-400 font-bold">Ctrl+K</span> for the palette.</p>
+                    <p class="text-sm text-zinc-500 mb-6 md:mb-8 text-center max-w-md">Type <span class="text-indigo-400 font-bold">/</span> for commands, or press <kbd class="pro">Ctrl+K</kbd> for the palette.</p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3 max-w-2xl w-full">
-                        <button onclick="usePrompt('Explain quantum computing in simple terms')" class="text-left p-3 md:p-4 rounded-2xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-800/60 hover:border-zinc-700 transition-all group active:scale-95">
-                            <div class="flex items-center gap-2 text-zinc-500 mb-2 group-hover:text-indigo-400 transition-colors"><i class="fas fa-graduation-cap text-xs"></i><span class="text-[10px] font-bold uppercase tracking-wider">Learn</span></div>
+                        <button onclick="usePrompt('Explain quantum computing in simple terms')" class="text-left p-3 md:p-4 rounded-2xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-800/60 hover:border-indigo-500/40 transition-all lift active:scale-95">
+                            <div class="flex items-center gap-2 text-zinc-500 mb-2"><i class="fas fa-graduation-cap text-xs text-indigo-400"></i><span class="text-[10px] font-bold uppercase tracking-wider">Learn</span></div>
                             <p class="text-xs md:text-sm text-zinc-300 font-medium">Explain quantum computing in simple terms.</p>
                         </button>
-                        <button onclick="usePrompt('Write a Python script to scrape a website using BeautifulSoup')" class="text-left p-3 md:p-4 rounded-2xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-800/60 hover:border-zinc-700 transition-all group active:scale-95">
-                            <div class="flex items-center gap-2 text-zinc-500 mb-2 group-hover:text-emerald-400 transition-colors"><i class="fas fa-code text-xs"></i><span class="text-[10px] font-bold uppercase tracking-wider">Code</span></div>
+                        <button onclick="usePrompt('Write a Python script to scrape a website using BeautifulSoup')" class="text-left p-3 md:p-4 rounded-2xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-800/60 hover:border-emerald-500/40 transition-all lift active:scale-95">
+                            <div class="flex items-center gap-2 text-zinc-500 mb-2"><i class="fas fa-code text-xs text-emerald-400"></i><span class="text-[10px] font-bold uppercase tracking-wider">Code</span></div>
                             <p class="text-xs md:text-sm text-zinc-300 font-medium">Write a Python script to scrape a website.</p>
                         </button>
-                        <button onclick="usePrompt('Search the web for the latest AI news today')" class="text-left p-3 md:p-4 rounded-2xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-800/60 hover:border-zinc-700 transition-all group active:scale-95">
-                            <div class="flex items-center gap-2 text-zinc-500 mb-2 group-hover:text-blue-400 transition-colors"><i class="fas fa-globe text-xs"></i><span class="text-[10px] font-bold uppercase tracking-wider">Search</span></div>
+                        <button onclick="usePrompt('Search the web for the latest AI news today')" class="text-left p-3 md:p-4 rounded-2xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-800/60 hover:border-blue-500/40 transition-all lift active:scale-95">
+                            <div class="flex items-center gap-2 text-zinc-500 mb-2"><i class="fas fa-globe text-xs text-blue-400"></i><span class="text-[10px] font-bold uppercase tracking-wider">Search</span></div>
                             <p class="text-xs md:text-sm text-zinc-300 font-medium">Search the web for the latest AI news today.</p>
                         </button>
-                        <button onclick="usePrompt('Summarize the uploaded document into 5 key bullet points')" class="text-left p-3 md:p-4 rounded-2xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-800/60 hover:border-zinc-700 transition-all group active:scale-95">
-                            <div class="flex items-center gap-2 text-zinc-500 mb-2 group-hover:text-purple-400 transition-colors"><i class="fas fa-file-alt text-xs"></i><span class="text-[10px] font-bold uppercase tracking-wider">Analyze</span></div>
+                        <button onclick="usePrompt('Summarize the uploaded document into 5 key bullet points')" class="text-left p-3 md:p-4 rounded-2xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-800/60 hover:border-purple-500/40 transition-all lift active:scale-95">
+                            <div class="flex items-center gap-2 text-zinc-500 mb-2"><i class="fas fa-file-alt text-xs text-purple-400"></i><span class="text-[10px] font-bold uppercase tracking-wider">Analyze</span></div>
                             <p class="text-xs md:text-sm text-zinc-300 font-medium">Summarize my document into 5 key bullet points.</p>
                         </button>
                     </div>
@@ -141,10 +144,10 @@
             {% endfor %}
         </div>
 
-        <button id="scroll-bottom-btn" class="hidden absolute bottom-32 md:bottom-44 left-1/2 -translate-x-1/2 z-20 w-9 h-9 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-white shadow-xl items-center justify-center transition-all active:scale-95" title="Jump to latest"><i class="fas fa-arrow-down text-xs"></i></button>
+        <button id="scroll-bottom-btn" class="hidden absolute bottom-36 md:bottom-52 left-1/2 -translate-x-1/2 z-20 w-9 h-9 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-white shadow-xl items-center justify-center transition-all active:scale-95" title="Jump to latest"><i class="fas fa-arrow-down text-xs"></i></button>
 
-        <!-- Floating Input -->
-        <div class="absolute bottom-0 left-0 right-0 p-2 md:p-4 lg:p-6 bg-gradient-to-t from-zinc-950 via-zinc-950/95 to-transparent pointer-events-none flex justify-center z-10">
+        <!-- ============ FLOATING INPUT ============ -->
+        <div class="absolute bottom-0 left-0 right-0 p-2 md:p-4 lg:p-6 bg-gradient-to-t from-zinc-950 via-zinc-950/95 to-transparent pointer-events-none flex justify-center z-10" style="padding-bottom: calc(env(safe-area-inset-bottom) + 8px);">
             <div class="max-w-3xl w-full pointer-events-auto relative">
 
                 <div id="slash-menu" class="hidden absolute bottom-full mb-2 left-0 right-0 z-30 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden">
@@ -160,16 +163,29 @@
                     <span class="text-[10px] text-zinc-500">Image attached — Irus will analyze it 👁️</span>
                 </div>
 
-                <div class="relative bg-zinc-900 border border-zinc-800 rounded-2xl md:rounded-3xl shadow-2xl shadow-black/50 backdrop-blur-xl p-1.5 md:p-2 flex items-end gap-1 md:gap-2 focus-within:border-indigo-500/50 transition-all">
-                    <button id="upload-doc-btn-mobile" class="w-9 h-9 md:w-10 md:h-10 rounded-full hover:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-indigo-400 transition-colors flex-shrink-0 active:scale-95" title="Upload Document"><i class="fas fa-paperclip text-sm"></i></button>
-                    <button id="upload-image-btn" class="w-9 h-9 md:w-10 md:h-10 rounded-full hover:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-purple-400 transition-colors flex-shrink-0 active:scale-95" title="Attach image (Vision)"><i class="fas fa-image text-sm"></i></button>
+                <!-- 🔊 Speak Bar with Language Selector -->
+                <div id="speak-bar" class="hidden mb-2 items-center gap-2 md:gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/90 backdrop-blur-xl px-3 py-2">
+                    <i class="fas fa-volume-up text-indigo-400 animate-pulse flex-shrink-0"></i>
+                    <span class="hidden sm:block text-[10px] font-bold text-zinc-500 uppercase tracking-widest flex-shrink-0">Speaking</span>
+                    <div class="flex-1 h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+                        <div id="speak-progress" class="h-full w-0 bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-200"></div>
+                    </div>
+                    <!-- NEW: Language Button -->
+                    <button id="voice-lang-btn" class="w-9 h-9 rounded-lg hover:bg-zinc-800 flex items-center justify-center active:scale-95 flex-shrink-0" title="Language (EN / IN / Hindi)"></button>
+                    <button id="voice-gender-btn" class="w-9 h-9 rounded-lg hover:bg-zinc-800 flex items-center justify-center active:scale-95 flex-shrink-0" title="Switch voice (male/female)"><i id="voice-gender-icon" class="fas fa-venus text-pink-400"></i></button>
+                    <button id="speak-stop-btn" class="w-9 h-9 rounded-lg bg-red-500/15 text-red-400 hover:bg-red-500/25 flex items-center justify-center active:scale-95 flex-shrink-0" title="Stop speaking"><i class="fas fa-stop text-xs"></i></button>
+                </div>
+
+                <div class="relative bg-zinc-900 border border-zinc-800 rounded-2xl md:rounded-3xl shadow-2xl shadow-black/50 backdrop-blur-xl p-1.5 md:p-2 flex flex-wrap items-end gap-1 md:gap-2 focus-within:border-indigo-500/50 transition-all">
+                    <textarea id="message-input" rows="1" placeholder='Message Irus... ( type "/" for commands )' class="-order-1 md:order-none w-full md:w-auto md:flex-1 bg-transparent border-none px-1.5 md:px-2 py-2 md:py-2.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none resize-none max-h-32 md:max-h-40 custom-scrollbar"></textarea>
+                    <button id="upload-doc-btn-mobile" class="w-10 h-10 rounded-full hover:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-indigo-400 transition-colors flex-shrink-0 active:scale-95" title="Upload Document"><i class="fas fa-paperclip text-sm"></i></button>
+                    <button id="upload-image-btn" class="w-10 h-10 rounded-full hover:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-purple-400 transition-colors flex-shrink-0 active:scale-95" title="Attach image (Vision)"><i class="fas fa-image text-sm"></i></button>
                     <input type="file" id="image-input" class="hidden" accept="image/*">
-                    <textarea id="message-input" rows="1" placeholder='Message Irus... ( type "/" for commands )' class="flex-1 bg-transparent border-none px-1.5 md:px-2 py-2 md:py-2.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none resize-none max-h-32 md:max-h-40 custom-scrollbar"></textarea>
-                    <button id="mic-btn" class="w-9 h-9 md:w-10 md:h-10 rounded-full hover:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-indigo-400 transition-colors flex-shrink-0 active:scale-95" title="Voice Input"><i class="fas fa-microphone text-sm"></i></button>
-                    <button id="web-search-btn" class="w-9 h-9 md:w-10 md:h-10 rounded-full hover:bg-zinc-800 flex items-center justify-center text-zinc-500 transition-colors flex-shrink-0 active:scale-95" title="Live web search"><i class="fas fa-globe text-sm"></i></button>
-                    <button id="compare-btn" class="w-9 h-9 md:w-10 md:h-10 rounded-full hover:bg-zinc-800 flex items-center justify-center text-zinc-500 transition-colors flex-shrink-0 active:scale-95" title="Compare with another model"><i class="fas fa-code-compare text-sm"></i></button>
-                    <button id="stop-btn" class="hidden w-9 h-9 md:w-10 md:h-10 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500/30 flex items-center justify-center flex-shrink-0 active:scale-95 transition-colors" title="Stop"><i class="fas fa-stop text-xs"></i></button>
-                    <button id="send-btn" class="w-9 h-9 md:w-10 md:h-10 rounded-full bg-white text-black hover:bg-zinc-200 flex items-center justify-center flex-shrink-0 active:scale-95 transition-colors disabled:opacity-40 disabled:cursor-not-allowed" title="Send" disabled><i class="fas fa-arrow-up text-xs font-bold"></i></button>
+                    <button id="mic-btn" class="w-10 h-10 rounded-full hover:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-indigo-400 transition-colors flex-shrink-0 active:scale-95" title="Voice Input"><i class="fas fa-microphone text-sm"></i></button>
+                    <button id="web-search-btn" class="w-10 h-10 rounded-full hover:bg-zinc-800 flex items-center justify-center text-zinc-500 transition-colors flex-shrink-0 active:scale-95" title="Live web search"><i class="fas fa-globe text-sm"></i></button>
+                    <button id="compare-btn" class="w-10 h-10 rounded-full hover:bg-zinc-800 flex items-center justify-center text-zinc-500 transition-colors flex-shrink-0 active:scale-95" title="Compare models"><i class="fas fa-code-compare text-sm"></i></button>
+                    <button id="stop-btn" class="hidden w-10 h-10 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500/30 flex items-center justify-center flex-shrink-0 active:scale-95" title="Stop"><i class="fas fa-stop text-xs"></i></button>
+                    <button id="send-btn" class="ml-auto md:ml-0 w-10 h-10 rounded-full bg-white text-black hover:bg-zinc-200 flex items-center justify-center flex-shrink-0 active:scale-95 transition-colors disabled:opacity-40 disabled:cursor-not-allowed" title="Send" disabled><i class="fas fa-arrow-up text-xs font-bold"></i></button>
                 </div>
                 <div class="flex items-center justify-center gap-3 mt-2 md:mt-3">
                     <span id="char-count" class="hidden text-[9px] text-zinc-600 font-mono"></span>
@@ -180,78 +196,76 @@
     </main>
 </div>
 
-<!-- Command Palette -->
+<!-- ============ MODALS ============ -->
 <div id="command-palette" class="hidden fixed inset-0 z-[110] bg-black/70 backdrop-blur-sm flex items-start justify-center pt-[10vh] md:pt-[15vh] p-4">
-    <div class="w-full max-w-lg bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden">
+    <div class="w-full max-w-lg bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden animate-pop">
         <div class="flex items-center gap-3 px-4 border-b border-zinc-800">
             <i class="fas fa-terminal text-indigo-400 text-sm"></i>
             <input id="palette-input" type="text" placeholder="Type a command..." class="flex-1 bg-transparent py-4 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none">
-            <kbd class="text-[10px] text-zinc-600 border border-zinc-700 rounded px-1.5 py-0.5 hidden md:inline">ESC</kbd>
+            <kbd class="pro hidden md:inline">ESC</kbd>
         </div>
         <div id="palette-list" class="p-2 space-y-1 max-h-72 overflow-y-auto custom-scrollbar"></div>
     </div>
 </div>
 
-<!-- Shortcuts Modal -->
 <div id="shortcuts-modal" class="hidden fixed inset-0 z-[120] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-    <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-2xl">
+    <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-2xl animate-pop">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="fas fa-keyboard text-indigo-400"></i> Keyboard Shortcuts</h3>
             <button id="shortcuts-close" class="text-zinc-500 hover:text-white w-8 h-8 rounded-lg flex items-center justify-center"><i class="fas fa-xmark"></i></button>
         </div>
         <div class="space-y-2 text-sm">
-            <div class="flex justify-between p-2 rounded-lg bg-zinc-950 border border-zinc-800"><span class="text-zinc-400">Command palette</span><kbd class="text-xs text-indigo-400">Ctrl/⌘ + K</kbd></div>
-            <div class="flex justify-between p-2 rounded-lg bg-zinc-950 border border-zinc-800"><span class="text-zinc-400">Send message</span><kbd class="text-xs text-indigo-400">Enter</kbd></div>
-            <div class="flex justify-between p-2 rounded-lg bg-zinc-950 border border-zinc-800"><span class="text-zinc-400">New line</span><kbd class="text-xs text-indigo-400">Shift + Enter</kbd></div>
-            <div class="flex justify-between p-2 rounded-lg bg-zinc-950 border border-zinc-800"><span class="text-zinc-400">Stop streaming</span><kbd class="text-xs text-indigo-400">Esc</kbd></div>
-            <div class="flex justify-between p-2 rounded-lg bg-zinc-950 border border-zinc-800"><span class="text-zinc-400">Slash commands</span><kbd class="text-xs text-indigo-400">/</kbd></div>
-            <div class="flex justify-between p-2 rounded-lg bg-zinc-950 border border-zinc-800"><span class="text-zinc-400">This overlay</span><kbd class="text-xs text-indigo-400">?</kbd></div>
+            <div class="flex justify-between p-2 rounded-lg bg-zinc-950 border border-zinc-800"><span class="text-zinc-400">Command palette</span><kbd class="pro">Ctrl/⌘ + K</kbd></div>
+            <div class="flex justify-between p-2 rounded-lg bg-zinc-950 border border-zinc-800"><span class="text-zinc-400">Send message</span><kbd class="pro">Enter</kbd></div>
+            <div class="flex justify-between p-2 rounded-lg bg-zinc-950 border border-zinc-800"><span class="text-zinc-400">New line</span><kbd class="pro">Shift + Enter</kbd></div>
+            <div class="flex justify-between p-2 rounded-lg bg-zinc-950 border border-zinc-800"><span class="text-zinc-400">Stop streaming</span><kbd class="pro">Esc</kbd></div>
+            <div class="flex justify-between p-2 rounded-lg bg-zinc-950 border border-zinc-800"><span class="text-zinc-400">Slash commands / focus input</span><kbd class="pro">/</kbd></div>
+            <div class="flex justify-between p-2 rounded-lg bg-zinc-950 border border-zinc-800"><span class="text-zinc-400">This overlay</span><kbd class="pro">?</kbd></div>
         </div>
     </div>
 </div>
 
-<!-- Rename / Folder / Memory / Support / Share modals (unchanged from your current version) -->
 <div id="rename-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-    <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-4 md:p-6 shadow-2xl">
+    <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-4 md:p-6 shadow-2xl animate-pop">
         <h3 class="font-semibold text-lg text-white mb-4">Rename Chat</h3>
-        <input id="rename-input" type="text" maxlength="120" class="w-full rounded-xl bg-zinc-800 border border-zinc-700 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-4">
+        <input id="rename-input" type="text" maxlength="120" class="input-pro mb-4">
         <div class="flex justify-end gap-3">
-            <button id="rename-cancel" class="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-sm text-zinc-300 active:scale-95">Cancel</button>
-            <button id="rename-save" class="px-4 py-2.5 rounded-xl bg-white text-black hover:bg-zinc-200 text-sm font-semibold active:scale-95">Save</button>
+            <button id="rename-cancel" class="btn btn-ghost !min-h-0 !py-2 text-sm">Cancel</button>
+            <button id="rename-save" class="btn btn-primary !min-h-0 !py-2 text-sm">Save</button>
         </div>
     </div>
 </div>
 
 <div id="folder-modal" class="hidden fixed inset-0 z-[110] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-    <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-4 md:p-6 shadow-2xl">
+    <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-4 md:p-6 shadow-2xl animate-pop">
         <h3 class="text-lg font-bold text-white mb-1">Move to Folder</h3>
         <p class="text-xs text-zinc-500 mb-4">Leave empty to move back to Uncategorized.</p>
-        <input id="folder-input" type="text" maxlength="40" placeholder="e.g. Work, Research" class="w-full rounded-xl bg-zinc-800 border border-zinc-700 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-3">
+        <input id="folder-input" type="text" maxlength="40" placeholder="e.g. Work, Research" class="input-pro mb-3">
         <div id="folder-suggestions" class="flex flex-wrap gap-2 mb-4"></div>
         <div class="flex justify-end gap-3">
-            <button id="folder-cancel" class="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-sm text-zinc-300 active:scale-95">Cancel</button>
-            <button id="folder-save" class="px-4 py-2.5 rounded-xl bg-white text-black hover:bg-zinc-200 text-sm font-semibold active:scale-95">Save</button>
+            <button id="folder-cancel" class="btn btn-ghost !min-h-0 !py-2 text-sm">Cancel</button>
+            <button id="folder-save" class="btn btn-primary !min-h-0 !py-2 text-sm">Save</button>
         </div>
     </div>
 </div>
 
 <div id="memory-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-    <div class="w-full max-w-lg bg-zinc-900 border border-zinc-800 rounded-2xl p-4 md:p-6 shadow-2xl max-h-[85vh] flex flex-col">
+    <div class="w-full max-w-lg bg-zinc-900 border border-zinc-800 rounded-2xl p-4 md:p-6 shadow-2xl max-h-[85vh] flex flex-col animate-pop">
         <div class="flex items-center justify-between mb-4">
             <h3 class="font-semibold text-lg flex items-center gap-2 text-white"><i class="fas fa-brain text-indigo-400"></i> Long-Term Memory</h3>
             <button id="memory-close" class="text-zinc-500 hover:text-white w-8 h-8 rounded-lg flex items-center justify-center"><i class="fas fa-xmark"></i></button>
         </div>
-        <p class="text-xs text-zinc-500 mb-4">Irus remembers these facts across all conversations.</p>
+        <p class="text-xs text-zinc-500 mb-4">Irus remembers these facts across all conversations. Or type "Remember [fact]" in chat.</p>
         <div class="flex gap-2 mb-4">
-            <input id="new-memory-input" type="text" placeholder="e.g., I prefer concise answers" class="flex-1 rounded-xl bg-zinc-800 border border-zinc-700 px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <button id="add-memory-btn" class="px-4 py-2.5 rounded-xl bg-white text-black hover:bg-zinc-200 text-sm font-semibold active:scale-95">Add</button>
+            <input id="new-memory-input" type="text" placeholder="e.g., I prefer concise answers" class="input-pro !min-h-0">
+            <button id="add-memory-btn" class="btn btn-primary !min-h-0 !py-2 text-sm">Add</button>
         </div>
         <div id="memory-list" class="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar"></div>
     </div>
 </div>
 
 <div id="support-modal" class="hidden fixed inset-0 z-[120] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-    <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-6 md:p-8 shadow-2xl text-center max-h-[90vh] overflow-y-auto">
+    <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-6 md:p-8 shadow-2xl text-center max-h-[90vh] overflow-y-auto animate-pop">
         <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center mb-4 shadow-lg shadow-pink-500/20"><i class="fas fa-mug-hot text-white text-xl"></i></div>
         <h3 class="text-lg font-bold text-white">Support the Developer</h3>
         <p class="text-xs text-zinc-500 mt-2 mb-6 leading-relaxed">Irus AI is free for everyone, forever.<br>If it helps you, consider fueling its development ☕</p>
@@ -260,8 +274,8 @@
             <div class="flex items-center gap-4">
                 <div id="upi-qr-box" class="bg-white p-2 rounded-xl flex-shrink-0"></div>
                 <div class="flex-1 text-left">
-                    <input id="qr-amount" type="number" min="1" step="1" placeholder="Amount ₹ (optional)" class="w-full rounded-xl bg-zinc-900 border border-zinc-800 px-3 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-2">
-                    <button id="qr-generate" class="w-full px-3 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 active:scale-95"><i class="fas fa-qrcode mr-1"></i> Generate QR</button>
+                    <input id="qr-amount" type="number" min="1" step="1" placeholder="Amount ₹ (optional)" class="input-pro !min-h-0 mb-2">
+                    <button id="qr-generate" class="btn btn-ghost w-full !min-h-0 !py-2 text-xs"><i class="fas fa-qrcode"></i> Generate QR</button>
                 </div>
             </div>
         </div>
@@ -270,67 +284,83 @@
                 <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1">UPI ID</p>
                 <p class="text-sm text-zinc-200 font-mono truncate">nejamulhaque@upi</p>
             </div>
-            <button id="copy-upi-btn" class="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-[10px] font-bold text-zinc-300 uppercase tracking-wider flex-shrink-0 active:scale-95">Copy</button>
+            <button id="copy-upi-btn" class="btn btn-ghost !min-h-0 !py-1.5 !px-3 text-[10px]">Copy</button>
         </div>
         <div class="grid grid-cols-2 gap-3 mb-4">
-            <a href="upi://pay?pa=nejamulhaque@upi&pn=Nejamul%20Haque" class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold active:scale-95"><i class="fas fa-indian-rupee-sign text-xs"></i> Pay via UPI</a>
-            <a href="https://www.buymeacoffee.com/nejamulhaque" target="_blank" rel="noopener" class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-sm font-semibold active:scale-95"><i class="fas fa-mug-hot text-xs"></i> Coffee</a>
+            <a href="upi://pay?pa=nejamulhaque@upi&pn=Nejamul%20Haque" class="btn btn-accent"><i class="fas fa-indian-rupee-sign text-xs"></i> Pay via UPI</a>
+            <a href="https://www.buymeacoffee.com/nejamulhaque" target="_blank" rel="noopener" class="btn bg-amber-500 hover:bg-amber-400 text-black text-sm font-semibold"><i class="fas fa-mug-hot text-xs"></i> Coffee</a>
         </div>
         <button id="support-close" class="text-xs text-zinc-600 hover:text-zinc-300 active:scale-95">Maybe later</button>
     </div>
 </div>
 
 <div id="share-modal" class="hidden fixed inset-0 z-[120] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-    <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-2xl">
+    <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-2xl animate-pop">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-bold text-white flex items-center gap-2"><i class="fas fa-share-nodes text-indigo-400"></i> Share Chat</h3>
             <button id="share-close" class="text-zinc-500 hover:text-white"><i class="fas fa-xmark"></i></button>
         </div>
         <p id="share-status" class="text-sm mb-4"></p>
         <div id="share-url-row" class="hidden flex items-center gap-2 mb-4">
-            <input id="share-url-input" readonly class="flex-1 rounded-xl bg-zinc-950 border border-zinc-800 px-3 py-2.5 text-xs text-zinc-300 focus:outline-none">
-            <button id="share-copy-btn" class="px-3 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200 active:scale-95">Copy</button>
+            <input id="share-url-input" readonly class="input-pro !min-h-0 text-xs">
+            <button id="share-copy-btn" class="btn btn-ghost !min-h-0 !py-2 text-xs">Copy</button>
         </div>
-        <button id="share-toggle-btn" class="w-full px-4 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold active:scale-95"></button>
+        <button id="share-toggle-btn" class="btn btn-accent w-full"></button>
     </div>
 </div>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
-    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
     .message-row { animation: fadeUp .3s ease; }
-    @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-    @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-    .animate-float { animation: float 3s ease-in-out infinite; }
-    .typing-label { font-size: 10px; color: #71717a; margin-left: 6px; }
-    .message-content p { margin-bottom: 0.75rem; line-height: 1.6; }
-    .message-content p:last-child { margin-bottom: 0; }
-    .message-content ul, .message-content ol { padding-left: 1.5rem; margin: 0.75rem 0; }
-    .message-content ul { list-style-type: disc; } .message-content ol { list-style-type: decimal; }
-    .message-content h1, .message-content h2, .message-content h3 { font-weight: 600; margin: 1.25rem 0 0.5rem; color: #fff; }
-    .message-content a { color: #818cf8; text-decoration: underline; text-underline-offset: 2px; }
-    .message-content strong { color: #fff; }
-    .message-content pre { background: #09090b !important; border: 1px solid #27272a; border-radius: 0.75rem; padding: 1rem; overflow-x: auto; margin: 1rem 0; font-size: 0.85rem; }
-    .message-content code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem; }
-    .message-content p code { background: #27272a; padding: 0.15rem 0.4rem; border-radius: 0.25rem; color: #f472b6; font-size: 0.8rem; }
-    .message-content table { width: 100%; border-collapse: collapse; margin: 0.75rem 0; font-size: 0.8rem; }
-    .message-content th, .message-content td { border: 1px solid #27272a; padding: 0.5rem 0.75rem; text-align: left; }
-    .message-content th { background: #18181b; color: #fff; font-weight: 600; }
-    .message-content tr:nth-child(even) { background: #09090b; }
-    .message-content img { max-width: 100%; border-radius: 0.75rem; margin: 0.5rem 0; border: 1px solid #27272a; }
-    .doc-item { display: flex; align-items: center; justify-content: space-between; padding: 0.4rem 0.5rem; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s; font-size: 0.75rem; color: #a1a1aa; min-height: 36px; }
-    .doc-item:hover { background-color: #18181b; color: #fff; }
-    .doc-item.active { background-color: rgba(99,102,241,0.1); color: #818cf8; border: 1px solid rgba(99,102,241,0.2); }
+    .doc-item { display: flex; align-items: center; justify-content: space-between; padding: .4rem .5rem; border-radius: .5rem; cursor: pointer; transition: all .2s; font-size: .75rem; color: #a1a1aa; min-height: 40px; }
+    .doc-item:hover { background: #18181b; color: #fff; }
+    .doc-item.active { background: rgba(99,102,241,.1); color: #818cf8; border: 1px solid rgba(99,102,241,.2); }
     .editing .message-actions { display: none !important; }
-    [data-theme="dark"] .moon-icon { display: none; }
-    [data-theme="light"] .sun-icon { display: none; }
-    @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.7); } 70% { box-shadow: 0 0 0 10px rgba(239,68,68,0); } 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); } }
-    .listening { animation: pulse-red 1.5s infinite; background-color: rgba(239,68,68,0.2) !important; color: #ef4444 !important; }
+    .speaking-active { color: #ef4444 !important; opacity: 1 !important; animation: pulse-red 1.5s infinite; padding: 2px 6px; border-radius: 6px; background: rgba(239,68,68,.12); }
+    .listening { animation: pulse-red 1.5s infinite; background: rgba(239,68,68,.2) !important; color: #ef4444 !important; }
+    @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239,68,68,.7); } 70% { box-shadow: 0 0 0 10px rgba(239,68,68,0); } 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); } }
+    .typing-label { font-size: 10px; color: #71717a; margin-left: 6px; }
+    @media (hover: none) { .message-actions { opacity: 1 !important; } }
+    ::selection { background: rgba(99,102,241,.4); }
+
+    /* ---------- PRO MESSAGE SYSTEM ---------- */
+    .msg-avatar { width: 2.1rem; height: 2.1rem; border-radius: .8rem; object-fit: cover; flex-shrink: 0;
+      box-shadow: 0 6px 16px -6px rgba(99,102,241,.45); border: 1px solid rgba(99,102,241,.25); }
+    .msg-avatar.user-init { display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #3f3f46, #27272a); color: #e4e4e7; font-weight: 700; font-size: .8rem;
+      border: 1px solid var(--border-2); box-shadow: none; }
+    [data-theme="light"] .msg-avatar.user-init { background: #e4e4e7; color: #3f3f46; }
+    .msg-head { display: flex; align-items: center; gap: .45rem; font-size: 9.5px; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase; color: var(--t-4); margin: 0 .3rem .4rem; }
+    .msg-head .dot { width: 3px; height: 3px; border-radius: 50%; background: var(--accent); }
+    .msg-head .message-meta { display: inline-flex; align-items: center; gap: .25rem; text-transform: none; letter-spacing: 0; font-weight: 600; }
+    .msg-bubble { position: relative; padding: .95rem 1.15rem; border-radius: 1.25rem; line-height: 1.75;
+      word-break: break-word; transition: box-shadow .25s ease, border-color .25s ease; }
+    .msg-bubble.ai { background: linear-gradient(180deg, rgba(24,24,27,.92), rgba(24,24,27,.7));
+      border: 1px solid rgba(63,63,70,.55); border-top-left-radius: .4rem; backdrop-filter: blur(10px); color: var(--t-2); }
+    [data-theme="light"] .msg-bubble.ai { background: #fff; border-color: #e4e4e7; box-shadow: 0 4px 18px -8px rgba(0,0,0,.08); }
+    .msg-bubble.user { background: linear-gradient(135deg, #6366f1 0%, #7c3aed 100%); color: #fff;
+      border-top-right-radius: .4rem; box-shadow: 0 12px 28px -14px rgba(99,102,241,.6); }
+    .message-row:hover .msg-bubble.ai { border-color: rgba(99,102,241,.35); box-shadow: 0 10px 34px -18px rgba(99,102,241,.35); }
+    .message-row:hover .msg-bubble.user { box-shadow: 0 14px 34px -14px rgba(99,102,241,.75); }
+    .msg-bubble.user ::selection { background: rgba(255,255,255,.3); }
+    .msg-bubble.user p code { background: rgba(255,255,255,.18); color: #fff; }
+    .message-content { font-size: .9rem; }
+    .message-content blockquote { border-left: 3px solid var(--accent); padding: .4rem .9rem; margin: .8rem 0;
+      background: rgba(99,102,241,.07); border-radius: 0 .6rem .6rem 0; color: var(--t-3); }
+    .message-content hr { border: none; border-top: 1px solid var(--border); margin: 1rem 0; }
+    .message-content a { transition: color .15s; }
+    .message-content a:hover { color: #a5b4fc; }
+    .message-content li { margin: .25rem 0; }
+    .message-content li::marker { color: var(--accent); }
+    .message-actions { gap: .3rem !important; margin-top: .45rem; }
+    .message-actions button { padding: .3rem .55rem; border-radius: .6rem; border: 1px solid transparent; }
+    .message-actions button:hover { background: var(--bg-2); border-color: var(--border); color: var(--t-1) !important; }
 </style>
 
 <script>
@@ -361,6 +391,18 @@
     let stickToBottom = true, attachedImage = null;
     let shareToken = {{ 'null' if not conversation.share_token else "'" + conversation.share_token + "'" }};
 
+    // ---------- TOASTS ----------
+    function showToast(message, type = 'success') {
+        const box = document.getElementById('toast-container');
+        const t = document.createElement('div');
+        t.className = `flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl border text-sm font-medium pointer-events-auto animate-pop ${
+            type === 'success' ? 'bg-emerald-950/90 border-emerald-800 text-emerald-200' :
+            type === 'error' ? 'bg-red-950/90 border-red-800 text-red-200' : 'bg-zinc-900/95 border-zinc-800 text-zinc-200'}`;
+        t.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle text-emerald-400' : type === 'error' ? 'fa-exclamation-circle text-red-400' : 'fa-info-circle text-indigo-400'}"></i> ${message}`;
+        box.appendChild(t);
+        setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(() => t.remove(), 300); }, 3200);
+    }
+
     // ---------- MOBILE SIDEBAR ----------
     function toggleMobileSidebar() {
         sidebar.classList.toggle("-translate-x-full");
@@ -370,39 +412,12 @@
     document.getElementById("sidebar-toggle").addEventListener("click", toggleMobileSidebar);
     mobileOverlay.addEventListener("click", toggleMobileSidebar);
 
-    // ---------- TOASTS ----------
-    function showToast(message, type = 'success') {
-        const toast = document.createElement('div');
-        toast.className = `flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl border text-sm font-medium transition-all duration-300 transform translate-x-10 opacity-0 pointer-events-auto ${
-            type === 'success' ? 'bg-emerald-950/90 border-emerald-800 text-emerald-200' :
-            type === 'error' ? 'bg-red-950/90 border-red-800 text-red-200' : 'bg-zinc-900 border-zinc-800 text-zinc-200'}`;
-        toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle text-emerald-400' : type === 'error' ? 'fa-exclamation-circle text-red-400' : 'fa-info-circle text-blue-400'}"></i> ${message}`;
-        document.getElementById('toast-container').appendChild(toast);
-        requestAnimationFrame(() => toast.classList.remove('translate-x-10', 'opacity-0'));
-        setTimeout(() => { toast.classList.add('translate-x-10', 'opacity-0'); setTimeout(() => toast.remove(), 300); }, 3000);
-    }
-
-    // ---------- CONNECTION STATUS ----------
+    // ---------- CONNECTION ----------
     const connDot = document.getElementById("conn-dot");
-    function setConn(online) {
-        connDot.className = `w-2 h-2 rounded-full flex-shrink-0 ${online ? 'bg-emerald-500' : 'bg-red-500'}`;
-        connDot.title = online ? 'Online' : 'Offline';
-    }
+    function setConn(on) { connDot.className = `w-2 h-2 rounded-full flex-shrink-0 ${on ? 'bg-emerald-500' : 'bg-red-500'}`; connDot.title = on ? 'Online' : 'Offline'; }
     window.addEventListener('online', () => { setConn(true); showToast('Back online', 'info'); });
     window.addEventListener('offline', () => { setConn(false); showToast('You are offline', 'error'); });
     setConn(navigator.onLine);
-
-    // ---------- BROADCAST BANNER ----------
-    fetch('/broadcast').then(r => r.json()).then(d => {
-        if (d.active && d.message) {
-            document.getElementById('broadcast-text').textContent = d.message;
-            document.getElementById('broadcast-banner').classList.remove('hidden');
-            document.getElementById('broadcast-banner').classList.add('flex');
-        }
-    }).catch(() => {});
-    document.getElementById('broadcast-close').addEventListener('click', () => {
-        document.getElementById('broadcast-banner').classList.add('hidden');
-    });
 
     // ---------- ONBOARDING ----------
     if (!localStorage.getItem('irus_onboarded')) {
@@ -413,14 +428,14 @@
 
     // ---------- THEME ----------
     document.getElementById("theme-toggle").addEventListener("click", () => {
-        const current = document.documentElement.getAttribute("data-theme") || "dark";
-        const next = current === "dark" ? "light" : "dark";
+        const cur = document.documentElement.getAttribute("data-theme") || "dark";
+        const next = cur === "dark" ? "light" : "dark";
         document.documentElement.setAttribute("data-theme", next);
         localStorage.setItem("theme", next);
         showToast(`Switched to ${next} mode`, "info");
     });
 
-    // ---------- SHORTCUTS MODAL ----------
+    // ---------- SHORTCUTS ----------
     const shortcutsModal = document.getElementById("shortcuts-modal");
     document.getElementById("shortcuts-btn").addEventListener("click", () => shortcutsModal.classList.remove("hidden"));
     document.getElementById("shortcuts-close").addEventListener("click", () => shortcutsModal.classList.add("hidden"));
@@ -467,21 +482,22 @@
     }
     function usePrompt(text) { input.value = text; autoResizeTextarea(); input.focus(); }
     function escapeHtml(str) { const d = document.createElement("div"); d.textContent = str || ""; return d.innerHTML; }
+    function relTime(iso) {
+        const s = (Date.now() - new Date(iso)) / 1000;
+        if (s < 60) return 'now';
+        if (s < 3600) return Math.floor(s / 60) + 'm';
+        if (s < 86400) return Math.floor(s / 3600) + 'h';
+        return Math.floor(s / 86400) + 'd';
+    }
 
     // ---------- TYPEWRITER PLACEHOLDER ----------
-    const PLACEHOLDERS = [
-        'Message Irus... ( type "/" for commands )',
-        'Ask me to explain anything...',
-        'Try "Search the web for AI news"...',
-        'Attach an image and ask "What is this?"...',
-        'Press Ctrl+K for the command palette...'
-    ];
+    const PLACEHOLDERS = ['Message Irus... ( type "/" for commands )', 'Ask me to explain anything...', 'Try "Search the web for AI news"...', 'Attach an image and ask "What is this?"...', 'Press Ctrl+K for the command palette...'];
     let phIdx = 0, phPos = 0, phDel = false;
     setInterval(() => {
         if (imageMode || document.activeElement === input || input.value) return;
         const target = PLACEHOLDERS[phIdx];
         phPos += phDel ? -1 : 1;
-        if (!phDel && phPos === target.length) { phDel = true; setTimeout(() => {}, 1200); }
+        if (!phDel && phPos === target.length) phDel = true;
         if (phDel && phPos === 0) { phDel = false; phIdx = (phIdx + 1) % PLACEHOLDERS.length; }
         input.placeholder = target.slice(0, phPos);
     }, 45);
@@ -492,44 +508,39 @@
         const role = row.dataset.role;
         const actions = document.createElement("div");
         actions.className = "message-actions flex items-center gap-3 mt-2 opacity-0 group-hover:opacity-100 transition-opacity";
-        if (role === "user") {
-            actions.innerHTML = `<button class="edit-message-btn text-zinc-600 hover:text-zinc-300 text-[10px] font-bold uppercase tracking-wider"><i class="fas fa-pen mr-1"></i>Edit</button>`;
-        } else {
-            actions.innerHTML = `<button class="speak-message-btn text-zinc-600 hover:text-zinc-300 text-[10px] font-bold uppercase tracking-wider"><i class="fas fa-volume-up mr-1"></i>Read</button>
-                <button class="regenerate-message-btn text-zinc-600 hover:text-zinc-300 text-[10px] font-bold uppercase tracking-wider"><i class="fas fa-rotate mr-1"></i>Retry</button>`;
-        }
+        if (role === "user") actions.innerHTML = `<button class="edit-message-btn text-zinc-600 hover:text-zinc-300 text-[10px] font-bold uppercase tracking-wider"><i class="fas fa-pen mr-1"></i>Edit</button>`;
+        else actions.innerHTML = `<button class="speak-message-btn text-zinc-600 hover:text-zinc-300 text-[10px] font-bold uppercase tracking-wider"><i class="fas fa-volume-up mr-1"></i>Read</button><button class="regenerate-message-btn text-zinc-600 hover:text-zinc-300 text-[10px] font-bold uppercase tracking-wider"><i class="fas fa-rotate mr-1"></i>Retry</button>`;
         actions.innerHTML += `<button class="copy-message-btn text-zinc-600 hover:text-zinc-300 text-[10px] font-bold uppercase tracking-wider"><i class="fas fa-copy mr-1"></i>Copy</button>`;
         const col = row.querySelector(".flex.flex-col");
         if (col) col.appendChild(actions);
     }
-
     function addMeta(row, seconds) {
-        if (!row) return;
-        const col = row.querySelector(".flex.flex-col");
-        if (!col || col.querySelector(".message-meta")) return;
-        const m = document.createElement("div");
-        m.className = "message-meta text-[10px] text-zinc-600 mt-1.5";
-        const t = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        m.innerHTML = `<i class="fas fa-bolt text-indigo-500/70"></i> ${seconds ? seconds.toFixed(1) + 's · ' : ''}${t} · Irus`;
-        col.appendChild(m);
+        if (!row || !seconds) return;
+        const head = row.querySelector(".msg-head");
+        if (!head || head.querySelector(".message-meta")) return;
+        const m = document.createElement("span");
+        m.className = "message-meta";
+        m.innerHTML = `<i class="fas fa-bolt" style="color:#818cf8"></i> ${seconds.toFixed(1)}s`;
+        head.appendChild(m);
     }
-
     function appendMessage(role, content = "", messageId = null, imageData = null) {
         removeEmptyState();
         const row = document.createElement("div");
-        row.className = `message-row group flex gap-2 md:gap-4 max-w-4xl mx-auto ${role === "user" ? "justify-end" : "justify-start"}`;
+        row.className = `message-row group flex gap-3 max-w-4xl mx-auto ${role === "user" ? "justify-end" : "justify-start"}`;
         row.dataset.role = role;
         if (messageId) row.dataset.messageId = messageId;
-        const aiAvatar = `<img src="/static/icons/icon-192.png" class="w-7 h-7 md:w-8 md:h-8 rounded-lg object-cover flex-shrink-0 shadow-lg shadow-indigo-500/10 mt-1" alt="Irus AI">`;
+        const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         const userInitial = "{{ current_user.username[0].upper() }}";
-        const userAvatar = `<div class="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-zinc-800 flex items-center justify-center flex-shrink-0 mt-1 text-[10px] md:text-xs font-bold text-zinc-400">${userInitial}</div>`;
-        const bubbleClass = role === "user" ? "bg-indigo-600 text-white rounded-br-sm" : "bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-bl-sm";
+        const aiAvatar = `<img src="/static/icons/icon-192.png" class="msg-avatar mt-5" alt="Irus AI">`;
+        const userAvatar = `<div class="msg-avatar user-init mt-5">${userInitial}</div>`;
+        const head = `<div class="msg-head ${role === "user" ? "flex-row-reverse" : ""}"><span>${role === "user" ? "You" : "Irus"}</span><span class="dot"></span><span>${now}</span></div>`;
         row.innerHTML = `
             ${role === "assistant" ? aiAvatar : ""}
-            <div class="flex flex-col max-w-[88%] md:max-w-[75%] min-w-0">
-                <div class="px-3 md:px-4 py-2.5 md:py-3 rounded-2xl ${bubbleClass}">
+            <div class="flex flex-col max-w-[88%] md:max-w-[78%] min-w-0 ${role === "user" ? "items-end" : ""}">
+                ${head}
+                <div class="msg-bubble ${role === "user" ? "user" : "ai"}">
                     ${imageData ? `<img src="${imageData}" class="max-w-[220px] w-full rounded-xl mb-2 border border-zinc-700" alt="attached">` : ""}
-                    <div class="message-content text-sm leading-relaxed"></div>
+                    <div class="message-content"></div>
                 </div>
             </div>
             ${role === "user" ? userAvatar : ""}`;
@@ -541,26 +552,27 @@
         scrollToBottom(true);
         return { row, contentElement };
     }
-
     function removeMessagesFrom(messageId, include = false) {
         const rows = Array.from(chatBox.querySelectorAll(".message-row[data-message-id]"));
         const index = rows.findIndex(r => r.dataset.messageId == messageId);
         if (index === -1) return;
         rows.slice(include ? index : index + 1).forEach(r => r.remove());
     }
-
     function setStreaming(active) {
+        if (active) stopSpeaking();
         isStreaming = active;
         sendBtn.classList.toggle("hidden", active);
         stopBtn.classList.toggle("hidden", !active);
     }
 
-    // ---------- FOLLOW-UPS ----------
+    // ---------- FOLLOW-UPS (smart) ----------
     function removeFollowUps() { document.querySelectorAll(".followup-row").forEach(el => el.remove()); }
     function showFollowUps(lastUserText) {
         removeFollowUps();
         const topic = lastUserText.replace(/\s+/g, ' ').trim().split(' ').slice(0, 6).join(' ');
-        if (!topic) return;
+        const trimmed = (lastUserText || "").trim();
+        const isGreeting = /^(hi|hello|hey|yo|sup|ok|okay|thanks|thank you|good (morning|afternoon|night))[!. ]*$/i.test(trimmed);
+        if (!topic || trimmed.length < 6 || isGreeting) return;
         const row = document.createElement("div");
         row.className = "followup-row flex flex-wrap gap-2 max-w-4xl mx-auto";
         [`Tell me more about ${topic}`, 'Give me a practical example', 'Explain it in simpler terms'].forEach(s => {
@@ -576,7 +588,7 @@
 
     // ---------- SOURCES ----------
     function renderSources(contentElement, sources) {
-        const bubble = contentElement.parentNode;
+        const bubble = contentElement.closest(".msg-bubble");
         if (bubble.querySelector(".sources-row")) return;
         const row = document.createElement("div");
         row.className = "sources-row flex flex-wrap gap-2 mb-3";
@@ -593,8 +605,7 @@
     // ---------- MODES ----------
     function toggleImageMode() {
         imageMode = !imageMode;
-        if (!imageMode) input.placeholder = PLACEHOLDERS[0];
-        else input.placeholder = "Describe the image you want to create...";
+        input.placeholder = imageMode ? "Describe the image you want to create..." : PLACEHOLDERS[0];
         showToast(imageMode ? "Image generation enabled 🎨" : "Image generation disabled", "info");
     }
     webSearchBtn.addEventListener("click", () => {
@@ -609,7 +620,7 @@
         compareBtn.classList.toggle("text-purple-400", compareEnabled);
         compareBtn.classList.toggle("bg-purple-500/10", compareEnabled);
         compareBtn.classList.toggle("text-zinc-500", !compareEnabled);
-        showToast(compareEnabled ? "Compare mode: Groq vs Ollama ⚖️" : "Compare mode disabled", "info");
+        showToast(compareEnabled ? "Compare mode ON ⚖️" : "Compare mode disabled", "info");
     });
 
     // ---------- VISION ----------
@@ -636,7 +647,7 @@
                 attachedImage = canvas.toDataURL("image/jpeg", 0.85);
                 imagePreview.src = attachedImage;
                 imagePreviewWrap.classList.remove("hidden");
-                showToast("Image attached ", "info");
+                showToast("Image attached 👁️", "info");
                 autoResizeTextarea();
             };
             img.src = reader.result;
@@ -666,9 +677,7 @@
             : '<span class="text-zinc-500"><i class="fas fa-lock mr-1"></i>Private — no public link.</span>';
         document.getElementById("share-url-row").classList.toggle("hidden", !on);
         if (on) shareUrlInput.value = location.origin + "/share/" + shareToken;
-        document.getElementById("share-toggle-btn").innerHTML = on
-            ? '<i class="fas fa-link-slash mr-1"></i> Disable Public Link'
-            : '<i class="fas fa-link mr-1"></i> Create Public Link';
+        document.getElementById("share-toggle-btn").innerHTML = on ? '<i class="fas fa-link-slash mr-1"></i> Disable Public Link' : '<i class="fas fa-link mr-1"></i> Create Public Link';
     }
     document.getElementById("share-chat-btn").addEventListener("click", () => { renderShareModal(); shareModal.classList.remove("hidden"); });
     document.getElementById("share-close").addEventListener("click", () => shareModal.classList.add("hidden"));
@@ -685,6 +694,144 @@
         }
     });
     document.getElementById("share-copy-btn").addEventListener("click", () => { navigator.clipboard.writeText(shareUrlInput.value); showToast("Link copied!", "success"); });
+
+    // ---------- TEXT-TO-SPEECH (Auto-Detect + Multi-Language) ----------
+    let activeSpeakBtn = null, lastSpeakText = "";
+    let voiceGender = localStorage.getItem('irus_voice_gender') || 'female';
+    let voiceLang = localStorage.getItem('irus_voice_lang') || 'en-US';
+    let voicesCache = [];
+    function refreshVoices() { if ('speechSynthesis' in window) voicesCache = window.speechSynthesis.getVoices(); }
+    if ('speechSynthesis' in window) { refreshVoices(); window.speechSynthesis.onvoiceschanged = refreshVoices; }
+
+    const FEMALE_HINT = /female|woman|zira|aria|jenny|samantha|victoria|karen|moira|tessa|fiona|serena|google (us|uk) english|heera|kalpana|veena/i;
+    const MALE_HINT = /\bmale\b|\bman\b|david|mark|daniel|alex|fred|george|james|guy|arthur|ravi|hemant|madhav/i;
+
+    // 🧠 AUTO-DETECT: Checks for Hindi (Devanagari) script
+    function detectLanguage(text) {
+        const devCount = (text.match(/[\u0900-\u097F]/g) || []).length;
+        const totalAlpha = (text.match(/[a-zA-Z\u0900-\u097F]/g) || []).length;
+        // If more than 15% of the characters are Hindi, use Hindi voice
+        if (totalAlpha > 0 && (devCount / totalAlpha) > 0.15) {
+            return 'hi-IN';
+        }
+        return voiceLang; // Fallback to user's manual toggle (EN / IN)
+    }
+
+    function pickVoice(gender, targetLang) {
+        if (!voicesCache.length) refreshVoices();
+        let pool = voicesCache;
+
+        if (targetLang === 'hi-IN') {
+            pool = voicesCache.filter(v => v.lang.startsWith('hi'));
+        } else if (targetLang === 'en-IN') {
+            pool = voicesCache.filter(v => v.lang === 'en-IN');
+            if (!pool.length) pool = voicesCache.filter(v => v.lang.startsWith('en'));
+        } else {
+            pool = voicesCache.filter(v => v.lang.startsWith('en'));
+        }
+
+        if (!pool.length) pool = voicesCache; // Ultimate fallback
+
+        const hint = gender === 'female' ? FEMALE_HINT : MALE_HINT;
+        return pool.find(v => hint.test(v.name)) || pool[0] || null;
+    }
+
+    function updateGenderIcon() {
+        const icon = document.getElementById('voice-gender-icon');
+        if (icon) icon.className = voiceGender === 'female' ? 'fas fa-venus text-pink-400' : 'fas fa-mars text-blue-400';
+    }
+
+    function updateLangBtn() {
+        const btn = document.getElementById('voice-lang-btn');
+        if (!btn) return;
+        if (voiceLang === 'hi-IN') btn.innerHTML = '<span class="text-[11px] font-bold text-orange-400">हि</span>';
+        else if (voiceLang === 'en-IN') btn.innerHTML = '<span class="text-[10px] font-bold text-emerald-400">IN</span>';
+        else btn.innerHTML = '<i class="fas fa-globe text-xs text-indigo-400"></i>';
+    }
+
+    const speakBar = document.getElementById('speak-bar');
+    const speakProgress = document.getElementById('speak-progress');
+    function showSpeakBar() { speakBar.classList.remove('hidden'); speakBar.classList.add('flex'); speakProgress.style.width = '0%'; }
+    function hideSpeakBar() { speakBar.classList.add('hidden'); speakBar.classList.remove('flex'); }
+    function setSpeakBtnState(btn, speaking) {
+        if (!btn) return;
+        if (speaking) { btn.innerHTML = '<i class="fas fa-stop mr-1"></i>Stop'; btn.classList.add("speaking-active"); }
+        else { btn.innerHTML = '<i class="fas fa-volume-up mr-1"></i>Read'; btn.classList.remove("speaking-active"); }
+    }
+    function stopSpeaking() {
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        setSpeakBtnState(activeSpeakBtn, false);
+        activeSpeakBtn = null;
+        hideSpeakBar();
+    }
+    function handleSpeak(btn, text) {
+        if (!('speechSynthesis' in window)) { showToast("Speech is not supported in this browser.", "error"); return; }
+        if (activeSpeakBtn === btn && window.speechSynthesis.speaking) { stopSpeaking(); return; }
+        stopSpeaking();
+
+        const clean = text.replace(/(\*|_|#|`|\[|\]\(.*?\))/g, '');
+        lastSpeakText = text;
+
+        // 🧠 AUTO-DETECT LANGUAGE
+        const detectedLang = detectLanguage(clean);
+
+        const utter = new SpeechSynthesisUtterance(clean);
+        utter.lang = detectedLang;
+
+        const voice = pickVoice(voiceGender, detectedLang);
+        if (voice) {
+            utter.voice = voice;
+            utter.lang = voice.lang;
+        }
+
+        utter.pitch = voiceGender === 'female' ? 1.1 : 0.85;
+        activeSpeakBtn = btn;
+        setSpeakBtnState(btn, true);
+        showSpeakBar();
+
+        // Temporarily update the UI button to show what language is currently speaking
+        const langBtn = document.getElementById('voice-lang-btn');
+        if (langBtn) {
+            if (detectedLang === 'hi-IN') langBtn.innerHTML = '<span class="text-[11px] font-bold text-orange-400">हि</span>';
+            else if (detectedLang === 'en-IN') langBtn.innerHTML = '<span class="text-[10px] font-bold text-emerald-400">IN</span>';
+            else langBtn.innerHTML = '<i class="fas fa-globe text-xs text-indigo-400"></i>';
+        }
+
+        utter.onboundary = (e) => { if (clean.length) speakProgress.style.width = Math.min(100, Math.round((e.charIndex / clean.length) * 100)) + '%'; };
+        const reset = () => {
+            setSpeakBtnState(btn, false);
+            hideSpeakBar();
+            if (activeSpeakBtn === btn) activeSpeakBtn = null;
+            updateLangBtn(); // Revert button to user's manual preference when done
+        };
+        utter.onend = reset;
+        utter.onerror = reset;
+        window.speechSynthesis.speak(utter);
+    }
+
+    function cycleLang() {
+        const langs = ['en-US', 'en-IN', 'hi-IN'];
+        const idx = langs.indexOf(voiceLang);
+        voiceLang = langs[(idx + 1) % langs.length];
+        localStorage.setItem('irus_voice_lang', voiceLang);
+        updateLangBtn();
+        const label = voiceLang === 'hi-IN' ? 'Hindi' : (voiceLang === 'en-IN' ? 'Indian English' : 'International English');
+        showToast(`Default Voice: ${label}`, 'info');
+        if (activeSpeakBtn && lastSpeakText) { const b = activeSpeakBtn; stopSpeaking(); handleSpeak(b, lastSpeakText); }
+    }
+
+    document.getElementById('speak-stop-btn').addEventListener('click', stopSpeaking);
+    document.getElementById('voice-gender-btn').addEventListener('click', () => {
+        voiceGender = voiceGender === 'female' ? 'male' : 'female';
+        localStorage.setItem('irus_voice_gender', voiceGender);
+        updateGenderIcon();
+        showToast(`Voice set to ${voiceGender} ${voiceGender === 'female' ? '♀' : '♂'}`, 'info');
+        if (activeSpeakBtn && lastSpeakText) { const b = activeSpeakBtn; stopSpeaking(); handleSpeak(b, lastSpeakText); }
+    });
+    document.getElementById('voice-lang-btn').addEventListener('click', cycleLang);
+
+    updateGenderIcon();
+    updateLangBtn();
 
     // ---------- CHAT ENGINE ----------
     async function sendChat({ mode = "send", message = "", message_id = null }) {
@@ -708,7 +855,7 @@
 
         setStreaming(true);
         controller = new AbortController();
-        let aiText = "", firstChunk = false;
+        let aiText = "";
 
         try {
             const response = await fetch(`/chat/${conversationId}/stream`, {
@@ -737,12 +884,7 @@
                         const payload = JSON.parse(part.slice(5).trim());
                         if (payload.type === "meta" && payload.user_message_id && userRow) userRow.dataset.messageId = payload.user_message_id;
                         if (payload.type === "meta" && payload.sources && payload.sources.length && aiContentElement) renderSources(aiContentElement, payload.sources);
-                        if (payload.type === "chunk") {
-                            if (!firstChunk) { firstChunk = true; }
-                            aiText += payload.content;
-                            renderMarkdown(aiContentElement, aiText);
-                            scrollToBottom();
-                        }
+                        if (payload.type === "chunk") { aiText += payload.content; renderMarkdown(aiContentElement, aiText); scrollToBottom(); }
                         if (payload.type === "done" && payload.assistant_message_id && aiRow) aiRow.dataset.messageId = payload.assistant_message_id;
                     } catch (e) {}
                 }
@@ -756,6 +898,7 @@
             controller = null;
             clearImage();
             addMeta(aiRow, (performance.now() - streamStart) / 1000);
+            loadConversations();
             const lastUser = Array.from(chatBox.querySelectorAll('.message-row[data-role="user"]')).pop();
             if (lastUser && aiText) showFollowUps(lastUser.querySelector(".message-content").dataset.content || "");
         }
@@ -767,12 +910,12 @@
         const row = document.createElement("div");
         row.className = "compare-row max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-3";
         row.innerHTML = `
-            <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+            <div class="card-pro p-4">
                 <div class="flex items-center gap-2 mb-3 text-[10px] font-bold uppercase tracking-widest text-indigo-400"><i class="fas fa-bolt"></i> Groq <span class="compare-status-g text-zinc-600">· thinking…</span></div>
                 <div class="compare-content-g message-content text-sm leading-relaxed"></div>
             </div>
-                        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
-                <div class="flex items-center gap-2 mb-3 text-[10px] font-bold uppercase tracking-widest text-emerald-400"><i class="fas fa-globe"></i> Pollinations <span class="compare-status-o text-zinc-600">· thinking…</span></div>
+            <div class="card-pro p-4">
+                <div class="flex items-center gap-2 mb-3 text-[10px] font-bold uppercase tracking-widest text-emerald-400"><i class="fas fa-microchip"></i> Second Model <span class="compare-status-o text-zinc-600">· thinking…</span></div>
                 <div class="compare-content-o message-content text-sm leading-relaxed"></div>
             </div>`;
         chatBox.appendChild(row);
@@ -782,11 +925,11 @@
     async function sendCompare(message) {
         if (isStreaming) return;
         removeFollowUps();
-        appendMessage("user", message + " (Compare Groq vs Pollinations)", null, null);
+        appendMessage("user", message + " ⚖️");
         const row = createCompareRow();
         const cg = row.querySelector(".compare-content-g"), co = row.querySelector(".compare-content-o");
         const sg = row.querySelector(".compare-status-g"), so = row.querySelector(".compare-status-o");
-        const texts = { groq: "", pollinations: "" };
+        const texts = {};
         setStreaming(true);
         controller = new AbortController();
         try {
@@ -808,13 +951,13 @@
                     if (!part.trim() || !part.startsWith("data:")) continue;
                     try {
                         const p = JSON.parse(part.slice(5).trim());
-                                                if (p.type === "chunk") { texts[p.provider] += p.content; renderMarkdown(p.provider === "groq" ? cg : co, texts[p.provider]); scrollToBottom(); }
+                        if (p.type === "chunk") { texts[p.provider] = (texts[p.provider] || "") + p.content; renderMarkdown(p.provider === "groq" ? cg : co, texts[p.provider]); scrollToBottom(); }
                         if (p.type === "provider_done") (p.provider === "groq" ? sg : so).textContent = "· done ✓";
                     } catch (e) {}
                 }
             }
         } catch (err) { if (err.name !== "AbortError") showToast(err.message, "error"); }
-        finally { setStreaming(false); controller = null; }
+        finally { setStreaming(false); controller = null; loadConversations(); }
     }
 
     // ---------- EDIT ----------
@@ -827,10 +970,10 @@
         contentElement.innerHTML = "";
         const ta = document.createElement("textarea");
         ta.rows = 3; ta.value = contentElement.dataset.content || "";
-        ta.className = "w-full bg-zinc-950 border border-zinc-700 rounded-xl p-3 text-sm text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500";
+        ta.className = "input-pro text-sm";
         const editActions = document.createElement("div");
         editActions.className = "flex gap-2 mt-2";
-        editActions.innerHTML = `<button class="save-edit-btn px-3 py-1.5 rounded-lg bg-white text-black text-xs font-bold">Save</button><button class="cancel-edit-btn px-3 py-1.5 rounded-lg bg-zinc-800 text-zinc-300 text-xs font-bold">Cancel</button>`;
+        editActions.innerHTML = `<button class="save-edit-btn btn btn-primary !min-h-0 !py-1.5 text-xs">Save</button><button class="cancel-edit-btn btn btn-ghost !min-h-0 !py-1.5 text-xs">Cancel</button>`;
         contentElement.appendChild(ta); contentElement.appendChild(editActions);
         ta.focus();
     }
@@ -849,7 +992,7 @@
 
     // ---------- EXPORT ----------
     function exportChat() {
-        const title = document.getElementById('conversation-title').textContent || 'chat';
+        const title = document.getElementById('conversation-title-text').textContent || 'chat';
         let md = `# ${title}\n\n_Exported from Irus AI on ${new Date().toLocaleString()}_\n\n`;
         document.querySelectorAll('#chat-box .message-row').forEach(row => {
             const role = row.dataset.role === 'user' ? '👤 User' : '🤖 Irus AI';
@@ -886,6 +1029,7 @@
                 item.className = `conversation-item group flex items-center gap-1 rounded-lg px-2 py-1.5 ${conv.id == conversationId ? "bg-zinc-900" : "hover:bg-zinc-900/60"}`;
                 item.dataset.conversationId = conv.id; item.dataset.title = conv.title;
                 item.innerHTML = `<a href="/chat/${conv.id}" class="conversation-title flex-1 min-w-0 px-1 py-1 text-xs text-zinc-400 hover:text-zinc-200 truncate">${escapeHtml(conv.title)}</a>
+                    <span class="text-[9px] text-zinc-600 flex-shrink-0 group-hover:hidden">${relTime(conv.updated_at)}</span>
                     <button type="button" class="move-to-folder-btn opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-indigo-400 px-2 py-1" title="Move to folder"><i class="fas fa-folder-plus text-[10px]"></i></button>
                     <button type="button" class="rename-chat-btn opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-indigo-400 px-2 py-1" title="Rename"><i class="fas fa-pen text-[10px]"></i></button>
                     <button type="button" class="delete-chat-btn opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-red-400 px-2 py-1" title="Delete"><i class="fas fa-trash text-[10px]"></i></button>`;
@@ -925,7 +1069,7 @@
 
     document.getElementById("conversation-list").addEventListener("click", async e => {
         const renameBtn = e.target.closest(".rename-chat-btn");
-        if (renameBtn) { const item = renameBtn.closest(".conversation-item"); renameConversationId = item.dataset.conversationId; renameInput.value = item.dataset.title || ""; renameModal.classList.remove("hidden"); renameInput.focus(); return; }
+        if (renameBtn) { const item = renameBtn.closest(".conversation-item"); renameConversationId = item.dataset.conversationId; document.getElementById("rename-input").value = item.dataset.title || ""; document.getElementById("rename-modal").classList.remove("hidden"); document.getElementById("rename-input").focus(); return; }
         const moveBtn = e.target.closest(".move-to-folder-btn");
         if (moveBtn) { showFolderModal(moveBtn.closest(".conversation-item").dataset.conversationId); return; }
         const deleteBtn = e.target.closest(".delete-chat-btn");
@@ -942,7 +1086,7 @@
             const folder = delFolder.dataset.folder;
             if (!confirm(`Delete folder "${folder}"?`)) return;
             await fetch(`/folders/${encodeURIComponent(folder)}/delete`, { method: "DELETE" });
-            showToast(`Folder deleted`, "success"); loadConversations(); return;
+            showToast("Folder deleted", "success"); loadConversations(); return;
         }
         if (e.target.closest('a[href^="/chat/"]') && window.innerWidth < 768) toggleMobileSidebar();
     });
@@ -950,9 +1094,9 @@
     // ---------- SLASH ----------
     const SLASH_COMMANDS = [
         { cmd: '/web', icon: 'fa-globe', desc: 'Toggle live web search', action: () => webSearchBtn.click() },
-        { cmd: '/compare', icon: 'fa-code-compare', desc: 'Compare Groq vs Ollama', action: () => compareBtn.click() },
+        { cmd: '/compare', icon: 'fa-code-compare', desc: 'Compare models side-by-side', action: () => compareBtn.click() },
         { cmd: '/image', icon: 'fa-wand-magic-sparkles', desc: 'Toggle AI image generation', action: toggleImageMode },
-        { cmd: '/doc', icon: 'fa-paperclip', desc: 'Upload a document', action: () => fileInput.click() },
+        { cmd: '/doc', icon: 'fa-paperclip', desc: 'Upload a document', action: () => document.getElementById('file-input').click() },
         { cmd: '/remember', icon: 'fa-brain', desc: 'Save a memory', action: () => { input.value = 'Remember that '; input.focus(); } },
         { cmd: '/code', icon: 'fa-code', desc: 'Generate code', action: () => { input.value = 'Write clean, well-commented code for: '; input.focus(); } },
         { cmd: '/summarize', icon: 'fa-file-alt', desc: 'Summarize text or document', action: () => { input.value = 'Summarize this in 5 bullet points: '; input.focus(); } },
@@ -981,9 +1125,9 @@
         { name: 'Toggle Compare Mode', icon: 'fa-code-compare', run: () => compareBtn.click() },
         { name: 'Toggle Image Generation', icon: 'fa-wand-magic-sparkles', run: toggleImageMode },
         { name: 'Toggle Theme', icon: 'fa-circle-half-stroke', run: () => document.getElementById('theme-toggle').click() },
-        { name: 'Upload Document', icon: 'fa-paperclip', run: () => fileInput.click() },
-        { name: 'Open Memories', icon: 'fa-brain', run: () => { memoryModal.classList.remove('hidden'); loadMemories(); } },
-        { name: 'Support the Developer', icon: 'fa-mug-hot', run: () => { supportModal.classList.remove('hidden'); renderUpiQr(); } },
+        { name: 'Upload Document', icon: 'fa-paperclip', run: () => document.getElementById('file-input').click() },
+        { name: 'Open Memories', icon: 'fa-brain', run: () => { document.getElementById('memory-modal').classList.remove('hidden'); loadMemories(); } },
+        { name: 'Support the Developer', icon: 'fa-mug-hot', run: () => { document.getElementById('support-modal').classList.remove('hidden'); renderUpiQr(); } },
         { name: 'API Keys', icon: 'fa-key', run: () => window.location.href = '/api-keys' },
         { name: 'Open Profile', icon: 'fa-user-gear', run: () => window.location.href = '/profile' },
         { name: 'Keyboard Shortcuts', icon: 'fa-keyboard', run: () => shortcutsModal.classList.remove('hidden') },
@@ -1018,9 +1162,8 @@
             if (isStreaming && controller) controller.abort();
             return;
         }
-        if (e.key === "?" && document.activeElement !== input && document.activeElement.tagName !== "INPUT") {
-            e.preventDefault(); shortcutsModal.classList.remove("hidden");
-        }
+        if (e.key === "/" && document.activeElement !== input && !["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) { e.preventDefault(); input.focus(); }
+        if (e.key === "?" && document.activeElement !== input && document.activeElement.tagName !== "INPUT") { e.preventDefault(); shortcutsModal.classList.remove("hidden"); }
         if (!palette.classList.contains("hidden") && e.key === "Enter") { e.preventDefault(); const first = paletteList.querySelector("button"); if (first) first.click(); }
     });
 
@@ -1069,13 +1212,10 @@
         if (e.target.closest(".edit-message-btn")) { startEdit(row); return; }
         if (e.target.closest(".regenerate-message-btn")) { removeMessagesFrom(id, true); sendChat({ mode: "regenerate", message_id: id }); return; }
         if (e.target.closest(".copy-message-btn")) { navigator.clipboard.writeText(text); showToast("Copied!", "success"); return; }
-        if (e.target.closest(".speak-message-btn")) {
-            if ('speechSynthesis' in window) { window.speechSynthesis.cancel(); window.speechSynthesis.speak(new SpeechSynthesisUtterance(text.replace(/(\*|_|#|`)/g, ''))); }
-            return;
-        }
+        if (e.target.closest(".speak-message-btn")) { handleSpeak(e.target.closest(".speak-message-btn"), text); return; }
     });
 
-    // ---------- VOICE ----------
+    // ---------- VOICE INPUT ----------
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     let recognition = null, isListening = false;
     if (SpeechRecognition) {
@@ -1103,6 +1243,28 @@
         document.getElementById('no-search-results').classList.toggle('hidden', visible !== 0);
     });
 
+    // ---------- TITLE CLICK-RENAME + PWA INSTALL ----------
+    document.getElementById("conversation-title").addEventListener("click", () => {
+        renameConversationId = conversationId;
+        renameInput.value = document.getElementById("conversation-title-text").textContent.trim();
+        renameModal.classList.remove("hidden");
+        renameInput.focus();
+    });
+
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', e => {
+        e.preventDefault();
+        deferredPrompt = e;
+        document.getElementById('install-app-btn').classList.remove('hidden');
+    });
+    document.getElementById('install-app-btn').addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') { showToast('Irus AI installed! 🎉', 'success'); document.getElementById('install-app-btn').classList.add('hidden'); }
+        deferredPrompt = null;
+    });
+
     // ---------- RENAME ----------
     const renameModal = document.getElementById('rename-modal');
     const renameInput = document.getElementById('rename-input');
@@ -1114,7 +1276,7 @@
         const res = await fetch(`/chat/${renameConversationId}/rename`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title }) });
         const data = await res.json();
         if (res.ok) {
-            if (String(renameConversationId) === String(conversationId)) document.getElementById('conversation-title').textContent = data.title;
+            if (String(renameConversationId) === String(conversationId)) document.getElementById('conversation-title-text').textContent = data.title;
             renameModal.classList.add('hidden'); showToast("Chat renamed!", "success"); loadConversations();
         } else showToast(data.error || "Rename failed", "error");
     });
@@ -1217,7 +1379,6 @@
             const c = row.querySelector(".message-content");
             renderMarkdown(c, c.dataset.content || "");
             addMessageActions(row);
-            addMeta(row, null);
         });
         scrollToBottom(true);
         autoResizeTextarea();

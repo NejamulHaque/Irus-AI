@@ -447,4 +447,60 @@
         submitSpinner.classList.remove("hidden");
     });
 </script>
+
+<!-- PWA Install Popup -->
+<div id="install-popup" class="hidden fixed bottom-4 left-4 right-4 md:left-auto md:right-6 md:w-96 z-[200]">
+    <div class="glass p-4 rounded-2xl shadow-2xl animate-pop">
+        <div class="flex items-center gap-3">
+            <img src="{{ url_for('static', filename='icons/icon-192.png') }}" class="w-12 h-12 rounded-xl object-cover shadow-lg" alt="Irus AI">
+            <div class="flex-1 min-w-0">
+                <p class="text-sm font-bold text-white">Install Irus AI</p>
+                <p id="install-popup-text" class="text-xs text-zinc-500 mt-0.5">Full-screen app experience — free, fast & offline-ready.</p>
+            </div>
+            <button id="install-dismiss" class="w-8 h-8 rounded-lg hover:bg-zinc-800 text-zinc-500 hover:text-white flex items-center justify-center active:scale-95"><i class="fas fa-xmark text-xs"></i></button>
+        </div>
+        <div class="flex gap-2 mt-3">
+            <button id="install-accept" class="btn btn-accent flex-1 !min-h-0 !py-2 text-xs"><i class="fas fa-download"></i> Install App</button>
+            <button id="install-later" class="btn btn-ghost flex-1 !min-h-0 !py-2 text-xs">Maybe later</button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const popup = document.getElementById('install-popup');
+    const text = document.getElementById('install-popup-text');
+    const acceptBtn = document.getElementById('install-accept');
+    let deferredPrompt = null;
+
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+    if (standalone) return; // already installed
+
+    if (isIOS) {
+        text.innerHTML = 'Tap <b>Share</b> <i class="fas fa-share-nodes"></i> then <b>"Add to Home Screen"</b> to install.';
+        acceptBtn.style.display = 'none';
+    }
+
+    window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; });
+
+    setTimeout(() => {
+        if (!localStorage.getItem('irus_install_dismissed')) popup.classList.remove('hidden');
+    }, 2500);
+
+    acceptBtn.addEventListener('click', async () => {
+        if (isIOS) return;
+        if (!deferredPrompt) { text.textContent = 'Use your browser menu → "Install app".'; return; }
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') popup.classList.add('hidden');
+        deferredPrompt = null;
+    });
+
+    const dismiss = () => { popup.classList.add('hidden'); localStorage.setItem('irus_install_dismissed', '1'); };
+    document.getElementById('install-dismiss').addEventListener('click', dismiss);
+    document.getElementById('install-later').addEventListener('click', dismiss);
+})();
+
+</script>
 {% endblock %}

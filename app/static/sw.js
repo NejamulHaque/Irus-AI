@@ -1,4 +1,4 @@
-const CACHE = 'irus-ai-v2';
+const CACHE = 'irus-ai-v5';
 const APP_SHELL = ['/', '/auth', '/static/css/theme.css'];
 
 self.addEventListener('install', (e) => {

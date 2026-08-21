@@ -12,7 +12,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(256), nullable=False)
     avatar = db.Column(db.Text, nullable=True)
     bio = db.Column(db.Text, nullable=True)
-    preferred_model = db.Column(db.String(100), default='llama-3.1-8b-instant')
+    preferred_model = db.Column(db.String(100), default='llama-3.3-70b-versatile')
     is_admin = db.Column(db.Boolean, default=False)
     is_banned = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

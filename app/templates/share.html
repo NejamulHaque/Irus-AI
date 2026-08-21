@@ -1,49 +1,67 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="min-h-screen bg-zinc-950 text-zinc-200 py-8 md:py-12 px-4">
-    <div class="max-w-3xl mx-auto">
+<div class="min-h-screen bg-zinc-950 text-zinc-200">
 
-        <div class="flex items-center gap-3 mb-8">
-            <img src="{{ url_for('static', filename='icons/icon-192.png') }}" class="w-10 h-10 rounded-xl object-cover" alt="Irus AI">
-            <div>
-                <h1 class="font-bold text-white leading-none">Shared Conversation</h1>
-                <p class="text-xs text-zinc-500 mt-1">{{ conversation.title }} · shared via Irus AI</p>
+    <!-- Sticky glass header -->
+    <header class="sticky top-0 z-40 glass !rounded-none border-x-0 border-t-0 px-4 md:px-8 py-3 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3 min-w-0">
+            <img src="{{ url_for('static', filename='icons/icon-192.png') }}" class="w-9 h-9 rounded-xl object-cover shadow-lg shadow-indigo-500/20" alt="Irus AI">
+            <div class="min-w-0">
+                <p class="text-sm font-bold text-white truncate">{{ conversation.title }}</p>
+                <p class="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Shared conversation</p>
             </div>
         </div>
+        <div class="flex items-center gap-2">
+            <button id="copy-link-btn" class="btn btn-ghost !min-h-0 !py-2 text-xs"><i class="fas fa-link"></i><span class="hidden sm:inline">Copy link</span></button>
+            <a href="{{ url_for('main.auth') }}" class="btn btn-accent !min-h-0 !py-2 text-xs"><i class="fas fa-rocket"></i><span class="hidden sm:inline">Try Irus AI</span></a>
+        </div>
+    </header>
 
-        <div class="space-y-6">
-            {% for message in messages %}
-            <div class="flex gap-3 {% if message.role == 'user' %}justify-end{% endif %}">
-                {% if message.role == 'assistant' %}
-                <img src="{{ url_for('static', filename='icons/icon-192.png') }}" class="w-8 h-8 rounded-lg object-cover flex-shrink-0 mt-1" alt="Irus AI">
+    <!-- Messages -->
+    <main class="max-w-3xl mx-auto px-3 md:px-6 py-8 space-y-6">
+        {% for message in messages %}
+        <div class="flex gap-3 {{ 'justify-end' if message.role == 'user' else 'justify-start' }} fade-in">
+            {% if message.role == 'assistant' %}
+            <img src="{{ url_for('static', filename='icons/icon-192.png') }}" class="w-8 h-8 rounded-lg object-cover flex-shrink-0 mt-1" alt="Irus AI">
+            {% endif %}
+            <div class="max-w-[85%] px-4 py-3 rounded-2xl {{ 'bg-indigo-600 text-white rounded-br-sm' if message.role == 'user' else 'glass text-zinc-300 rounded-bl-sm' }}">
+                {% if message.image_data %}
+                <img src="{{ message.image_data }}" class="max-w-[220px] w-full rounded-xl mb-2 border border-zinc-700" alt="attached">
                 {% endif %}
-                <div class="max-w-[85%] px-4 py-3 rounded-2xl {% if message.role == 'user' %}bg-indigo-600 text-white rounded-br-sm{% else %}bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-bl-sm{% endif %}">
-                    {% if message.image_data %}
-                    <img src="{{ message.image_data }}" class="max-w-[220px] w-full rounded-xl mb-2 border border-zinc-700" alt="attached image">
-                    {% endif %}
-                    <div class="message-content text-sm leading-relaxed" data-content="{{ message.content | e }}"></div>
-                </div>
+                <div class="message-content text-sm leading-relaxed" data-content="{{ message.content | e }}"></div>
+                <p class="text-[10px] mt-2 {{ 'text-white/60' if message.role == 'user' else 'text-zinc-600' }}">{{ message.created_at.strftime('%b %d, %H:%M') }}</p>
             </div>
-            {% endfor %}
+            {% if message.role == 'user' %}
+            <div class="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center flex-shrink-0 mt-1 text-xs font-bold text-zinc-400">👤</div>
+            {% endif %}
         </div>
+        {% else %}
+        <p class="text-center text-zinc-600 italic">This conversation is empty.</p>
+        {% endfor %}
+    </main>
 
-        <div class="mt-12 p-6 rounded-2xl border border-zinc-800 bg-zinc-900/50 text-center">
-            <p class="text-sm font-semibold text-white mb-1">Want your own AI command center?</p>
-            <p class="text-xs text-zinc-500 mb-4">Chat, web search, document intelligence, vision & more — free forever.</p>
-            <a href="{{ url_for('main.auth') }}" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-black text-sm font-semibold hover:bg-zinc-200 transition-colors">
-                <i class="fas fa-rocket text-xs"></i> Try Irus AI
-            </a>
+    <!-- CTA footer -->
+    <footer class="max-w-3xl mx-auto px-4 pb-12">
+        <div class="glass p-6 md:p-8 text-center lift">
+            <img src="{{ url_for('static', filename='icons/icon-192.png') }}" class="w-14 h-14 rounded-2xl object-cover mx-auto mb-4 animate-float" alt="Irus AI">
+            <h2 class="text-xl font-bold text-white">Want your own AI command center?</h2>
+            <p class="text-sm text-zinc-500 mt-2 mb-5">Chat · Live search · Documents · Vision · Memory · Image gen — free forever.</p>
+            <a href="{{ url_for('main.auth') }}" class="btn btn-accent px-6"><i class="fas fa-rocket"></i> Create free account</a>
         </div>
-    </div>
+        <p class="text-center text-[10px] text-zinc-700 mt-6">Powered by <span class="font-bold text-zinc-500">Irus AI</span> · built by Nejamul Haque</p>
+    </footer>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
 <script>
-    document.querySelectorAll(".message-content").forEach(el => {
-        const text = el.dataset.content || "";
-        el.innerHTML = DOMPurify.sanitize(marked.parse(text));
+    document.querySelectorAll('.message-content').forEach(el => {
+        el.innerHTML = DOMPurify.sanitize(marked.parse(el.dataset.content || ''));
+    });
+    document.getElementById('copy-link-btn').addEventListener('click', () => {
+        navigator.clipboard.writeText(location.href);
+        showToast('Link copied to clipboard!', 'success');
     });
 </script>
 {% endblock %}

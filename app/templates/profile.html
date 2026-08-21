@@ -1,25 +1,22 @@
 {% extends "base.html" %}
 
 {% block content %}
+{% set s = stats or {} %}
 <div class="min-h-screen bg-zinc-950 text-zinc-200 pb-20">
 
-    <!-- Cover banner -->
+    <!-- Cover -->
     <div class="h-40 md:h-52 relative bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600">
         <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 22px 22px;"></div>
-        <a href="{{ url_for('main.index') }}" class="absolute top-4 left-4 flex items-center gap-2 px-3 py-2 rounded-xl bg-black/30 backdrop-blur-md text-white text-xs font-semibold hover:bg-black/50 transition-colors active:scale-95">
-            <i class="fas fa-arrow-left"></i> Back to Chat
-        </a>
+        <a href="{{ url_for('main.index') }}" class="absolute top-4 left-4 flex items-center gap-2 px-3 py-2 rounded-xl bg-black/30 backdrop-blur-md text-white text-xs font-semibold hover:bg-black/50 active:scale-95"><i class="fas fa-arrow-left"></i> Back to Chat</a>
         {% if current_user.is_admin %}
-        <a href="{{ url_for('main.admin_dashboard') }}" class="absolute top-4 right-4 flex items-center gap-2 px-3 py-2 rounded-xl bg-black/30 backdrop-blur-md text-red-300 text-xs font-semibold hover:bg-black/50 transition-colors active:scale-95">
-            <i class="fas fa-shield-halved"></i> Admin
-        </a>
+        <a href="{{ url_for('main.admin_dashboard') }}" class="absolute top-4 right-4 flex items-center gap-2 px-3 py-2 rounded-xl bg-black/30 backdrop-blur-md text-red-300 text-xs font-semibold hover:bg-black/50 active:scale-95"><i class="fas fa-shield-halved"></i> Admin</a>
         {% endif %}
     </div>
 
     <div class="max-w-5xl mx-auto px-4">
 
         <!-- Identity card -->
-        <div class="relative -mt-10 md:-mt-12 p-5 md:p-6 rounded-3xl border border-zinc-800 bg-zinc-900/90 backdrop-blur-xl shadow-2xl">
+        <div class="glass relative -mt-10 md:-mt-12 p-5 md:p-6 shadow-2xl">
             <div class="flex flex-col md:flex-row md:items-center gap-5">
                 <div class="relative w-24 h-24 md:w-28 md:h-28 flex-shrink-0 mx-auto md:mx-0">
                     {% if current_user.avatar %}
@@ -27,139 +24,193 @@
                     {% else %}
                     <div id="avatar-preview" class="w-24 h-24 md:w-28 md:h-28 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-3xl font-bold text-white border-2 border-indigo-500/50 shadow-xl">{{ current_user.username[0].upper() }}</div>
                     {% endif %}
-                    <label for="avatar-input" class="absolute -bottom-2 -right-2 w-9 h-9 rounded-xl bg-white text-black flex items-center justify-center cursor-pointer hover:bg-zinc-200 active:scale-95 shadow-lg" title="Change avatar">
-                        <i class="fas fa-camera text-xs"></i>
-                    </label>
+                    <label for="avatar-input" class="absolute -bottom-2 -right-2 w-9 h-9 rounded-xl bg-white text-black flex items-center justify-center cursor-pointer hover:bg-zinc-200 active:scale-95 shadow-lg" title="Change avatar"><i class="fas fa-camera text-xs"></i></label>
                 </div>
-
                 <div class="flex-1 text-center md:text-left min-w-0">
                     <h1 class="text-2xl font-bold text-white flex items-center justify-center md:justify-start gap-2 flex-wrap">
                         {{ current_user.username }}
-                        {% if current_user.is_admin %}
-                        <span class="px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/30 text-red-400 text-[10px] font-bold uppercase tracking-widest">Admin</span>
-                        {% endif %}
+                        {% if current_user.is_admin %}<span class="badge badge-red">Admin</span>{% endif %}
+                        <span class="badge badge-green">Active</span>
                     </h1>
                     <p class="text-sm text-zinc-500 mt-1 flex items-center justify-center md:justify-start gap-2">
                         <i class="fas fa-envelope text-xs"></i> {{ current_user.email or 'no email set' }}
                         <button type="button" id="copy-email" class="text-zinc-600 hover:text-white transition-colors" title="Copy email"><i class="fas fa-copy text-xs"></i></button>
                     </p>
-                    <p class="text-xs text-zinc-600 mt-2"><i class="fas fa-cake-candles mr-1"></i> Member since {{ current_user.created_at.strftime('%B %Y') }}</p>
+                    <p class="text-xs text-zinc-600 mt-2"><i class="fas fa-cake-candles mr-1"></i> Member since {{ current_user.created_at.strftime('%B %Y') }} · Model: <span class="text-indigo-400 font-semibold">{{ current_user.preferred_model }}</span></p>
                 </div>
             </div>
 
             <!-- Stats strip -->
             <div class="grid grid-cols-3 md:grid-cols-6 gap-2 mt-5">
-                <div class="p-3 rounded-2xl bg-zinc-950 border border-zinc-800 text-center"><p class="text-lg font-bold text-white">{{ stats.conversations }}</p><p class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Chats</p></div>
-                <div class="p-3 rounded-2xl bg-zinc-950 border border-zinc-800 text-center"><p class="text-lg font-bold text-white">{{ stats.messages }}</p><p class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Messages</p></div>
-                <div class="p-3 rounded-2xl bg-zinc-950 border border-zinc-800 text-center"><p class="text-lg font-bold text-white">{{ stats.documents }}</p><p class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Docs</p></div>
-                <div class="p-3 rounded-2xl bg-zinc-950 border border-zinc-800 text-center"><p class="text-lg font-bold text-white">{{ stats.memories }}</p><p class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">Memories</p></div>
-                <div class="p-3 rounded-2xl bg-zinc-950 border border-zinc-800 text-center"><p class="text-lg font-bold text-amber-400">{{ stats.api_keys }}</p><p class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">API Keys</p></div>
-                <div class="p-3 rounded-2xl bg-zinc-950 border border-zinc-800 text-center"><p class="text-lg font-bold text-amber-400">{{ stats.api_requests }}</p><p class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">API Calls</p></div>
+                {% for label, key, color in [('Chats','conversations','text-white'), ('Messages','messages','text-white'), ('Docs','documents','text-white'), ('Memories','memories','text-white'), ('API Keys','api_keys','text-amber-400'), ('API Calls','api_requests','text-amber-400')] %}
+                <div class="card-pro lift p-3 text-center">
+                    <p class="text-lg font-bold {{ color }} counter" data-count="{{ s.get(key, 0) if s is mapping else 0 }}">0</p>
+                    <p class="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">{{ label }}</p>
+                </div>
+                {% endfor %}
             </div>
         </div>
 
-        <!-- Settings form -->
-        <form method="POST" enctype="multipart/form-data" class="mt-6 grid md:grid-cols-2 gap-5">
+        <!-- Tabs -->
+        <div class="flex gap-2 mt-6 overflow-x-auto custom-scrollbar pb-1">
+            <button class="tab-btn btn btn-accent !min-h-0 !py-2 text-xs" data-tab="profile"><i class="fas fa-user-pen"></i> Profile</button>
+            <button class="tab-btn btn btn-ghost !min-h-0 !py-2 text-xs" data-tab="security"><i class="fas fa-lock"></i> Security</button>
+            <button class="tab-btn btn btn-ghost !min-h-0 !py-2 text-xs" data-tab="developer"><i class="fas fa-key"></i> Developer</button>
+            <button class="tab-btn btn btn-ghost !min-h-0 !py-2 text-xs" data-tab="session"><i class="fas fa-right-from-bracket"></i> Session</button>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" class="mt-4">
             <input type="file" name="avatar" id="avatar-input" accept="image/*" class="hidden">
 
-            <!-- Profile settings -->
-            <div class="p-5 rounded-3xl border border-zinc-800 bg-zinc-900/60">
-                <h2 class="text-sm font-bold text-white mb-4 flex items-center gap-2"><i class="fas fa-user-pen text-indigo-400"></i> Profile Settings</h2>
-                <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Bio</label>
-                <textarea name="bio" rows="3" class="w-full rounded-xl bg-zinc-950 border border-zinc-800 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Tell Irus about yourself...">{{ current_user.bio or '' }}</textarea>
-
-                <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2 mt-4">Preferred AI Model</label>
-                <select name="preferred_model" class="w-full rounded-xl bg-zinc-950 border border-zinc-800 px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    <option value="llama-3.1-8b-instant" {{ 'selected' if current_user.preferred_model == 'llama-3.1-8b-instant' }}>⚡ Llama 3.1 8B — Fast</option>
-                    <option value="llama-3.3-70b-versatile" {{ 'selected' if current_user.preferred_model == 'llama-3.3-70b-versatile' }}>🧠 Llama 3.3 70B — Smart</option>
-                    <option value="qwen/qwen3.6-27b" {{ 'selected' if current_user.preferred_model == 'qwen/qwen3.6-27b' }}>👁️ Qwen 3.6 27B — Vision</option>
-                </select>
-                <p class="text-[10px] text-zinc-600 mt-2">Used for everyday chat. Vision & compare modes pick their own models automatically.</p>
-            </div>
-
-            <!-- Security -->
-            <div class="p-5 rounded-3xl border border-zinc-800 bg-zinc-900/60">
-                <h2 class="text-sm font-bold text-white mb-4 flex items-center gap-2"><i class="fas fa-lock text-emerald-400"></i> Security</h2>
-                <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">New Password</label>
-                <div class="relative">
-                    <input type="password" name="new_password" id="new-password" class="w-full rounded-xl bg-zinc-950 border border-zinc-800 px-4 py-3 pr-12 text-sm text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Leave blank to keep current" autocomplete="new-password">
-                    <button type="button" id="eye-btn" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-zinc-600 hover:text-zinc-300"><i class="fas fa-eye text-xs"></i></button>
+            <!-- PROFILE TAB -->
+            <section id="tab-profile" class="tab-panel grid md:grid-cols-2 gap-5">
+                <div class="card-pro p-5">
+                    <h2 class="text-sm font-bold text-white mb-4"><i class="fas fa-id-card text-indigo-400 mr-2"></i>Public Profile</h2>
+                    <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Bio</label>
+                    <textarea name="bio" rows="4" class="input-pro !min-h-0 text-sm" placeholder="Tell Irus about yourself...">{{ current_user.bio or '' }}</textarea>
+                    <p class="text-[10px] text-zinc-600 mt-2">Used to personalize your experience.</p>
                 </div>
-                <div class="flex gap-1.5 mt-3">
-                    <div class="pw-bar h-1 flex-1 rounded-full bg-zinc-800"></div>
-                    <div class="pw-bar h-1 flex-1 rounded-full bg-zinc-800"></div>
-                    <div class="pw-bar h-1 flex-1 rounded-full bg-zinc-800"></div>
-                    <div class="pw-bar h-1 flex-1 rounded-full bg-zinc-800"></div>
-                </div>
-                <p id="pw-label" class="text-[10px] text-zinc-600 mt-1.5">Minimum 8 chars with a letter + number.</p>
-            </div>
-
-            <!-- Developer console -->
-            <div class="p-5 rounded-3xl border border-amber-500/20 bg-gradient-to-br from-zinc-900/80 to-amber-500/5 md:col-span-2">
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h2 class="text-sm font-bold text-white flex items-center gap-2"><i class="fas fa-key text-amber-400"></i> Developer Console</h2>
-                        <p class="text-xs text-zinc-500 mt-1">{{ stats.api_keys }} active key(s) · {{ stats.api_requests }} requests. Build bots, scripts & apps on top of Irus.</p>
+                <div class="card-pro p-5">
+                    <h2 class="text-sm font-bold text-white mb-4"><i class="fas fa-microchip text-purple-400 mr-2"></i>AI Preferences</h2>
+                    <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Preferred Model</label>
+                    <select name="preferred_model" class="input-pro text-sm">
+                        <option value="llama-3.1-8b-instant" {{ 'selected' if current_user.preferred_model == 'llama-3.1-8b-instant' }}>⚡ Llama 3.1 8B — Fast</option>
+                        <option value="llama-3.3-70b-versatile" {{ 'selected' if current_user.preferred_model == 'llama-3.3-70b-versatile' }}>🧠 Llama 3.3 70B — Smart</option>
+                        <option value="qwen/qwen3.6-27b" {{ 'selected' if current_user.preferred_model == 'qwen/qwen3.6-27b' }}>👁️ Qwen 3.6 27B — Vision</option>
+                    </select>
+                    <div class="mt-4 p-3 rounded-xl bg-zinc-950 border border-zinc-800 text-[11px] text-zinc-500 leading-relaxed">
+                        <i class="fas fa-circle-info text-indigo-400 mr-1"></i> Vision & Compare modes automatically pick their own models.
                     </div>
-                    <a href="{{ url_for('main.api_keys_page') }}" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white text-black text-sm font-semibold hover:bg-zinc-200 active:scale-95">
-                        Open API Console <i class="fas fa-arrow-right text-xs"></i>
-                    </a>
                 </div>
-            </div>
+            </section>
+
+            <!-- SECURITY TAB -->
+            <section id="tab-security" class="tab-panel hidden grid md:grid-cols-2 gap-5">
+                <div class="card-pro p-5">
+                    <h2 class="text-sm font-bold text-white mb-4"><i class="fas fa-key text-emerald-400 mr-2"></i>Change Password</h2>
+                    <label class="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">New Password</label>
+                    <div class="relative">
+                        <input type="password" name="new_password" id="new-password" class="input-pro pr-12 text-sm" placeholder="Leave blank to keep current" autocomplete="new-password">
+                        <button type="button" id="eye-btn" class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-zinc-600 hover:text-zinc-300"><i class="fas fa-eye text-xs"></i></button>
+                    </div>
+                    <div class="flex gap-1.5 mt-3">
+                        <div class="pw-bar h-1 flex-1 rounded-full bg-zinc-800"></div>
+                        <div class="pw-bar h-1 flex-1 rounded-full bg-zinc-800"></div>
+                        <div class="pw-bar h-1 flex-1 rounded-full bg-zinc-800"></div>
+                        <div class="pw-bar h-1 flex-1 rounded-full bg-zinc-800"></div>
+                    </div>
+                    <p id="pw-label" class="text-[10px] text-zinc-600 mt-1.5">Minimum 8 chars with a letter + number.</p>
+                </div>
+                <div class="card-pro p-5">
+                    <h2 class="text-sm font-bold text-white mb-4"><i class="fas fa-shield-halved text-emerald-400 mr-2"></i>Account Protection</h2>
+                    <ul class="space-y-2 text-xs text-zinc-400">
+                        <li class="flex items-center gap-2 p-2 rounded-lg bg-zinc-950 border border-zinc-800"><i class="fas fa-check-circle text-emerald-400"></i> Password hashed (scrypt)</li>
+                        <li class="flex items-center gap-2 p-2 rounded-lg bg-zinc-950 border border-zinc-800"><i class="fas fa-check-circle text-emerald-400"></i> Rate-limited login (20/min)</li>
+                        <li class="flex items-center gap-2 p-2 rounded-lg bg-zinc-950 border border-zinc-800"><i class="fas fa-check-circle text-emerald-400"></i> HttpOnly + SameSite session cookies</li>
+                        <li class="flex items-center gap-2 p-2 rounded-lg bg-zinc-950 border border-zinc-800"><i class="fas fa-check-circle text-emerald-400"></i> Honeypot anti-bot protection</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- DEVELOPER TAB -->
+            <section id="tab-developer" class="tab-panel hidden">
+                <div class="card-pro p-5 border-amber-500/20">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-sm font-bold text-white flex items-center gap-2"><i class="fas fa-key text-amber-400"></i> Developer Console</h2>
+                            <p class="text-xs text-zinc-500 mt-1">{{ s.get('api_keys', 0) if s is mapping else 0 }} active key(s) · {{ s.get('api_requests', 0) if s is mapping else 0 }} requests. Build bots & apps on top of Irus.</p>
+                        </div>
+                        <a href="{{ url_for('main.api_keys_page') }}" class="btn btn-accent text-xs"><i class="fas fa-arrow-right"></i> Open API Console</a>
+                    </div>
+                    <div class="relative mt-4">
+                        <button type="button" id="copy-curl" class="absolute top-2 right-2 px-2 py-1 rounded-md bg-zinc-800 text-zinc-400 hover:text-white text-[10px] font-bold"><i class="fas fa-copy mr-1"></i>Copy</button>
+<pre class="text-xs text-zinc-400 overflow-x-auto leading-relaxed p-4 rounded-xl bg-zinc-950 border border-zinc-800">curl -X POST {{ url_for('main.api_chat', _external=True) }} \
+  -H "Authorization: Bearer ${IRUS_API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Hello Irus!"}'</pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SESSION TAB -->
+            <section id="tab-session" class="tab-panel hidden">
+                <div class="card-pro p-5 border-red-500/20">
+                    <h2 class="text-sm font-bold text-white mb-2"><i class="fas fa-right-from-bracket text-red-400 mr-2"></i>Session</h2>
+                    <p class="text-xs text-zinc-500 mb-4">Signing out ends this session on this device. Your data stays safe.</p>
+                    <a href="{{ url_for('main.logout') }}" class="btn btn-danger text-xs"><i class="fas fa-sign-out-alt"></i> Log out of Irus AI</a>
+                </div>
+            </section>
 
             <!-- Save bar -->
-            <div class="md:col-span-2 flex items-center justify-between">
-                <a href="{{ url_for('main.logout') }}" class="text-xs text-zinc-600 hover:text-red-400 transition-colors"><i class="fas fa-sign-out-alt mr-1"></i> Log out</a>
-                <button type="submit" class="px-6 py-3 rounded-xl bg-white text-black font-semibold text-sm hover:bg-zinc-200 active:scale-95"><i class="fas fa-floppy-disk mr-2"></i>Save Changes</button>
+            <div class="flex justify-end mt-6">
+                <button type="submit" class="btn btn-primary px-6"><i class="fas fa-floppy-disk"></i> Save Changes</button>
             </div>
         </form>
     </div>
 </div>
 
 <script>
+    // Tabs
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.className = b.className.replace('btn-accent', 'btn-ghost'));
+            btn.className = btn.className.replace('btn-ghost', 'btn-accent');
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+            document.getElementById('tab-' + btn.dataset.tab).classList.remove('hidden');
+        });
+    });
+
+    // Animated counters
+    document.querySelectorAll('.counter').forEach(el => {
+        const target = parseInt(el.dataset.count || '0', 10);
+        const t0 = performance.now();
+        (function tick(t) {
+            const p = Math.min(1, (t - t0) / 900);
+            el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3)));
+            if (p < 1) requestAnimationFrame(tick);
+        })(t0);
+    });
+
     // Live avatar preview
-    document.getElementById("avatar-input").addEventListener("change", e => {
+    document.getElementById('avatar-input').addEventListener('change', e => {
         const file = e.target.files[0];
         if (!file) return;
         const reader = new FileReader();
         reader.onload = () => {
-            const prev = document.getElementById("avatar-preview");
-            if (prev.tagName === "DIV") {
-                const img = document.createElement("img");
-                img.id = "avatar-preview";
-                img.className = prev.className;
+            const prev = document.getElementById('avatar-preview');
+            if (prev.tagName === 'DIV') {
+                const img = document.createElement('img');
+                img.id = 'avatar-preview'; img.className = prev.className;
                 prev.replaceWith(img);
             }
-            document.getElementById("avatar-preview").src = reader.result;
+            document.getElementById('avatar-preview').src = reader.result;
+            showToast('Avatar ready — press Save Changes', 'info');
         };
         reader.readAsDataURL(file);
     });
 
-    // Copy email
-    document.getElementById("copy-email").addEventListener("click", () => {
+    // Copy email + curl
+    document.getElementById('copy-email').addEventListener('click', () => {
         navigator.clipboard.writeText("{{ current_user.email or '' }}");
+        showToast('Email copied!', 'success');
+    });
+    document.getElementById('copy-curl').addEventListener('click', function () {
+        navigator.clipboard.writeText(this.parentElement.querySelector('pre').innerText);
+        showToast('cURL copied!', 'success');
     });
 
     // Password eye + strength
-    const pw = document.getElementById("new-password");
-    document.getElementById("eye-btn").addEventListener("click", () => {
-        pw.type = pw.type === "password" ? "text" : "password";
-    });
-    pw.addEventListener("input", () => {
-        const v = pw.value;
-        let s = 0;
-        if (v.length >= 8) s++;
-        if (v.length >= 12) s++;
-        if (/[A-Z]/.test(v) && /[a-z]/.test(v)) s++;
-        if (/\d/.test(v)) s++;
-        if (/[^A-Za-z0-9]/.test(v)) s++;
-        const level = v.length === 0 ? 0 : Math.min(4, Math.max(1, s));
-        const colors = ["bg-zinc-800", "bg-red-500", "bg-orange-500", "bg-yellow-500", "bg-emerald-500"];
-        const labels = ["Minimum 8 chars with a letter + number.", "Weak", "Fair", "Good", "Strong 💪"];
-        document.querySelectorAll(".pw-bar").forEach((bar, i) => {
-            bar.className = `pw-bar h-1 flex-1 rounded-full ${i < level ? colors[level] : "bg-zinc-800"}`;
-        });
-        document.getElementById("pw-label").textContent = labels[level];
+    const pw = document.getElementById('new-password');
+    document.getElementById('eye-btn').addEventListener('click', () => { pw.type = pw.type === 'password' ? 'text' : 'password'; });
+    pw.addEventListener('input', () => {
+        const v = pw.value; let sc = 0;
+        if (v.length >= 8) sc++; if (v.length >= 12) sc++;
+        if (/[A-Z]/.test(v) && /[a-z]/.test(v)) sc++; if (/\d/.test(v)) sc++; if (/[^A-Za-z0-9]/.test(v)) sc++;
+        const level = v.length === 0 ? 0 : Math.min(4, Math.max(1, sc));
+        const colors = ['bg-zinc-800','bg-red-500','bg-orange-500','bg-yellow-500','bg-emerald-500'];
+        const labels = ['Minimum 8 chars with a letter + number.','Weak','Fair','Good','Strong 💪'];
+        document.querySelectorAll('.pw-bar').forEach((b, i) => { b.className = `pw-bar h-1 flex-1 rounded-full ${i < level ? colors[level] : 'bg-zinc-800'}`; });
+        document.getElementById('pw-label').textContent = labels[level];
     });
 </script>
 {% endblock %}

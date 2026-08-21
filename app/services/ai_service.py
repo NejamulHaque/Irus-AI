@@ -68,23 +68,47 @@ def _image_parts(content):
     return parts
 
 # ----------------------- Providers -----------------------
+GROQ_FALLBACK_MODELS = [
+    "llama-3.3-70b-versatile",
+    "openai/gpt-oss-20b",
+    "qwen/qwen3.6-27b",
+    "groq/compound",
+]
+
 def _stream_groq(messages, model_override=None):
     from groq import Groq
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
         raise RuntimeError("GROQ_API_KEY is missing")
     client = Groq(api_key=api_key)
-    model = model_override or os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
-    stream = client.chat.completions.create(
-        model=model, messages=messages,
-        temperature=float(os.getenv("AI_TEMPERATURE", "0.7")),
-        max_tokens=int(os.getenv("AI_MAX_TOKENS", "1024")),
-        stream=True,
-    )
-    for chunk in stream:
-        delta = chunk.choices[0].delta
-        if getattr(delta, "content", None):
-            yield delta.content
+
+    models_to_try = [model_override or os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")]
+    models_to_try += [m for m in GROQ_FALLBACK_MODELS if m not in models_to_try]
+
+    last_err = None
+    for model in models_to_try:
+        try:
+            stream = client.chat.completions.create(
+                model=model,
+                messages=messages,
+                temperature=float(os.getenv("AI_TEMPERATURE", "0.7")),
+                max_tokens=int(os.getenv("AI_MAX_TOKENS", "1024")),
+                stream=True,
+            )
+            got = False
+            for chunk in stream:
+                delta = chunk.choices[0].delta
+                if getattr(delta, "content", None):
+                    got = True
+                    yield delta.content
+            return  # success
+        except Exception as e:
+            last_err = e
+            print(f"--- [Groq] model '{model}' failed: {e} — trying next ---")
+            if 'got' in dir() and got:
+                raise  # never double-stream after partial output
+            continue
+    raise last_err or RuntimeError("All Groq models failed")
 
 def _stream_gemini(messages):
     import requests

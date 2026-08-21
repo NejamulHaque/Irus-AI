@@ -37,6 +37,16 @@ main = Blueprint('main', __name__)
 USERNAME_PATTERN = re.compile(r'^[a-zA-Z0-9_.-]{3,30}$')
 EMAIL_PATTERN = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
 
+# Models retired by Groq — auto-redirect to prevent 404s
+RETIRED_MODELS = [
+    'llama-3.1-8b-instant',
+    'llama-3.2-11b-vision-preview',
+    'llama-3.2-11b-vision-instruct',
+    'mixtral-8x7b-32768',
+    'meta-llama/llama-4-scout-17b-16e-instruct',
+]
+DEFAULT_MODEL = 'llama-3.3-70b-versatile'
+
 
 def validate_password(password):
     if len(password) < 8:
@@ -173,6 +183,7 @@ def auth():
                 username=username,
                 email=email,
                 password_hash=generate_password_hash(password),
+                preferred_model=DEFAULT_MODEL,
                 is_admin=(User.query.count() == 0)
             )
             db.session.add(new_user)
@@ -476,7 +487,10 @@ def stream_chat(conversation_id):
         user_memories=user_memories
     )
 
-    user_model = current_user.preferred_model
+    # 🛡️ Retired-model guard
+    user_model = current_user.preferred_model or DEFAULT_MODEL
+    if user_model in RETIRED_MODELS:
+        user_model = DEFAULT_MODEL
     current_user_id = current_user.id
 
     # Vision attach
@@ -556,7 +570,7 @@ def stream_chat(conversation_id):
 
 
 # -----------------------
-# Compare (Groq vs Ollama)
+# Compare (Groq vs Pollinations — cloud-safe)
 # -----------------------
 
 @main.route('/chat/<int:conversation_id>/compare', methods=['POST'])
@@ -599,8 +613,6 @@ def compare_chat(conversation_id):
 
     def generate():
         yield sse({'type': 'meta', 'user_message_id': user_message_id})
-        
-        # Compare Groq vs Pollinations (cloud-safe)
         full = {'groq': [], 'pollinations': []}
         gens = {
             'groq': ai_service._stream_groq(ai_messages),
@@ -634,9 +646,7 @@ def compare_chat(conversation_id):
         with app.app_context():
             try:
                 assistant_message = Message(
-                    conversation_id=conversation_id,
-                    role='assistant',
-                    content=combined
+                    conversation_id=conversation_id, role='assistant', content=combined
                 )
                 db.session.add(assistant_message)
                 db.session.commit()
@@ -647,19 +657,12 @@ def compare_chat(conversation_id):
                 db.session.remove()
         yield sse({'type': 'done', 'assistant_message_id': assistant_message_id})
 
-    return Response(
-        generate(),
-        mimetype='text/event-stream',
-        headers={
-            'Cache-Control': 'no-cache',
-            'X-Accel-Buffering': 'no',
-            'Connection': 'keep-alive'
-        }
-    )
+    return Response(generate(), mimetype='text/event-stream',
+                    headers={'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no', 'Connection': 'keep-alive'})
 
 
 # -----------------------
-# Documents
+# Documents (RAG)
 # -----------------------
 
 @main.route('/documents/upload', methods=['POST'])
@@ -743,7 +746,7 @@ def delete_memory(mem_id):
 def profile():
     if request.method == 'POST':
         current_user.bio = request.form.get('bio', '').strip()
-        current_user.preferred_model = request.form.get('preferred_model', 'llama-3.1-8b-instant')
+        current_user.preferred_model = request.form.get('preferred_model', DEFAULT_MODEL)
         if 'avatar' in request.files:
             file = request.files['avatar']
             if file and file.filename != '':
@@ -904,6 +907,7 @@ def admin_dashboard():
         'api_requests': APIRequestLog.query.count(),
     }
 
+    # 7-day message activity
     activity = []
     max_count = 1
     for i in range(6, -1, -1):
@@ -916,6 +920,7 @@ def admin_dashboard():
     for d in activity:
         d['height'] = max(4, int((d['count'] / max_count) * 100))
 
+    # 7-day signups
     signups = []
     for i in range(6, -1, -1):
         day = (datetime.utcnow() - timedelta(days=i)).date()

@@ -15,80 +15,79 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Irus AI">
 
-    <!-- UI libs -->
+    <!-- UI -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='icons/icon-192.png') }}">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
 
-    <!-- Theme bootstrap (before paint = no flash) -->
+    <!-- Theme bootstrap (no flash of wrong theme) -->
     <script>
         (function () {
             var saved = localStorage.getItem('theme');
-            var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            document.documentElement.setAttribute('data-theme', saved || (prefersDark ? 'dark' : 'light'));
+            var dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.setAttribute('data-theme', saved || (dark ? 'dark' : 'light'));
         })();
     </script>
-
-    <style>
-        * { -webkit-tap-highlight-color: transparent; }
-        html { scroll-behavior: smooth; }
-        body { font-family: 'Inter', sans-serif; overscroll-behavior-y: none; }
-        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
-        .pt-safe { padding-top: env(safe-area-inset-top); }
-    </style>
 </head>
 <body class="bg-zinc-950 text-zinc-200">
 
+    <!-- Global toast system -->
+    <div id="toast-container" class="fixed top-4 right-4 left-4 md:left-auto md:w-96 z-[300] flex flex-col gap-2 pointer-events-none"></div>
+    <script>
+        function showToast(message, type = 'success') {
+            const box = document.getElementById('toast-container');
+            if (!box) return;
+            const t = document.createElement('div');
+            t.className = `flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl border text-sm font-medium pointer-events-auto animate-pop ${
+                type === 'success' ? 'bg-emerald-950/90 border-emerald-800 text-emerald-200' :
+                type === 'error' ? 'bg-red-950/90 border-red-800 text-red-200' : 'bg-zinc-900/95 border-zinc-800 text-zinc-200'}`;
+            t.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle text-emerald-400' : type === 'error' ? 'fa-exclamation-circle text-red-400' : 'fa-info-circle text-indigo-400'}"></i> ${message}`;
+            box.appendChild(t);
+            setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(() => t.remove(), 300); }, 3200);
+        }
+    </script>
+
+    <!-- Flash messages → toasts -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            <div id="flash-messages" class="fixed top-4 left-4 right-4 z-[200] space-y-2">
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
                 {% for category, message in messages %}
-                    <div class="p-4 rounded-xl border backdrop-blur-md shadow-2xl {{ 'bg-red-950/90 border-red-800 text-red-200' if category == 'error' else 'bg-emerald-950/90 border-emerald-800 text-emerald-200' }}">
-                        <div class="flex items-center gap-3">
-                            <i class="fas {{ 'fa-exclamation-circle' if category == 'error' else 'fa-check-circle' }}"></i>
-                            <span class="text-sm font-medium">{{ message }}</span>
-                        </div>
-                    </div>
+                showToast("{{ message }}", "{{ 'error' if category == 'error' else 'success' }}");
                 {% endfor %}
-            </div>
+            });
+        </script>
         {% endif %}
     {% endwith %}
 
-    {% set broadcast = None %}
-    {% if current_user.is_authenticated %}
-        {# We fetch the latest active broadcast in the template context or rely on the route #}
-    {% endif %}
-    <!-- Global Broadcast Banner (Injected via JS or context) -->
-    <div id="global-broadcast" class="hidden fixed top-0 left-0 right-0 z-[300] bg-indigo-600 text-white text-center text-sm font-semibold py-2 px-4 shadow-lg">
-        <span id="broadcast-text"></span>
-        <button onclick="this.parentElement.classList.add('hidden')" class="ml-4 text-white/70 hover:text-white"><i class="fas fa-xmark"></i></button>
+    <!-- Admin broadcast banner -->
+    <div id="broadcast-banner" class="hidden items-center justify-center gap-3 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-semibold">
+        <i class="fas fa-bullhorn"></i><span id="broadcast-text"></span>
+        <button id="broadcast-close" class="ml-2 text-white/70 hover:text-white"><i class="fas fa-xmark"></i></button>
     </div>
-    <script>
-        // Fetch active broadcast
-        fetch('/chat/history').then(r => r.json()).catch(() => {}); // Dummy to keep alive
-        // Actually, let's just inject it via a quick endpoint or rely on admin page. 
-        // For simplicity, we'll add a quick fetch to a broadcast endpoint if needed, 
-        // but for now, the admin page manages it.
-    </script>
 
-    {% block content %}{% endblock %}
+    <div class="page-enter">
+        {% block content %}{% endblock %}
+    </div>
 
     <script>
-        setTimeout(() => {
-            const f = document.getElementById('flash-messages');
-            if (f) { f.style.opacity = '0'; setTimeout(() => f.remove(), 300); }
-        }, 5000);
-
+        // Service worker (PWA)
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').catch(() => {});
-            });
+            window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
         }
+        // Broadcast banner (safe if endpoint missing)
+        fetch('/broadcast').then(r => r.ok ? r.json() : null).then(d => {
+            if (d && d.active && d.message) {
+                document.getElementById('broadcast-text').textContent = d.message;
+                const b = document.getElementById('broadcast-banner');
+                b.classList.remove('hidden'); b.classList.add('flex');
+            }
+        }).catch(() => {});
+        document.getElementById('broadcast-close').addEventListener('click', () => {
+            document.getElementById('broadcast-banner').classList.add('hidden');
+        });
     </script>
 </body>
 </html>
