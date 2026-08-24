@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Irus AI — The Future of Intelligence</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg: #030305;
+            --primary: #6366f1;
+            --secondary: #a855f7;
+            --accent: #06b6d4;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            perspective: 1000px;
+        }
+
+        h1, h2, h3, .brand { font-family: 'Space Grotesk', sans-serif; }
+
+        /* --- 3D Background & Grid --- */
+        .bg-grid {
+            position: fixed; top: 0; left: 0; width: 200vw; height: 200vh;
+            background-image: 
+                linear-gradient(rgba(99, 102, 241, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99, 102, 241, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px);
+            animation: gridMove 20s linear infinite;
+            z-index: -2; pointer-events: none;
+        }
+        @keyframes gridMove { 0% { transform: perspective(500px) rotateX(60deg) translateY(0) translateZ(-200px); } 100% { transform: perspective(500px) rotateX(60deg) translateY(50px) translateZ(-200px); } }
+
+        .glow-orb {
+            position: fixed; border-radius: 50%; filter: blur(100px); z-index: -1; opacity: 0.4; pointer-events: none;
+        }
+        .orb-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: var(--primary); }
+        .orb-2 { bottom: -10%; right: -10%; width: 40vw; height: 40vw; background: var(--secondary); }
+
+        /* --- Navigation --- */
+        nav {
+            position: fixed; top: 0; width: 100%; padding: 1.5rem 5%;
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(3, 3, 5, 0.5); backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--glass-border); z-index: 100;
+            transition: all 0.3s ease;
+        }
+        .brand { font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: white; }
+        .brand span { background: linear-gradient(to right, var(--primary), var(--secondary)); -webkit-background-clip: text; color: transparent; }
+        
+        .nav-links { display: flex; gap: 2rem; align-items: center; }
+        .nav-links a { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; font-weight: 600; transition: color 0.3s; }
+        .nav-links a:hover { color: white; }
+        
+        .btn {
+            padding: 0.6rem 1.5rem; border-radius: 30px; font-weight: 600; text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; border: none; font-family: 'Inter', sans-serif;
+        }
+        .btn-outline { background: transparent; border: 1px solid var(--glass-border); color: white; }
+        .btn-outline:hover { background: var(--glass); border-color: var(--primary); box-shadow: 0 0 15px rgba(99, 102, 241, 0.3); }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(168, 85, 247, 0.6); }
+
+        /* --- Hero Section & 3D Core --- */
+        .hero {
+            min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            text-align: center; padding: 0 5%; position: relative; padding-top: 80px;
+        }
+        .hero h1 { font-size: clamp(3rem, 8vw, 6rem); line-height: 1.1; margin-bottom: 1.5rem; letter-spacing: -0.02em; }
+        .hero h1 span { background: linear-gradient(to right, #fff, #a5b4fc); -webkit-background-clip: text; color: transparent; }
+        .hero p { font-size: clamp(1rem, 2vw, 1.25rem); color: var(--text-muted); max-width: 600px; margin-bottom: 2.5rem; }
+        .hero-btns { display: flex; gap: 1rem; z-index: 10; }
+
+        /* The 3D Floating AI Core */
+        .scene-3d {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 600px; height: 600px; z-index: -1; pointer-events: none;
+            transform-style: preserve-3d;
+        }
+        .core {
+            position: absolute; top: 50%; left: 50%; width: 200px; height: 200px;
+            transform: translate(-50%, -50%); transform-style: preserve-3d;
+            animation: floatCore 6s ease-in-out infinite;
+        }
+        .ring {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            border: 2px solid rgba(99, 102, 241, 0.5); border-radius: 50%;
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.2), inset 0 0 20px rgba(168, 85, 247, 0.2);
+        }
+        .ring-1 { transform: rotateX(70deg) rotateY(20deg); animation: spin1 10s linear infinite; }
+        .ring-2 { transform: rotateX(20deg) rotateY(70deg); border-color: rgba(168, 85, 247, 0.5); animation: spin2 15s linear infinite reverse; }
+        .ring-3 { transform: rotateX(50deg) rotateY(50deg); border-color: rgba(6, 182, 212, 0.5); animation: spin3 12s linear infinite; width: 140%; height: 140%; top: -20%; left: -20%; }
+        .core-center {
+            position: absolute; top: 50%; left: 50%; width: 60px; height: 60px;
+            background: white; border-radius: 50%; transform: translate(-50%, -50%);
+            box-shadow: 0 0 50px 20px rgba(255,255,255,0.8), 0 0 100px 40px var(--primary);
+            animation: pulseCenter 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes floatCore { 0%, 100% { transform: translate(-50%, -50%) translateZ(0); } 50% { transform: translate(-50%, -60%) translateZ(50px); } }
+        @keyframes spin1 { 100% { transform: rotateX(70deg) rotateY(20deg) rotateZ(360deg); } }
+        @keyframes spin2 { 100% { transform: rotateX(20deg) rotateY(70deg) rotateZ(360deg); } }
+        @keyframes spin3 { 100% { transform: rotateX(50deg) rotateY(50deg) rotateZ(-360deg); } }
+        @keyframes pulseCenter { 0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.8; } 100% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; } }
+
+        /* --- Sections Common --- */
+        section { padding: 8rem 5%; position: relative; }
+        .section-header { text-align: center; margin-bottom: 4rem; }
+        .section-header h2 { font-size: 2.5rem; margin-bottom: 1rem; }
+        .section-header p { color: var(--text-muted); max-width: 600px; margin: 0 auto; }
+
+        /* --- 3D Cards (Services & Projects) --- */
+        .grid-3d {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;
+            perspective: 1000px;
+        }
+        .card-3d {
+            background: var(--glass); border: 1px solid var(--glass-border); border-radius: 20px;
+            padding: 2.5rem; position: relative; transform-style: preserve-3d; transition: transform 0.1s;
+            backdrop-filter: blur(10px); overflow: hidden;
+        }
+        .card-3d::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at var(--mouse-x) var(--mouse-y), rgba(255,255,255,0.1) 0%, transparent 50%);
+            opacity: 0; transition: opacity 0.3s; pointer-events: none;
+        }
+        .card-3d:hover::before { opacity: 1; }
+        .card-icon {
+            width: 60px; height: 60px; border-radius: 15px; background: rgba(99, 102, 241, 0.1);
+            display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--primary);
+            margin-bottom: 1.5rem; transform: translateZ(30px); border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+        .card-3d h3 { font-size: 1.5rem; margin-bottom: 1rem; transform: translateZ(20px); }
+        .card-3d p { color: var(--text-muted); line-height: 1.6; transform: translateZ(10px); }
+        .card-link { display: inline-block; margin-top: 1.5rem; color: var(--accent); text-decoration: none; font-weight: 600; transform: translateZ(20px); transition: gap 0.3s; display: flex; align-items: center; gap: 0.5rem; }
+        .card-link:hover { gap: 1rem; }
+
+        /* --- Contact Section --- */
+        .contact-container {
+            max-width: 800px; margin: 0 auto; background: var(--glass); border: 1px solid var(--glass-border);
+            border-radius: 20px; padding: 3rem; backdrop-filter: blur(10px); text-align: center;
+        }
+        .contact-links { display: flex; justify-content: center; gap: 2rem; margin-top: 2rem; flex-wrap: wrap; }
+        .contact-btn {
+            display: flex; align-items: center; gap: 0.8rem; padding: 1rem 2rem; background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border); border-radius: 12px; color: white; text-decoration: none;
+            transition: all 0.3s;
+        }
+        .contact-btn:hover { background: var(--primary); border-color: var(--primary); transform: translateY(-3px); }
+
+        /* --- Footer --- */
+        footer { padding: 3rem 5%; text-align: center; border-top: 1px solid var(--glass-border); color: var(--text-muted); font-size: 0.9rem; }
+
+        /* --- Mobile Nav --- */
+        .mobile-toggle { display: none; font-size: 1.5rem; color: white; cursor: pointer; }
+        @media (max-width: 768px) {
+            .nav-links { display: none; position: absolute; top: 100%; left: 0; width: 100%; background: var(--bg); flex-direction: column; padding: 2rem; border-bottom: 1px solid var(--glass-border); }
+            .nav-links.active { display: flex; }
+            .mobile-toggle { display: block; }
+            .scene-3d { width: 300px; height: 300px; }
+            .hero h1 { font-size: 2.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 3D Background Elements -->
+    <div class="bg-grid"></div>
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+
+    <!-- Navigation -->
+    <nav id="navbar">
+        <a href="#" class="brand"><i class="fas fa-robot"></i> Irus<span>AI</span></a>
+        <div class="mobile-toggle" id="mobile-menu-btn"><i class="fas fa-bars"></i></div>
+        <div class="nav-links" id="nav-links">
+            <a href="#home">Home</a>
+            <a href="#services">Services</a>
+            <a href="#projects">Projects</a>
+            <a href="#contact">Contact</a>
+            <a href="{{ url_for('main.auth') }}" class="btn btn-outline">Log In</a>
+            <a href="{{ url_for('main.auth') }}#register" class="btn btn-primary">Sign Up Free</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <!-- 3D Floating Core -->
+        <div class="scene-3d" id="scene">
+            <div class="core" id="core">
+                <div class="ring ring-1"></div>
+                <div class="ring ring-2"></div>
+                <div class="ring ring-3"></div>
+                <div class="core-center"></div>
+            </div>
+        </div>
+
+        <h1>The Future of<br><span>Intelligence is Here.</span></h1>
+        <p>Experience Irus AI — your personal multimodal command center. Chat, search the live web, analyze documents, and generate art, all in one blazing-fast interface.</p>
+        <div class="hero-btns">
+            <a href="{{ url_for('main.auth') }}" class="btn btn-primary" style="padding: 1rem 2.5rem; font-size: 1.1rem;">Launch App <i class="fas fa-arrow-right" style="margin-left: 8px;"></i></a>
+            <a href="#services" class="btn btn-outline" style="padding: 1rem 2.5rem; font-size: 1.1rem;">Explore Features</a>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services">
+        <div class="section-header">
+            <h2>Unmatched AI Superpowers</h2>
+            <p>Everything you need to work smarter, built directly into your browser.</p>
+        </div>
+        <div class="grid-3d">
+            <div class="card-3d tilt-card">
+                <div class="card-icon"><i class="fas fa-comments"></i></div>
+                <h3>Streaming Chat</h3>
+                <p>Lightning-fast responses powered by Llama 3 and advanced routing. Compare models side-by-side instantly.</p>
+            </div>
+            <div class="card-3d tilt-card">
+                <div class="card-icon"><i class="fas fa-globe"></i></div>
+                <h3>Live Web Search</h3>
+                <p>Don't rely on outdated data. Irus searches the live internet and cites sources automatically.</p>
+            </div>
+            <div class="card-3d tilt-card">
+                <div class="card-icon"><i class="fas fa-file-pdf"></i></div>
+                <h3>Document RAG</h3>
+                <p>Upload PDFs or Word docs. Ask complex questions and get answers extracted directly from your files.</p>
+            </div>
+            <div class="card-3d tilt-card">
+                <div class="card-icon"><i class="fas fa-eye"></i></div>
+                <h3>Multimodal Vision</h3>
+                <p>Attach any image. Irus can see, analyze, and describe photos, charts, and screenshots in seconds.</p>
+            </div>
+            <div class="card-3d tilt-card">
+                <div class="card-icon"><i class="fas fa-palette"></i></div>
+                <h3>Image Generation</h3>
+                <p>Type a prompt and watch Irus generate stunning, high-resolution AI artwork right in the chat.</p>
+            </div>
+            <div class="card-3d tilt-card">
+                <div class="card-icon"><i class="fas fa-brain"></i></div>
+                <h3>Persistent Memory</h3>
+                <p>Irus remembers your preferences, facts, and context across every single conversation forever.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Other Services / Projects Section -->
+    <section id="projects" style="background: rgba(0,0,0,0.2);">
+        <div class="section-header">
+            <h2>Explore My Ecosystem</h2>
+            <p>Check out other projects, tools, and platforms built by Nejamul Haque.</p>
+        </div>
+        <div class="grid-3d">
+            <!-- EDIT THESE LINKS WITH YOUR ACTUAL PROJECT URLS -->
+            <a href="https://nejamulhaque.vercel.app" target="_blank" class="card-3d tilt-card" style="text-decoration: none; color: inherit;">
+                <div class="card-icon" style="color: var(--accent); background: rgba(6, 182, 212, 0.1); border-color: rgba(6, 182, 212, 0.2);"><i class="fas fa-user-astronaut"></i></div>
+                <h3>Personal Portfolio</h3>
+                <p>View my full resume, tech stack, and professional journey as a DevSecOps Engineer.</p>
+                <span class="card-link">Visit Site <i class="fas fa-external-link-alt"></i></span>
+            </a>
+            
+            <a href="https://github.com/NejamulHaque" target="_blank" class="card-3d tilt-card" style="text-decoration: none; color: inherit;">
+                <div class="card-icon" style="color: #fff; background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.2);"><i class="fab fa-github"></i></div>
+                <h3>GitHub Repositories</h3>
+                <p>Browse open-source contributions, DevSecOps pipelines, and experimental code.</p>
+                <span class="card-link">View Code <i class="fas fa-external-link-alt"></i></span>
+            </a>
+
+            <a href="https://www.buymeacoffee.com/nejamulhaque" target="_blank" class="card-3d tilt-card" style="text-decoration: none; color: inherit;">
+                <div class="card-icon" style="color: #fbbf24; background: rgba(251, 191, 36, 0.1); border-color: rgba(251, 191, 36, 0.2);"><i class="fas fa-mug-hot"></i></div>
+                <h3>Support the Dev</h3>
+                <p>If you love these tools, consider fueling the development with a cup of coffee!</p>
+                <span class="card-link">Buy Coffee <i class="fas fa-external-link-alt"></i></span>
+            </a>
+            
+            <!-- Add more project cards here easily -->
+            <a href="#" class="card-3d tilt-card" style="text-decoration: none; color: inherit;">
+                <div class="card-icon" style="color: var(--secondary); background: rgba(168, 85, 247, 0.1); border-color: rgba(168, 85, 247, 0.2);"><i class="fas fa-rocket"></i></div>
+                <h3>Project X (Coming Soon)</h3>
+                <p>A secret new AI automation tool currently in stealth mode. Stay tuned for the launch.</p>
+                <span class="card-link">Notify Me <i class="fas fa-bell"></i></span>
+            </a>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact">
+        <div class="contact-container tilt-card">
+            <h2 style="font-size: 2.5rem; margin-bottom: 1rem;">Let's Build the Future</h2>
+            <p style="color: var(--text-muted); margin-bottom: 2rem;">Have a question, a partnership idea, or just want to say hi? Reach out directly.</p>
+            
+            <div class="contact-links">
+                <a href="mailto:nejamulhaque.works@gmail.com" class="contact-btn">
+                    <i class="fas fa-envelope" style="font-size: 1.2rem;"></i> Email Me
+                </a>
+                <a href="https://github.com/NejamulHaque/Irus-AI" target="_blank" class="contact-btn">
+                    <i class="fab fa-github" style="font-size: 1.2rem;"></i> Star on GitHub
+                </a>
+                <a href="upi://pay?pa=nejamulhaque@upi&pn=Nejamul%20Haque" class="contact-btn">
+                    <i class="fas fa-indian-rupee-sign" style="font-size: 1.2rem;"></i> UPI Support
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 Irus AI. Designed & Engineered by <strong>Nejamul Haque</strong>. All rights reserved.</p>
+    </footer>
+
+    <!-- Interactive 3D JavaScript -->
+    <script>
+        // Mobile Menu Toggle
+        const menuBtn = document.getElementById('mobile-menu-btn');
+        const navLinks = document.getElementById('nav-links');
+        menuBtn.addEventListener('click', () => navLinks.classList.toggle('active'));
+        document.querySelectorAll('.nav-links a').forEach(link => link.addEventListener('click', () => navLinks.classList.remove('active')));
+
+        // Navbar blur on scroll
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 50) nav.style.background = 'rgba(3, 3, 5, 0.8)';
+            else nav.style.background = 'rgba(3, 3, 5, 0.5)';
+        });
+
+        // 3D Mouse Parallax for Hero Core
+        const scene = document.getElementById('scene');
+        const core = document.getElementById('core');
+        document.addEventListener('mousemove', (e) => {
+            const xAxis = (window.innerWidth / 2 - e.pageX) / 25;
+            const yAxis = (window.innerHeight / 2 - e.pageY) / 25;
+            scene.style.transform = `translate(-50%, -50%) rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+        });
+
+        // 3D Tilt Effect for Cards
+        const cards = document.querySelectorAll('.tilt-card');
+        cards.forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                // Calculate rotation based on mouse position
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                const rotateX = ((y - centerY) / centerY) * -10; // Max 10deg
+                const rotateY = ((x - centerX) / centerX) * 10;
+
+                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+                
+                // Update CSS variables for the glare effect
+                card.style.setProperty('--mouse-x', `${x}px`);
+                card.style.setProperty('--mouse-y', `${y}px`);
+            });
+
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = `perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)`;
+            });
+        });
+    </script>
+</body>
+</html>

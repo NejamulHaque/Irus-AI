@@ -206,15 +206,18 @@ def logout():
 # -----------------------
 
 @main.route('/')
-@login_required
 def index():
-    conversation = Conversation.query.filter_by(user_id=current_user.id).order_by(
-        Conversation.updated_at.desc()).first()
-    if not conversation:
-        conversation = Conversation(user_id=current_user.id, title='New Chat')
-        db.session.add(conversation)
-        db.session.commit()
-    return redirect(url_for('main.chat', conversation_id=conversation.id))
+    # If logged in, go straight to chat. If not, show the 3D Landing Page.
+    if current_user.is_authenticated:
+        conversation = Conversation.query.filter_by(user_id=current_user.id).order_by(
+            Conversation.updated_at.desc()).first()
+        if not conversation:
+            conversation = Conversation(user_id=current_user.id, title='New Chat')
+            db.session.add(conversation)
+            db.session.commit()
+        return redirect(url_for('main.chat', conversation_id=conversation.id))
+    
+    return render_template('landing.html')
 
 
 @main.route('/chat/new', methods=['GET', 'POST'])

@@ -501,6 +501,12 @@
     document.getElementById('install-dismiss').addEventListener('click', dismiss);
     document.getElementById('install-later').addEventListener('click', dismiss);
 })();
-
+<script>
+    // Auto-switch to Register tab if URL has #register
+    if (window.location.hash === '#register') {
+        const registerTab = document.getElementById('tab-register');
+        if (registerTab) registerTab.click();
+    }
+</script>
 </script>
 {% endblock %}
