@@ -6,6 +6,7 @@
 
     <!-- Cover -->
     <div class="h-40 md:h-52 relative bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600">
+        <img src="{{ url_for('static', filename='icons/icon-192.png') }}" class="icon-float absolute -bottom-6 right-6 w-14 h-14 object-cover hidden md:block" alt="Irus AI">
         <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 22px 22px;"></div>
         <a href="{{ url_for('main.index') }}" class="absolute top-4 left-4 flex items-center gap-2 px-3 py-2 rounded-xl bg-black/30 backdrop-blur-md text-white text-xs font-semibold hover:bg-black/50 active:scale-95"><i class="fas fa-arrow-left"></i> Back to Chat</a>
         {% if current_user.is_admin %}

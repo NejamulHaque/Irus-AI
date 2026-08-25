@@ -3,26 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Irus AI — Your Personal AI Command Center</title>
+    <title>{% block title %}Irus AI — Your Personal AI Command Center{% endblock %}</title>
+    <meta name="description" content="Irus AI is a free multimodal AI assistant: streaming chat, live web search, document analysis, vision, image generation and long-term memory. Built by Nejamul Haque.">
+    <meta name="author" content="Nejamul Haque">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="canonical" href="{{ request.base_url }}">
+    <meta property="og:site_name" content="Irus AI">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.base_url }}">
+    <meta property="og:title" content="Irus AI — Your Personal AI Command Center">
+    <meta property="og:description" content="Chat, live web search, document intelligence, vision, image generation & memory — free forever.">
+    <meta property="og:image" content="https://irus-ai.onrender.com/static/icons/icon-512.png">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Irus AI — Your Personal AI Command Center">
+    <meta name="twitter:image" content="https://irus-ai.onrender.com/static/icons/icon-512.png">
 
-    <!-- PWA -->
-    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
     <meta name="theme-color" content="#09090b">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='icons/icon-192.png') }}">
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
-    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Irus AI">
 
-    <!-- UI -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
-
-    <!-- Theme bootstrap (no flash of wrong theme) -->
     <script>
         (function () {
             var saved = localStorage.getItem('theme');
@@ -33,23 +43,32 @@
 </head>
 <body class="bg-zinc-950 text-zinc-200">
 
-    <!-- Global toast system -->
-    <div id="toast-container" class="fixed top-4 right-4 left-4 md:left-auto md:w-96 z-[300] flex flex-col gap-2 pointer-events-none"></div>
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[500] focus:px-4 focus:py-2 focus:bg-indigo-600 focus:text-white focus:rounded-lg">Skip to content</a>
+
+    <!-- 🌌 Ambient 3D layers -->
+    <div class="ambient" aria-hidden="true">
+        <div class="aurora a1"></div>
+        <div class="aurora a2"></div>
+        <div class="aurora a3"></div>
+        <div class="grid-lines"></div>
+        <canvas id="fx-particles"></canvas>
+    </div>
+    <div id="cursor-aura" aria-hidden="true"></div>
+
+    <div id="toast-container" class="fixed top-4 right-4 left-4 md:left-auto md:w-96 z-[300] flex flex-col gap-2 pointer-events-none" aria-live="polite"></div>
     <script>
         function showToast(message, type = 'success') {
             const box = document.getElementById('toast-container');
-            if (!box) return;
             const t = document.createElement('div');
             t.className = `flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl border text-sm font-medium pointer-events-auto animate-pop ${
                 type === 'success' ? 'bg-emerald-950/90 border-emerald-800 text-emerald-200' :
                 type === 'error' ? 'bg-red-950/90 border-red-800 text-red-200' : 'bg-zinc-900/95 border-zinc-800 text-zinc-200'}`;
-            t.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle text-emerald-400' : type === 'error' ? 'fa-exclamation-circle text-red-400' : 'fa-info-circle text-indigo-400'}"></i> ${message}`;
+            t.innerHTML = `<img src="/static/icons/icon-192.png" class="w-6 h-6 object-cover flex-shrink-0" alt=""><span>${message}</span>`;
             box.appendChild(t);
             setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(() => t.remove(), 300); }, 3200);
         }
     </script>
 
-    <!-- Flash messages → toasts -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
         <script>
@@ -62,32 +81,116 @@
         {% endif %}
     {% endwith %}
 
-    <!-- Admin broadcast banner -->
     <div id="broadcast-banner" class="hidden items-center justify-center gap-3 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs font-semibold">
         <i class="fas fa-bullhorn"></i><span id="broadcast-text"></span>
         <button id="broadcast-close" class="ml-2 text-white/70 hover:text-white"><i class="fas fa-xmark"></i></button>
     </div>
 
-    <div class="page-enter">
+    <div class="page-enter" id="main-content">
         {% block content %}{% endblock %}
     </div>
 
+    <!-- Cookie consent -->
+    <div id="cookie-banner" class="hidden fixed bottom-4 left-4 right-4 md:left-auto md:w-96 z-[400] glass p-4 rounded-2xl shadow-2xl animate-pop">
+        <p class="text-xs text-zinc-300 mb-3">🍪 We use cookies for preferences & optional analytics. <a href="/privacy" class="text-indigo-400 underline">Privacy Policy</a></p>
+        <div class="flex gap-2">
+            <button id="cookie-accept" class="btn btn-primary !min-h-0 !py-2 text-xs flex-1">Accept</button>
+            <button id="cookie-decline" class="btn btn-ghost !min-h-0 !py-2 text-xs flex-1">Decline</button>
+        </div>
+    </div>
+
+    <!-- ✨ Global FX -->
     <script>
-        // Service worker (PWA)
+        (function () {
+            const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            // Particle starfield
+            if (!reduced) {
+                const c = document.getElementById('fx-particles');
+                if (c) {
+                    const ctx = c.getContext('2d'); let w, h, pts;
+                    const resize = () => { w = c.width = innerWidth; h = c.height = innerHeight;
+                        pts = Array.from({ length: Math.min(70, Math.floor(w / 22)) }, () => ({
+                            x: Math.random() * w, y: Math.random() * h, r: Math.random() * 1.6 + .4,
+                            s: Math.random() * .35 + .08, o: Math.random() * .5 + .15 })); };
+                    addEventListener('resize', resize); resize();
+                    (function tick() {
+                        ctx.clearRect(0, 0, w, h);
+                        for (const p of pts) {
+                            p.y -= p.s; if (p.y < -4) { p.y = h + 4; p.x = Math.random() * w; }
+                            ctx.globalAlpha = p.o; ctx.fillStyle = '#818cf8';
+                            ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, 6.283); ctx.fill();
+                        }
+                        requestAnimationFrame(tick);
+                    })();
+                }
+                // Cursor aura (smooth follow glow)
+                const aura = document.getElementById('cursor-aura');
+                if (aura && matchMedia('(hover: hover)').matches) {
+                    let tx = -1000, ty = -1000, x = -1000, y = -1000;
+                    addEventListener('mousemove', e => { tx = e.clientX; ty = e.clientY; });
+                    (function loop() {
+                        x += (tx - x) * .08; y += (ty - y) * .08;
+                        aura.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+                        requestAnimationFrame(loop);
+                    })();
+                }
+            }
+
+            // 3D tilt physics (delegated, works on dynamic cards)
+            let cur = null;
+            document.addEventListener('mousemove', e => {
+                const el = e.target.closest('.card-pro, .glass');
+                if (cur && cur !== el) { cur.style.transform = ''; cur = null; }
+                if (!el || el.closest('#chat-box')) return;
+                cur = el;
+                const r = el.getBoundingClientRect();
+                const rx = ((e.clientY - r.top) / r.height - .5) * -6;
+                const ry = ((e.clientX - r.left) / r.width - .5) * 6;
+                el.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-2px)`;
+            });
+
+            // Scroll reveal
+            const io = new IntersectionObserver(es => es.forEach(x => {
+                if (x.isIntersecting) { x.target.classList.add('reveal-in'); io.unobserve(x.target); }
+            }), { threshold: .12 });
+            document.querySelectorAll('.card-pro, .glass').forEach(el => { el.classList.add('reveal-init'); io.observe(el); });
+
+            // Cookies + consent-gated analytics
+            const banner = document.getElementById('cookie-banner');
+            const choice = localStorage.getItem('irus_cookies');
+            if (!choice && banner) banner.classList.remove('hidden');
+            function loadAnalytics() {
+                const ID = 'G-XXXXXXXXXX';
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){ dataLayer.push(arguments); }
+                window.gtag = gtag; gtag('js', new Date()); gtag('config', ID);
+                const s = document.createElement('script'); s.async = true;
+                s.src = 'https://www.googletagmanager.com/gtag/js?id=' + ID;
+                document.head.appendChild(s);
+            }
+            if (banner) {
+                document.getElementById('cookie-accept').addEventListener('click', () => { localStorage.setItem('irus_cookies', 'granted'); banner.classList.add('hidden'); loadAnalytics(); });
+                document.getElementById('cookie-decline').addEventListener('click', () => { localStorage.setItem('irus_cookies', 'denied'); banner.classList.add('hidden'); });
+            }
+            if (choice === 'granted') loadAnalytics();
+
+            // Broadcast banner
+            fetch('/broadcast').then(r => r.ok ? r.json() : null).then(d => {
+                if (d && d.active && d.message) {
+                    document.getElementById('broadcast-text').textContent = d.message;
+                    const b = document.getElementById('broadcast-banner');
+                    b.classList.remove('hidden'); b.classList.add('flex');
+                }
+            }).catch(() => {});
+            document.getElementById('broadcast-close').addEventListener('click', () => document.getElementById('broadcast-banner').classList.add('hidden'));
+        })();
+    </script>
+
+    <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
         }
-        // Broadcast banner (safe if endpoint missing)
-        fetch('/broadcast').then(r => r.ok ? r.json() : null).then(d => {
-            if (d && d.active && d.message) {
-                document.getElementById('broadcast-text').textContent = d.message;
-                const b = document.getElementById('broadcast-banner');
-                b.classList.remove('hidden'); b.classList.add('flex');
-            }
-        }).catch(() => {});
-        document.getElementById('broadcast-close').addEventListener('click', () => {
-            document.getElementById('broadcast-banner').classList.add('hidden');
-        });
     </script>
 </body>
 </html>
