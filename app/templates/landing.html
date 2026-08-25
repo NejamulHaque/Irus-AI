@@ -370,5 +370,34 @@
             });
         });
     </script>
+    <style>
+    /* 1. Crisp white text on gradient buttons */
+    .btn-primary { color: #fff !important; }
+
+    /* 2. Brighter, bolder 3D core */
+    .ring { border-width: 3px; }
+    .ring-1 { border-color: rgba(99, 102, 241, .85); }
+    .ring-2 { border-color: rgba(168, 85, 247, .85); }
+    .ring-3 { border-color: rgba(6, 182, 212, .85); }
+    .core-center {
+        box-shadow: 0 0 60px 25px rgba(255,255,255,.85),
+                    0 0 140px 70px rgba(99,102,241,.7);
+    }
+
+    /* 3. Scroll-reveal animations for sections */
+    .reveal { opacity: 0; transform: translateY(40px); transition: all .8s cubic-bezier(.2,.8,.2,1); }
+    .reveal.visible { opacity: 1; transform: none; }
+</style>
+
+<script>
+    // Fade sections in as the user scrolls
+    const io = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+            if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); }
+        });
+    }, { threshold: 0.15 });
+    document.querySelectorAll('.card-3d, .section-header, .contact-container')
+        .forEach(el => { el.classList.add('reveal'); io.observe(el); });
+</script>
 </body>
 </html>
