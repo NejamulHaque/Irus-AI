@@ -135,6 +135,31 @@
         </div>
     </div>
 
+        <!-- Pending Subscriptions -->
+    <div class="card-pro p-5">
+        <h3 class="text-sm font-bold text-white mb-4"><i class="fas fa-crown text-amber-400 mr-2"></i>Pending Pro Payments</h3>
+        <div class="overflow-x-auto">
+            <table class="table-pro">
+                <thead><tr><th>User</th><th>Plan</th><th>Amount</th><th>UTR</th><th>Date</th><th class="text-right">Actions</th></tr></thead>
+                <tbody>
+                    {% for s in (pending_subs or []) %}
+                    <tr data-sub-id="{{ s.id }}">
+                        <td class="font-semibold text-white">{{ s.user.username }}</td>
+                        <td>{{ 'Yearly' if s.plan == 'pro_yearly' else 'Monthly' }}</td>
+                        <td>₹{{ s.amount }}</td>
+                        <td class="font-mono">{{ s.utr }}</td>
+                        <td>{{ s.created_at.strftime('%m-%d %H:%M') }}</td>
+                        <td class="text-right whitespace-nowrap">
+                            <button class="sub-action btn btn-primary !min-h-0 !py-1 !px-2 text-[10px]" data-action="approve">Approve</button>
+                            <button class="sub-action btn btn-danger !min-h-0 !py-1 !px-2 text-[10px]" data-action="reject">Reject</button>
+                        </td>
+                    </tr>
+                    {% else %}<tr><td colspan="6" class="text-center text-zinc-600 italic">No pending payments 🎉</td></tr>{% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <!-- Moderation + System -->
     <div class="grid md:grid-cols-2 gap-4">
         <div class="card-pro p-5">
@@ -208,6 +233,13 @@
         if (!confirm('Clear all error logs?')) return;
         await fetch('/admin/errors/clear', { method: 'POST' });
         location.reload();
+    });
+        document.querySelectorAll('.sub-action').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const id = btn.closest('tr').dataset.subId;
+            await fetch(`/admin/subscriptions/${id}/${btn.dataset.action}`, { method: 'POST' });
+            location.reload();
+        });
     });
 </script>
 {% endblock %}

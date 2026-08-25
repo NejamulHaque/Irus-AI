@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}Pricing — Irus AI{% endblock %}
+{% block content %}
+<div class="min-h-screen bg-zinc-950 text-zinc-200 pb-20">
+    <div class="max-w-5xl mx-auto px-4 pt-10">
+
+        <div class="flex items-center justify-between mb-10">
+            <a href="{{ url_for('main.index') }}" class="btn btn-ghost !min-h-0 !py-2 text-xs"><i class="fas fa-arrow-left"></i> Back</a>
+            <span class="badge badge-indigo"><i class="fas fa-crown"></i> Irus Pro</span>
+        </div>
+
+        <div class="text-center mb-12">
+            <h1 class="text-3xl md:text-5xl font-bold text-white mb-3">Simple pricing. <span class="text-grad">Serious power.</span></h1>
+            <p class="text-sm text-zinc-500 max-w-xl mx-auto">Start free forever. Upgrade when you need more speed, smarter models and priority everything. Payments via UPI, activated after quick verification.</p>
+        </div>
+
+        {% if current_user.is_authenticated and current_user.is_pro %}
+        <div class="glass p-4 rounded-2xl mb-8 text-center text-sm text-emerald-400 font-semibold">
+            <i class="fas fa-crown mr-2"></i>You are PRO — active until {{ current_user.active_subscription.expires_at.strftime('%b %d, %Y') }}
+        </div>
+        {% endif %}
+
+        <div class="grid md:grid-cols-3 gap-5">
+            <!-- FREE -->
+            <div class="card-pro lift p-6 flex flex-col">
+                <h2 class="font-bold text-white text-lg mb-1">Free</h2>
+                <p class="text-3xl font-bold text-white mb-4">₹0<span class="text-xs text-zinc-500 font-normal">/forever</span></p>
+                <ul class="space-y-2 text-xs text-zinc-400 mb-6 flex-1">
+    <li><i class="fas fa-check text-emerald-400 mr-2"></i>Streaming AI chat</li>
+    <li><i class="fas fa-check text-emerald-400 mr-2"></i>Live web search</li>
+    <li><i class="fas fa-check text-emerald-400 mr-2"></i>Document Q&A <span class="text-zinc-600">(3 docs max)</span></li>
+    <li><i class="fas fa-check text-emerald-400 mr-2"></i>Image attachments <span class="text-zinc-600">(5/day)</span></li>
+    <li><i class="fas fa-xmark text-zinc-600 mr-2"></i><span class="text-zinc-600">Model comparison</span></li>
+    <li><i class="fas fa-check text-emerald-400 mr-2"></i>40 messages / minute</li>
+</ul>
+                <a href="{{ url_for('main.auth') }}" class="btn btn-ghost w-full">Start Free</a>
+            </div>
+
+            <!-- MONTHLY -->
+            <div class="card-pro lift p-6 flex flex-col border-indigo-500/40">
+                <h2 class="font-bold text-white text-lg mb-1">Pro Monthly</h2>
+                <p class="text-3xl font-bold text-white mb-4">₹99<span class="text-xs text-zinc-500 font-normal">/month</span></p>
+                <ul class="space-y-2 text-xs text-zinc-400 mb-6 flex-1">
+                <li><i class="fas fa-crown text-amber-400 mr-2"></i>Everything in Free</li>
+                <li><i class="fas fa-infinity text-emerald-400 mr-2"></i><strong class="text-white">Unlimited</strong> document uploads</li>
+                <li><i class="fas fa-infinity text-emerald-400 mr-2"></i><strong class="text-white">Unlimited</strong> image attachments</li>
+                <li><i class="fas fa-code-compare text-emerald-400 mr-2"></i>Model comparison (Groq vs Pollinations)</li>
+               <li><i class="fas fa-check text-emerald-400 mr-2"></i>120 messages / minute (3×)</li>
+               <li><i class="fas fa-check text-emerald-400 mr-2"></i>Priority Llama 3.3 70B routing</li>
+</ul>
+                <button class="btn btn-accent w-full subscribe-btn" data-plan="pro_monthly" data-amount="99">Go Pro — ₹99</button>
+            </div>
+
+            <!-- YEARLY -->
+            <div class="card-pro lift p-6 flex flex-col glow-card relative">
+                <span class="badge badge-green absolute -top-3 right-5">SAVE 16%</span>
+                <h2 class="font-bold text-white text-lg mb-1">Pro Yearly</h2>
+                <p class="text-3xl font-bold text-white mb-4">₹999<span class="text-xs text-zinc-500 font-normal">/year</span></p>
+                <ul class="space-y-2 text-xs text-zinc-400 mb-6 flex-1">
+                <li><i class="fas fa-crown text-amber-400 mr-2"></i>Everything in Pro Monthly</li>
+                <li><i class="fas fa-check text-emerald-400 mr-2"></i>2 months free vs monthly</li>
+                <li><i class="fas fa-check text-emerald-400 mr-2"></i>Early access to new features</li>
+                <li><i class="fas fa-check text-emerald-400 mr-2"></i>Founder supporter badge</li>
+</ul>
+                <button class="btn btn-accent w-full subscribe-btn" data-plan="pro_yearly" data-amount="999">Go Pro — ₹999</button>
+            </div>
+        </div>
+
+        <p class="text-center text-[11px] text-zinc-600 mt-8"><i class="fas fa-shield-halved mr-1"></i>Payments are verified manually within 24 hours. UPI only · no card required.</p>
+    </div>
+</div>
+
+<!-- Subscribe modal -->
+<div id="sub-modal" class="hidden fixed inset-0 z-[130] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div class="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-6 shadow-2xl animate-pop text-center">
+        <h3 id="sub-title" class="text-lg font-bold text-white mb-1">Go Pro</h3>
+        <p class="text-xs text-zinc-500 mb-4">Scan & pay the exact amount, then paste the UPI transaction ID (UTR).</p>
+        <div class="flex items-center justify-center gap-5 mb-4">
+            <div id="sub-qr" class="bg-white p-2 rounded-xl"></div>
+            <div class="text-left text-xs text-zinc-400 space-y-2">
+                <p>UPI: <span class="font-mono text-zinc-200">nejamulhaque@upi</span></p>
+                <p>Amount: <span id="sub-amount" class="font-bold text-emerald-400">₹99</span></p>
+                <button id="sub-copy-upi" class="btn btn-ghost !min-h-0 !py-1.5 !px-3 text-[10px]">Copy UPI ID</button>
+            </div>
+        </div>
+        <input id="sub-utr" type="text" maxlength="40" placeholder="UPI Transaction ID (e.g. 415023998877)" class="input-pro !min-h-0 text-sm mb-3">
+        <button id="sub-submit" class="btn btn-accent w-full mb-2"><i class="fas fa-paper-plane"></i> Submit for Activation</button>
+        <button id="sub-close" class="text-xs text-zinc-600 hover:text-zinc-300">Cancel</button>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+    let currentPlan = null, currentAmount = 0;
+    const modal = document.getElementById('sub-modal');
+
+    document.querySelectorAll('.subscribe-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            {% if not current_user.is_authenticated %}
+            window.location.href = "{{ url_for('main.auth') }}";
+            return;
+            {% endif %}
+            currentPlan = btn.dataset.plan;
+            currentAmount = btn.dataset.amount;
+            document.getElementById('sub-title').textContent = btn.dataset.plan === 'pro_yearly' ? 'Pro Yearly — ₹999' : 'Pro Monthly — ₹99';
+            document.getElementById('sub-amount').textContent = '₹' + currentAmount;
+            const qrBox = document.getElementById('sub-qr');
+            qrBox.innerHTML = '';
+            new QRCode(qrBox, {
+                text: `upi://pay?pa=nejamulhaque@upi&pn=${encodeURIComponent('Nejamul Haque')}&am=${currentAmount}&cu=INR`,
+                width: 130, height: 130, colorDark: '#09090b', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M
+            });
+            modal.classList.remove('hidden');
+        });
+    });
+
+    document.getElementById('sub-copy-upi').addEventListener('click', () => {
+        navigator.clipboard.writeText('nejamulhaque@upi');
+        showToast('UPI ID copied!', 'success');
+    });
+    document.getElementById('sub-close').addEventListener('click', () => modal.classList.add('hidden'));
+    modal.addEventListener('click', e => { if (e.target === modal) modal.classList.add('hidden'); });
+
+    document.getElementById('sub-submit').addEventListener('click', async () => {
+        const utr = document.getElementById('sub-utr').value.trim();
+        const res = await fetch('/subscribe', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ plan: currentPlan, utr })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            modal.classList.add('hidden');
+            showToast('Payment submitted! PRO activates after verification (≤24h). 👑', 'success');
+        } else {
+            showToast(data.error || 'Submission failed', 'error');
+        }
+    });
+</script>
+{% endblock %}

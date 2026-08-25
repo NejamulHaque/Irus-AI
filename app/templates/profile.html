@@ -32,6 +32,9 @@
                         {{ current_user.username }}
                         {% if current_user.is_admin %}<span class="badge badge-red">Admin</span>{% endif %}
                         <span class="badge badge-green">Active</span>
+                        {% if current_user.is_pro %}<span class="badge badge-indigo"><i class="fas fa-crown"></i> PRO until {{ current_user.active_subscription.expires_at.strftime('%b %d, %Y') }}</span>
+                        {% elif pending_sub %}<span class="badge badge-red"><i class="fas fa-hourglass-half"></i> Payment under review</span>
+                        {% else %}<a href="/pricing" class="badge badge-indigo" style="text-decoration:none;"><i class="fas fa-crown"></i> Go Pro</a>{% endif %}
                     </h1>
                     <p class="text-sm text-zinc-500 mt-1 flex items-center justify-center md:justify-start gap-2">
                         <i class="fas fa-envelope text-xs"></i> {{ current_user.email or 'no email set' }}
@@ -51,6 +54,27 @@
                 {% endfor %}
             </div>
         </div>
+
+        <div class="card-pro p-5">
+    <h3 class="text-sm font-bold text-white mb-3"><i class="fas fa-gauge-high text-indigo-400 mr-2"></i>Your Current Limits</h3>
+    <div class="grid grid-cols-3 gap-3 text-center">
+        <div class="p-3 rounded-xl bg-zinc-900 border border-zinc-800">
+            <p class="text-2xl font-bold text-white">{{ stats.documents }}</p>
+            <p class="text-[10px] text-zinc-500 mt-1">Documents {% if current_user.is_pro %}∞{% else %}/ 3{% endif %}</p>
+        </div>
+        <div class="p-3 rounded-xl bg-zinc-900 border border-zinc-800">
+            <p class="text-2xl font-bold text-white">{% if current_user.is_pro %}∞{% else %}5{% endif %}</p>
+            <p class="text-[10px] text-zinc-500 mt-1">Images / day</p>
+        </div>
+        <div class="p-3 rounded-xl bg-zinc-900 border border-zinc-800">
+            <p class="text-2xl font-bold text-white">{% if current_user.is_pro %}120{% else %}40{% endif %}</p>
+            <p class="text-[10px] text-zinc-500 mt-1">Msgs / min</p>
+        </div>
+    </div>
+    {% if not current_user.is_pro %}
+    <a href="/pricing" class="btn btn-accent w-full mt-4"><i class="fas fa-crown"></i> Unlock Unlimited — Go Pro</a>
+    {% endif %}
+</div>
 
         <!-- Tabs -->
         <div class="flex gap-2 mt-6 overflow-x-auto custom-scrollbar pb-1">
