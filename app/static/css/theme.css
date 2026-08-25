@@ -182,3 +182,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 [data-theme="light"] .hover\:bg-zinc-800:hover, [data-theme="light"] .hover\:bg-zinc-900:hover { background-color: var(--bg-2) !important; }
 [data-theme="light"] #toast-container > div { background: rgba(255,255,255,.95) !important; border-color: #e4e4e7 !important; color: #27272a !important; }
 [data-theme="light"] #toast-container > div i { color: #4f46e5 !important; }
+/* Light-mode navbar: make the bar light so bridged text is readable */
+[data-theme="light"] .bg-zinc-950\/70 { background-color: rgba(250,250,250,.9) !important; }
+[data-theme="light"] .border-zinc-900\/70 { border-color: #e4e4e7 !important; }

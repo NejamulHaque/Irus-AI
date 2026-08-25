@@ -9,7 +9,7 @@ import secrets
 import hashlib
 import base64
 import urllib.parse
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from sqlalchemy import func
 from werkzeug.utils import secure_filename
 
@@ -23,7 +23,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from app import limiter
 from app.models import (
     db, User, Conversation, Message, Document, DocumentChunk,
-    Memory, ErrorLog, APIKey, APIRequestLog, LoginAudit, Broadcast
+    Memory, ErrorLog, APIKey, APIRequestLog, LoginAudit, Broadcast, Subscription
 )
 from app.services import ai_service, document_service, search_service
 
@@ -31,11 +31,20 @@ main = Blueprint('main', __name__)
 
 
 # -----------------------
-# Helpers
+# Helpers & Constants
 # -----------------------
 
 USERNAME_PATTERN = re.compile(r'^[a-zA-Z0-9_.-]{3,30}$')
 EMAIL_PATTERN = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+# 🚫 Disposable / temp-mail domains (anti-spam)
+DISPOSABLE_DOMAINS = {
+    'mailinator.com', 'tempmail.com', 'temp-mail.org', '10minutemail.com',
+    'guerrillamail.com', 'yopmail.com', 'trashmail.com', 'getnada.com',
+    'maildrop.cc', 'dispostable.com', 'sharklasers.com', 'fakeinbox.com',
+    'mintemail.com', 'mytemp.email', 'mohmal.com', 'emailondeck.com',
+    'spamgourmet.com', 'tempinbox.com', 'discard.email', 'mailnesia.com',
+    'tempmailo.com', 'guerrillamailblock.com', 'grr.la', 'mailcatch.com',
+}
 
 # Models retired by Groq — auto-redirect to prevent 404s
 RETIRED_MODELS = [
@@ -46,6 +55,28 @@ RETIRED_MODELS = [
     'meta-llama/llama-4-scout-17b-16e-instruct',
 ]
 DEFAULT_MODEL = 'llama-3.3-70b-versatile'
+
+# Subscription plans
+PLANS = {
+    'pro_monthly': {'name': 'Pro Monthly', 'amount': 99,  'days': 30},
+    'pro_yearly':  {'name': 'Pro Yearly',  'amount': 999, 'days': 365},
+}
+
+# 🎯 Tiered feature limits
+FREE_LIMITS = {
+    'documents': 3,           # max uploaded PDFs/docs
+    'images_per_day': 5,      # max image attachments per day
+    'can_compare': False,     # model comparison locked
+}
+PRO_LIMITS = {
+    'documents': 999,         # effectively unlimited
+    'images_per_day': 999,
+    'can_compare': True,
+}
+
+def get_user_limits(user):
+    """Return the limits dict based on current subscription status."""
+    return PRO_LIMITS if user.is_pro else FREE_LIMITS
 
 
 def validate_password(password):
@@ -119,11 +150,59 @@ def broadcast_current():
 
 
 # -----------------------
-# Auth (with audit + ban check)
+# SEO: robots.txt, sitemap.xml, legal pages, custom 404
+# -----------------------
+
+@main.route('/robots.txt')
+def robots():
+    sitemap_url = url_for('main.sitemap', _external=True)
+    return Response(
+        "User-agent: *\n"
+        "Allow: /\n"
+        "Disallow: /admin\n"
+        "Disallow: /api-keys\n"
+        "Disallow: /profile\n"
+        "Disallow: /chat/\n"
+        "Disallow: /api/\n\n"
+        f"Sitemap: {sitemap_url}\n",
+        mimetype='text/plain'
+    )
+
+
+@main.route('/sitemap.xml')
+def sitemap():
+    base = request.url_root.rstrip('/')
+    pages = [('', '1.0'), ('/auth', '0.9'), ('/pricing', '0.9'),
+             ('/privacy', '0.5'), ('/terms', '0.5')]
+    xml = ['<?xml version="1.0" encoding="UTF-8"?>',
+           '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    for path, prio in pages:
+        xml.append(f"<url><loc>{base}{path}</loc><changefreq>weekly</changefreq><priority>{prio}</priority></url>")
+    xml.append('</urlset>')
+    return Response("\n".join(xml), mimetype='application/xml')
+
+
+@main.route('/privacy')
+def privacy():
+    return render_template('privacy.html')
+
+
+@main.route('/terms')
+def terms():
+    return render_template('terms.html')
+
+
+@main.app_errorhandler(404)
+def not_found(e):
+    return render_template('404.html'), 404
+
+
+# -----------------------
+# Auth (with audit + ban check + honeypot)
 # -----------------------
 
 @main.route('/auth', methods=['GET', 'POST'])
-@limiter.limit("20 per minute")
+@limiter.limit("20 per minute; 60 per hour")
 def auth():
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
@@ -168,6 +247,10 @@ def auth():
             if not EMAIL_PATTERN.match(email):
                 flash('Please enter a valid email address.', 'error')
                 return render_template('auth.html')
+            email_domain = email.split('@')[-1]
+            if email_domain in DISPOSABLE_DOMAINS:
+                flash('Disposable/temporary emails are not allowed. Please use a permanent email (Gmail, Outlook, etc.).', 'error')
+                return render_template('auth.html')
             password_error = validate_password(password)
             if password_error:
                 flash(password_error, 'error')
@@ -202,23 +285,25 @@ def logout():
 
 
 # -----------------------
-# Home / Conversations
+# Home / Landing
 # -----------------------
 
 @main.route('/')
 def index():
-    # If logged in, go straight to chat. If not, show the 3D Landing Page.
-    if current_user.is_authenticated:
-        conversation = Conversation.query.filter_by(user_id=current_user.id).order_by(
-            Conversation.updated_at.desc()).first()
-        if not conversation:
-            conversation = Conversation(user_id=current_user.id, title='New Chat')
-            db.session.add(conversation)
-            db.session.commit()
-        return redirect(url_for('main.chat', conversation_id=conversation.id))
-    
-    return render_template('landing.html')
+    if not current_user.is_authenticated:
+        return render_template('landing.html')
+    conversation = Conversation.query.filter_by(user_id=current_user.id).order_by(
+        Conversation.updated_at.desc()).first()
+    if not conversation:
+        conversation = Conversation(user_id=current_user.id, title='New Chat')
+        db.session.add(conversation)
+        db.session.commit()
+    return redirect(url_for('main.chat', conversation_id=conversation.id))
 
+
+# -----------------------
+# Conversations
+# -----------------------
 
 @main.route('/chat/new', methods=['GET', 'POST'])
 @login_required
@@ -236,9 +321,25 @@ def chat(conversation_id):
     if not conversation:
         flash('Conversation not found.', 'error')
         return redirect(url_for('main.index'))
+
     messages = Message.query.filter_by(conversation_id=conversation.id).order_by(
         Message.created_at.asc()).all()
-    return render_template('chat.html', conversation=conversation, messages=messages)
+
+    # 📊 Dashboard usage stats (tiered)
+    limits = get_user_limits(current_user)
+    start_of_day = datetime.combine(date.today(), datetime.min.time())
+    usage = {
+        'messages_today': Message.query.join(Conversation).filter(
+            Conversation.user_id == current_user.id,
+            Message.created_at >= start_of_day).count(),
+        'images_today': Message.query.join(Conversation).filter(
+            Conversation.user_id == current_user.id,
+            Message.image_data != None,
+            Message.created_at >= start_of_day).count(),
+        'docs_count': Document.query.filter_by(user_id=current_user.id).count(),
+        'limits': limits,
+    }
+    return render_template('chat.html', conversation=conversation, messages=messages, usage=usage)
 
 
 @main.route('/chat/<int:conversation_id>/delete', methods=['POST'])
@@ -357,12 +458,60 @@ def shared_chat(token):
 
 
 # -----------------------
-# Streaming Chat (vision, search, memory, image-gen, creator)
+# Pricing & Subscriptions
+# -----------------------
+
+@main.route('/pricing')
+def pricing():
+    return render_template('pricing.html', plans=PLANS)
+
+
+@main.route('/subscribe', methods=['POST'])
+@login_required
+def subscribe():
+    data = request.get_json(silent=True) or {}
+    plan_id = data.get('plan')
+    utr = (data.get('utr') or '').strip()
+    if plan_id not in PLANS:
+        return jsonify({'error': 'Invalid plan'}), 400
+    if len(utr) < 6:
+        return jsonify({'error': 'Please enter a valid UPI transaction ID (UTR).'}), 400
+    if Subscription.query.filter_by(user_id=current_user.id, status='pending').first():
+        return jsonify({'error': 'You already have a payment under review.'}), 400
+    sub = Subscription(
+        user_id=current_user.id, plan=plan_id,
+        amount=PLANS[plan_id]['amount'], utr=utr, status='pending'
+    )
+    db.session.add(sub)
+    db.session.commit()
+    return jsonify({'success': True})
+
+
+@main.route('/admin/subscriptions/<int:sub_id>/<action>', methods=['POST'])
+@login_required
+def manage_subscription(sub_id, action):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Denied'}), 403
+    if action not in ('approve', 'reject'):
+        return jsonify({'error': 'Invalid action'}), 400
+    sub = Subscription.query.get_or_404(sub_id)
+    if action == 'approve':
+        sub.status = 'active'
+        sub.activated_at = datetime.utcnow()
+        sub.expires_at = datetime.utcnow() + timedelta(days=PLANS.get(sub.plan, PLANS['pro_monthly'])['days'])
+    else:
+        sub.status = 'rejected'
+    db.session.commit()
+    return jsonify({'success': True, 'status': sub.status})
+
+
+# -----------------------
+# Streaming Chat (with tiered limits)
 # -----------------------
 
 @main.route('/chat/<int:conversation_id>/stream', methods=['POST'])
 @login_required
-@limiter.limit("40 per minute")
+@limiter.limit(lambda: "120 per minute" if current_user.is_authenticated and current_user.is_pro else "10 per minute")
 def stream_chat(conversation_id):
     conversation = get_user_conversation(conversation_id)
     if not conversation:
@@ -378,6 +527,24 @@ def stream_chat(conversation_id):
     image_data = data.get('image_data') or None
     if image_data and not str(image_data).startswith('data:image'):
         image_data = None
+
+    # 🎯 Enforce tiered limits
+    limits = get_user_limits(current_user)
+
+    # 🚫 Free tier: block image if daily limit reached
+    if image_data:
+        today = date.today()
+        start_of_day = datetime.combine(today, datetime.min.time())
+        images_today = Message.query.filter(
+            Message.conversation_id == conversation.id,
+            Message.role == 'user',
+            Message.image_data != None,
+            Message.created_at >= start_of_day
+        ).count()
+        if images_today >= limits['images_per_day']:
+            return jsonify({
+                'error': f"Free tier limit reached: {limits['images_per_day']} images/day. Upgrade to Pro for unlimited."
+            }), 403
 
     doc_id_int = None
     if document_id:
@@ -573,7 +740,7 @@ def stream_chat(conversation_id):
 
 
 # -----------------------
-# Compare (Groq vs Pollinations — cloud-safe)
+# Compare (with tiered limits)
 # -----------------------
 
 @main.route('/chat/<int:conversation_id>/compare', methods=['POST'])
@@ -583,6 +750,13 @@ def compare_chat(conversation_id):
     conversation = get_user_conversation(conversation_id)
     if not conversation:
         return jsonify({'error': 'Conversation not found'}), 404
+
+    # 🎯 Enforce tiered limits
+    limits = get_user_limits(current_user)
+    if not limits['can_compare']:
+        return jsonify({
+            'error': 'Model comparison is a Pro feature. Upgrade to ₹99/mo to unlock.'
+        }), 403
 
     data = request.get_json(silent=True) or {}
     message_text = (data.get('message') or '').strip()
@@ -665,7 +839,7 @@ def compare_chat(conversation_id):
 
 
 # -----------------------
-# Documents (RAG)
+# Documents (with tiered limits)
 # -----------------------
 
 @main.route('/documents/upload', methods=['POST'])
@@ -677,6 +851,15 @@ def upload_document():
     file = request.files['file']
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
+
+    # 🎯 Enforce tiered limits
+    limits = get_user_limits(current_user)
+    doc_count = Document.query.filter_by(user_id=current_user.id).count()
+    if doc_count >= limits['documents']:
+        return jsonify({
+            'error': f"Free tier limit: {limits['documents']} documents. Upgrade to Pro for unlimited."
+        }), 403
+
     try:
         doc = document_service.process_and_save_document(file, current_user.id)
         return jsonify({'success': True, 'id': doc.id, 'name': doc.original_name})
@@ -741,7 +924,7 @@ def delete_memory(mem_id):
 
 
 # -----------------------
-# Profile (with stats)
+# Profile
 # -----------------------
 
 @main.route('/profile', methods=['GET', 'POST'])
@@ -776,7 +959,9 @@ def profile():
         'api_keys': APIKey.query.filter_by(user_id=current_user.id).count(),
         'api_requests': APIRequestLog.query.filter_by(user_id=current_user.id).count(),
     }
-    return render_template('profile.html', stats=stats)
+    active_sub = current_user.active_subscription
+    pending_sub = Subscription.query.filter_by(user_id=current_user.id, status='pending').first()
+    return render_template('profile.html', stats=stats, active_sub=active_sub, pending_sub=pending_sub)
 
 
 # -----------------------
@@ -837,7 +1022,7 @@ def revoke_api_key(key_id):
 
 
 # -----------------------
-# Public Developer API (with logging)
+# Public Developer API
 # -----------------------
 
 @main.route('/api/v1/me')
@@ -910,7 +1095,6 @@ def admin_dashboard():
         'api_requests': APIRequestLog.query.count(),
     }
 
-    # 7-day message activity
     activity = []
     max_count = 1
     for i in range(6, -1, -1):
@@ -923,7 +1107,6 @@ def admin_dashboard():
     for d in activity:
         d['height'] = max(4, int((d['count'] / max_count) * 100))
 
-    # 7-day signups
     signups = []
     for i in range(6, -1, -1):
         day = (datetime.utcnow() - timedelta(days=i)).date()
@@ -958,13 +1141,15 @@ def admin_dashboard():
     all_users = User.query.order_by(User.created_at.desc()).all()
     all_conversations = Conversation.query.order_by(Conversation.updated_at.desc()).limit(20).all()
     active_broadcast = Broadcast.query.filter_by(is_active=True).first()
+    pending_subs = Subscription.query.filter_by(status='pending').order_by(Subscription.created_at.desc()).all()
 
     return render_template(
         'admin.html', stats=stats, activity=activity, signups=signups,
         most_used_docs=most_used_docs, model_usage=model_usage, top_ips=top_ips,
         api_stats=api_stats, recent_api_logs=recent_api_logs, top_keys=top_keys,
         recent_users=recent_users, error_logs=error_logs, all_users=all_users,
-        all_conversations=all_conversations, active_broadcast=active_broadcast
+        all_conversations=all_conversations, active_broadcast=active_broadcast,
+        pending_subs=pending_subs
     )
 
 
