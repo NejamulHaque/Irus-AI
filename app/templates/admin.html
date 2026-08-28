@@ -1,245 +1,871 @@
 {% extends "base.html" %}
+{% block title %}Platform Control Plane — Irus AI{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-zinc-950 text-zinc-200 p-4 md:p-8">
-<div class="max-w-7xl mx-auto space-y-6">
+<div class="min-h-screen bg-zinc-950 text-zinc-200 pb-20">
+    <div class="max-w-7xl mx-auto px-4 md:px-8 pt-6 space-y-6">
 
-    <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-            <h1 class="text-2xl md:text-3xl font-bold text-white flex items-center gap-3"><img src="{{ url_for('static', filename='icons/icon-192.png') }}" class="icon-float w-11 h-11 object-cover" alt="Irus AI"> Platform <span class="text-grad">Control Plane</span></h1>
-            <p class="text-sm text-zinc-500 mt-1">Observability · user lifecycle · moderation · system health</p>
-        </div>
-        <div class="flex flex-wrap gap-2">
-            <a href="{{ url_for('main.export_users') }}" class="btn btn-ghost text-xs"><i class="fas fa-file-csv"></i> Export CSV</a>
-            <a href="{{ url_for('main.index') }}" class="btn btn-primary text-xs"><i class="fas fa-arrow-left"></i> Back to App</a>
-        </div>
-    </div>
-
-    <!-- Stat cards -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {% for label, key, icon, color in [('Users','users','fa-users','text-indigo-400'), ('Messages','messages','fa-comments','text-purple-400'), ('Conversations','conversations','fa-inbox','text-blue-400'), ('Documents','documents','fa-file-alt','text-emerald-400'), ('Memories','memories','fa-brain','text-pink-400'), ('API Keys','api_keys','fa-key','text-amber-400'), ('API Requests','api_requests','fa-chart-line','text-cyan-400'), ('Errors','errors','fa-bug','text-red-400')] %}
-        <div class="card-pro lift p-4">
-            <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1"><i class="fas {{ icon }} {{ color }} mr-1"></i>{{ label }}</p>
-            <p class="text-2xl font-bold text-white counter" data-count="{{ stats[key] if stats[key] is defined else 0 }}">0</p>
-        </div>
-        {% endfor %}
-    </div>
-
-    <!-- Charts -->
-    <div class="grid md:grid-cols-2 gap-4">
-        <div class="card-pro p-5">
-            <h3 class="text-sm font-bold text-white mb-4"><i class="fas fa-chart-line text-indigo-400 mr-2"></i>Message Activity (7d)</h3>
-            <div class="flex items-end gap-2 h-32">
-                {% for d in activity %}
-                <div class="flex-1 flex flex-col items-center gap-1" title="{{ d.count }} messages">
-                    <div class="chart-bar w-full" style="height: {{ d.height }}%"></div>
-                    <span class="text-[9px] text-zinc-500">{{ d.label }}</span>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        <div class="card-pro p-5">
-            <h3 class="text-sm font-bold text-white mb-4"><i class="fas fa-user-plus text-emerald-400 mr-2"></i>New Signups (7d)</h3>
-            <div class="flex items-end gap-2 h-32">
-                {% for d in (signups or []) %}
-                <div class="flex-1 flex flex-col items-center gap-1" title="{{ d.count }} signups">
-                    <div class="chart-bar green w-full" style="height: {{ [8, d.count * 22] | max }}%"></div>
-                    <span class="text-[9px] text-zinc-500">{{ d.label }}</span>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-
-    <!-- Intelligence row -->
-    <div class="grid md:grid-cols-3 gap-4">
-        <div class="card-pro p-5">
-            <h3 class="text-sm font-bold text-white mb-3"><i class="fas fa-microchip text-blue-400 mr-2"></i>Model Usage</h3>
-            <ul class="space-y-2 text-sm">
-                {% for model, count in (model_usage or []) %}
-                <li class="flex justify-between"><span class="text-zinc-400 truncate pr-3">{{ model or 'Default' }}</span><span class="badge badge-indigo">{{ count }}</span></li>
-                {% else %}<li class="text-zinc-600 italic text-xs">No data yet.</li>{% endfor %}
-            </ul>
-        </div>
-        <div class="card-pro p-5">
-            <h3 class="text-sm font-bold text-white mb-3"><i class="fas fa-shield-virus text-red-400 mr-2"></i>Top IPs (Abuse)</h3>
-            <ul class="space-y-2 text-sm">
-                {% for ip, hits in (top_ips or []) %}
-                <li class="flex justify-between"><span class="font-mono text-zinc-400">{{ ip or 'Unknown' }}</span><span class="badge {{ 'badge-red' if hits > 20 else 'badge-green' }}">{{ hits }} hits</span></li>
-                {% else %}<li class="text-zinc-600 italic text-xs">No login data yet.</li>{% endfor %}
-            </ul>
-        </div>
-        <div class="card-pro p-5">
-            <h3 class="text-sm font-bold text-white mb-3"><i class="fas fa-file-alt text-emerald-400 mr-2"></i>Top Documents</h3>
-            <ul class="space-y-2 text-sm">
-                {% for name, uses in (most_used_docs or []) %}
-                <li class="flex justify-between"><span class="text-zinc-400 truncate pr-3">{{ name }}</span><span class="badge badge-green">{{ uses }}</span></li>
-                {% else %}<li class="text-zinc-600 italic text-xs">No documents yet.</li>{% endfor %}
-            </ul>
-        </div>
-    </div>
-
-    <!-- API platform -->
-    <div class="card-pro p-5">
-        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <h3 class="text-sm font-bold text-white"><i class="fas fa-key text-amber-400 mr-2"></i>API Platform</h3>
-            <div class="flex gap-2 text-xs">
-                <span class="badge badge-indigo">{{ (api_stats or {}).get('total_requests', 0) }} requests</span>
-                <span class="badge badge-green">{{ (api_stats or {}).get('requests_24h', 0) }} last 24h</span>
-                <span class="badge badge-red">{{ (api_stats or {}).get('error_count', 0) }} errors</span>
-            </div>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="table-pro">
-                <thead><tr><th>Time</th><th>Key</th><th>Endpoint</th><th>Status</th><th>Latency</th><th>IP</th></tr></thead>
-                <tbody>
-                    {% for l in (recent_api_logs or []) %}
-                    <tr>
-                        <td class="whitespace-nowrap">{{ l.created_at.strftime('%m-%d %H:%M') }}</td>
-                        <td class="font-mono">{{ l.api_key.prefix if l.api_key else '—' }}</td>
-                        <td class="font-mono">{{ l.endpoint }}</td>
-                        <td><span class="badge {{ 'badge-green' if l.status_code < 400 else 'badge-red' }}">{{ l.status_code }}</span></td>
-                        <td>{{ l.latency_ms or '—' }} ms</td>
-                        <td>{{ l.ip }}</td>
-                    </tr>
-                    {% else %}<tr><td colspan="6" class="text-center text-zinc-600 italic">No API traffic yet.</td></tr>{% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- User management -->
-    <div class="card-pro p-5">
-        <h3 class="text-sm font-bold text-white mb-4"><i class="fas fa-users-gear text-purple-400 mr-2"></i>User Management</h3>
-        <div class="overflow-x-auto">
-            <table class="table-pro">
-                <thead><tr><th>User</th><th>Email</th><th>Joined</th><th>Role</th><th>Status</th><th class="text-right">Actions</th></tr></thead>
-                <tbody>
-                    {% for u in (all_users or []) %}
-                    <tr data-user-id="{{ u.id }}">
-                        <td class="font-semibold text-white">{{ u.username }}</td>
-                        <td>{{ u.email or '—' }}</td>
-                        <td>{{ u.created_at.strftime('%Y-%m-%d') }}</td>
-                        <td><span class="badge {{ 'badge-red' if u.is_admin else 'badge-indigo' }}">{{ 'Admin' if u.is_admin else 'User' }}</span></td>
-                        <td><span class="badge {{ 'badge-red' if u.is_banned else 'badge-green' }}">{{ 'Banned' if u.is_banned else 'Active' }}</span></td>
-                        <td class="text-right whitespace-nowrap">
-                            <button class="btn-admin btn btn-ghost !min-h-0 !py-1 !px-2 text-[10px]" data-action="toggle-admin">Role</button>
-                            <button class="btn-admin btn btn-ghost !min-h-0 !py-1 !px-2 text-[10px]" data-action="toggle-ban">Ban</button>
-                            <button class="btn-admin btn btn-danger !min-h-0 !py-1 !px-2 text-[10px]" data-action="delete">Delete</button>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-        <!-- Pending Subscriptions -->
-    <div class="card-pro p-5">
-        <h3 class="text-sm font-bold text-white mb-4"><i class="fas fa-crown text-amber-400 mr-2"></i>Pending Pro Payments</h3>
-        <div class="overflow-x-auto">
-            <table class="table-pro">
-                <thead><tr><th>User</th><th>Plan</th><th>Amount</th><th>UTR</th><th>Date</th><th class="text-right">Actions</th></tr></thead>
-                <tbody>
-                    {% for s in (pending_subs or []) %}
-                    <tr data-sub-id="{{ s.id }}">
-                        <td class="font-semibold text-white">{{ s.user.username }}</td>
-                        <td>{{ 'Yearly' if s.plan == 'pro_yearly' else 'Monthly' }}</td>
-                        <td>₹{{ s.amount }}</td>
-                        <td class="font-mono">{{ s.utr }}</td>
-                        <td>{{ s.created_at.strftime('%m-%d %H:%M') }}</td>
-                        <td class="text-right whitespace-nowrap">
-                            <button class="sub-action btn btn-primary !min-h-0 !py-1 !px-2 text-[10px]" data-action="approve">Approve</button>
-                            <button class="sub-action btn btn-danger !min-h-0 !py-1 !px-2 text-[10px]" data-action="reject">Reject</button>
-                        </td>
-                    </tr>
-                    {% else %}<tr><td colspan="6" class="text-center text-zinc-600 italic">No pending payments 🎉</td></tr>{% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Moderation + System -->
-    <div class="grid md:grid-cols-2 gap-4">
-        <div class="card-pro p-5">
-            <h3 class="text-sm font-bold text-white mb-3"><i class="fas fa-magnifying-glass text-indigo-400 mr-2"></i>Moderation (recent chats)</h3>
-            <div class="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto custom-scrollbar pr-1">
-                {% for c in (all_conversations or []) %}
-                <a href="{{ url_for('main.inspect_chat', conversation_id=c.id) }}" class="p-3 rounded-xl bg-zinc-950 border border-zinc-800 hover:border-indigo-500/50 transition-colors lift">
-                    <p class="text-xs font-semibold text-white truncate">{{ c.title }}</p>
-                    <p class="text-[10px] text-zinc-500 mt-0.5">User #{{ c.user_id }} · {{ c.updated_at.strftime('%b %d') }}</p>
-                </a>
-                {% else %}<p class="text-zinc-600 italic text-xs">No conversations yet.</p>{% endfor %}
-            </div>
-        </div>
-        <div class="space-y-4">
-            <div class="card-pro p-5 border-amber-500/20 !bg-gradient-to-br !from-zinc-900 !to-amber-500/5">
-                <h3 class="text-sm font-bold text-white mb-3"><i class="fas fa-bullhorn text-amber-400 mr-2"></i>Site-wide Broadcast</h3>
-                <textarea id="broadcast-msg" rows="2" class="input-pro !min-h-0 text-xs mb-2" placeholder="Leave blank to disable...">{{ active_broadcast.message if active_broadcast else '' }}</textarea>
-                <button id="save-broadcast" class="btn btn-accent w-full !min-h-0 !py-2 text-xs">Update Banner</button>
-            </div>
-            <div class="card-pro p-5">
-                <div class="flex justify-between items-center mb-3">
-                    <h3 class="text-sm font-bold text-white"><i class="fas fa-bug text-red-400 mr-2"></i>Error Logs</h3>
-                    <button id="clear-errors" class="btn btn-danger !min-h-0 !py-1 !px-2 text-[10px]">Clear All</button>
-                </div>
-                <div class="max-h-40 overflow-y-auto space-y-2 custom-scrollbar pr-1">
-                    {% for log in (error_logs or []) %}
-                    <div class="p-2 rounded-lg bg-zinc-950 border border-zinc-800 text-xs">
-                        <span class="text-red-400 font-bold">{{ log.error_type }}</span>
-                        <span class="text-zinc-500"> · {{ log.created_at.strftime('%m-%d %H:%M') }}</span>
-                        <p class="text-zinc-400 truncate">{{ log.message }}</p>
+        <!-- ============ HEADER & SYSTEM TELEMETRY HUD ============ -->
+        <div class="card-pro p-6 !bg-gradient-to-br !from-zinc-900/90 !via-zinc-900/60 !to-indigo-950/30 border border-zinc-800 shadow-2xl relative overflow-hidden">
+            <div class="absolute -right-16 -top-16 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+                <div>
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 p-0.5 shadow-lg shadow-indigo-500/30 flex items-center justify-center flex-shrink-0">
+                            <img src="{{ url_for('static', filename='icons/icon-192.png') }}" class="w-full h-full object-cover rounded-[14px]" alt="Irus AI">
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">Platform <span class="text-grad">Control Plane</span></h1>
+                                <span class="badge badge-green text-[10px]"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping mr-1"></span>NOMINAL</span>
+                            </div>
+                            <p class="text-xs text-zinc-400 mt-0.5">Real-time telemetry, model intelligence, financial analytics & user governance</p>
+                        </div>
                     </div>
-                    {% else %}<p class="text-zinc-600 italic text-xs">System is clean ✨</p>{% endfor %}
+                </div>
+
+                <!-- Telemetry Pills & Global Exports -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-zinc-900/80 border border-zinc-800 text-[11px] font-mono text-zinc-300">
+                        <i class="fas fa-server text-indigo-400"></i>
+                        <span>{{ system_info.os }}</span>
+                        <span class="text-zinc-600">|</span>
+                        <span class="text-emerald-400">Py {{ system_info.python_version }}</span>
+                        <span class="text-zinc-600">|</span>
+                        <span class="text-indigo-400">DB: {{ system_info.db_size_mb }} MB</span>
+                    </div>
+
+                    <div class="flex items-center gap-1.5">
+                        <div class="dropdown relative inline-block">
+                            <button id="export-dropdown-btn" class="btn btn-ghost !min-h-0 !py-2 text-xs">
+                                <i class="fas fa-download text-indigo-400"></i> Export CSV <i class="fas fa-chevron-down text-[9px] ml-1"></i>
+                            </button>
+                            <div id="export-menu" class="hidden absolute right-0 mt-2 w-48 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl z-50 p-2 space-y-1">
+                                <a href="{{ url_for('main.export_users') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-zinc-800 text-xs text-zinc-300 hover:text-white transition-colors">
+                                    <i class="fas fa-users text-indigo-400 w-4"></i> Export Users
+                                </a>
+                                <a href="{{ url_for('main.export_subscriptions') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-zinc-800 text-xs text-zinc-300 hover:text-white transition-colors">
+                                    <i class="fas fa-crown text-amber-400 w-4"></i> Export Subscriptions
+                                </a>
+                                <a href="{{ url_for('main.export_api_logs') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-zinc-800 text-xs text-zinc-300 hover:text-white transition-colors">
+                                    <i class="fas fa-key text-cyan-400 w-4"></i> Export API Logs
+                                </a>
+                            </div>
+                        </div>
+
+                        <a href="{{ url_for('main.index') }}" class="btn btn-primary !min-h-0 !py-2 text-xs">
+                            <i class="fas fa-arrow-left"></i> App
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <div class="flex items-center gap-2 mt-6 pt-4 border-t border-zinc-800/80 overflow-x-auto pb-1 text-xs font-semibold">
+                <button class="nav-tab active px-3.5 py-1.5 rounded-xl transition-all" data-tab="tab-overview"><i class="fas fa-chart-pie mr-1.5"></i>Overview & Analytics</button>
+                <button class="nav-tab px-3.5 py-1.5 rounded-xl transition-all" data-tab="tab-users"><i class="fas fa-users mr-1.5"></i>Users ({{ stats.users }})</button>
+                <button class="nav-tab px-3.5 py-1.5 rounded-xl transition-all" data-tab="tab-finance"><i class="fas fa-coins mr-1.5"></i>Revenue & Pro ({{ pending_subs|length }} pending)</button>
+                <button class="nav-tab px-3.5 py-1.5 rounded-xl transition-all" data-tab="tab-api"><i class="fas fa-terminal mr-1.5"></i>API Platform</button>
+                <button class="nav-tab px-3.5 py-1.5 rounded-xl transition-all" data-tab="tab-security"><i class="fas fa-shield-halved mr-1.5"></i>Security & Audits</button>
+                <button class="nav-tab px-3.5 py-1.5 rounded-xl transition-all" data-tab="tab-system"><i class="fas fa-sliders mr-1.5"></i>System & Broadcast</button>
+            </div>
+        </div>
+
+        <!-- ============ TAB 1: OVERVIEW & ANALYTICS ============ -->
+        <div id="tab-overview" class="tab-content space-y-6">
+
+            <!-- Stat KPI Cards Grid -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Users & Pro -->
+                <div class="card-pro lift p-5 relative overflow-hidden">
+                    <div class="flex items-center justify-between text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-2">
+                        <span><i class="fas fa-users text-indigo-400 mr-1.5"></i>Total Users</span>
+                        <span class="badge badge-indigo text-[9px]">{{ stats.pro_conversion_pct }}% Pro</span>
+                    </div>
+                    <p class="text-3xl font-extrabold text-white counter" data-count="{{ stats.users }}">0</p>
+                    <div class="flex items-center gap-2 mt-2 text-[11px] text-zinc-400">
+                        <span class="text-emerald-400 font-semibold"><i class="fas fa-crown mr-1"></i>{{ stats.active_pro_users }} Pro</span>
+                        <span class="text-zinc-600">·</span>
+                        <span>{{ stats.users - stats.active_pro_users }} Free</span>
+                    </div>
+                </div>
+
+                <!-- Gross Revenue -->
+                <div class="card-pro lift p-5 relative overflow-hidden">
+                    <div class="flex items-center justify-between text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-2">
+                        <span><i class="fas fa-indian-rupee-sign text-emerald-400 mr-1.5"></i>Gross Revenue</span>
+                        <span class="badge badge-green text-[9px]">Verified</span>
+                    </div>
+                    <p class="text-3xl font-extrabold text-white">₹<span class="counter" data-count="{{ stats.total_revenue }}">0</span></p>
+                    <div class="flex items-center gap-2 mt-2 text-[11px] text-zinc-400">
+                        <span class="text-zinc-300 font-medium">30d: ₹{{ stats.revenue_30d }}</span>
+                        {% if stats.pending_revenue > 0 %}
+                        <span class="text-zinc-600">·</span>
+                        <span class="text-amber-400 font-semibold">₹{{ stats.pending_revenue }} in queue</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Messages & Tokens -->
+                <div class="card-pro lift p-5 relative overflow-hidden">
+                    <div class="flex items-center justify-between text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-2">
+                        <span><i class="fas fa-comments text-purple-400 mr-1.5"></i>AI Interactions</span>
+                        <span class="badge badge-indigo text-[9px]">820 TPS</span>
+                    </div>
+                    <p class="text-3xl font-extrabold text-white counter" data-count="{{ stats.messages }}">0</p>
+                    <div class="flex items-center gap-2 mt-2 text-[11px] text-zinc-400">
+                        <span>~<span class="counter" data-count="{{ stats.est_total_tokens }}">0</span> tokens</span>
+                        <span class="text-zinc-600">·</span>
+                        <span>{{ stats.conversations }} chats</span>
+                    </div>
+                </div>
+
+                <!-- API & System Health -->
+                <div class="card-pro lift p-5 relative overflow-hidden">
+                    <div class="flex items-center justify-between text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-2">
+                        <span><i class="fas fa-microchip text-cyan-400 mr-1.5"></i>API & Knowledge</span>
+                        <span class="badge badge-green text-[9px]">{{ api_stats.avg_latency_ms }}ms avg</span>
+                    </div>
+                    <p class="text-3xl font-extrabold text-white counter" data-count="{{ stats.api_requests }}">0</p>
+                    <div class="flex items-center gap-2 mt-2 text-[11px] text-zinc-400">
+                        <span>{{ stats.documents }} Docs</span>
+                        <span class="text-zinc-600">·</span>
+                        <span>{{ stats.chunks }} Vectors</span>
+                        <span class="text-zinc-600">·</span>
+                        <span>{{ stats.memories }} Memories</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISUALIZATION ROW 1: 14-Day Timeline & 24h Traffic Heatmap -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Dual Axis 14-Day Growth Curve -->
+                <div class="card-pro p-6 lg:col-span-2 shadow-xl flex flex-col justify-between">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                                <i class="fas fa-chart-line text-indigo-400"></i> Platform Activity & Growth Trend
+                            </h3>
+                            <p class="text-xs text-zinc-500">14-day rolling window of AI messages, new user signups, and API requests</p>
+                        </div>
+                        <div class="flex items-center gap-3 text-[11px]">
+                            <span class="flex items-center gap-1.5 text-indigo-400 font-medium"><span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>Messages</span>
+                            <span class="flex items-center gap-1.5 text-emerald-400 font-medium"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>Signups</span>
+                            <span class="flex items-center gap-1.5 text-cyan-400 font-medium"><span class="w-2.5 h-2.5 rounded-full bg-cyan-500"></span>API</span>
+                        </div>
+                    </div>
+                    <div class="h-64 relative w-full">
+                        <canvas id="timelineChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 24-Hour Traffic Heatmap -->
+                <div class="card-pro p-6 shadow-xl flex flex-col justify-between">
+                    <div class="mb-4">
+                        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                            <i class="fas fa-clock text-amber-400"></i> 24-Hour Traffic Distribution
+                        </h3>
+                        <p class="text-xs text-zinc-500">Hourly load profile over the last 24 hours</p>
+                    </div>
+                    <div class="h-64 relative w-full">
+                        <canvas id="hourlyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISUALIZATION ROW 2: Model Distribution & API Performance -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- AI Model Distribution -->
+                <div class="card-pro p-6 shadow-xl">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-1">
+                        <i class="fas fa-brain text-purple-400"></i> AI Model Market Share
+                    </h3>
+                    <p class="text-xs text-zinc-500 mb-4">User preferred model breakdown</p>
+                    <div class="h-56 relative w-full flex items-center justify-center">
+                        <canvas id="modelChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- API Response Codes & Status -->
+                <div class="card-pro p-6 shadow-xl">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-1">
+                        <i class="fas fa-shield-check text-cyan-400"></i> API Health & Status Codes
+                    </h3>
+                    <p class="text-xs text-zinc-500 mb-4">HTTP response breakdown (2xx vs 4xx vs 5xx)</p>
+                    <div class="h-56 relative w-full flex items-center justify-center">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Top Documents & Knowledge Assets -->
+                <div class="card-pro p-6 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-1">
+                            <i class="fas fa-file-lines text-emerald-400"></i> Top RAG Knowledge Assets
+                        </h3>
+                        <p class="text-xs text-zinc-500 mb-4">Most queried documents in semantic embeddings</p>
+                        <div class="space-y-2.5">
+                            {% for name, uses in (most_used_docs or []) %}
+                            <div class="flex items-center justify-between p-2.5 rounded-xl bg-zinc-900/80 border border-zinc-800 text-xs">
+                                <span class="text-zinc-300 font-medium truncate pr-3 flex items-center gap-2">
+                                    <i class="fas fa-file-pdf text-red-400"></i>
+                                    <span class="truncate">{{ name }}</span>
+                                </span>
+                                <span class="badge badge-green font-mono">{{ uses }} queries</span>
+                            </div>
+                            {% else %}
+                            <p class="text-xs text-zinc-600 italic">No document queries recorded yet.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+
+        <!-- ============ TAB 2: USER MANAGEMENT ============ -->
+        <div id="tab-users" class="tab-content hidden space-y-6">
+            <div class="card-pro p-6 shadow-2xl">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h3 class="text-base font-bold text-white flex items-center gap-2">
+                            <i class="fas fa-users-gear text-indigo-400"></i> User Directory & Governance
+                        </h3>
+                        <p class="text-xs text-zinc-500">Search, inspect, toggle Pro access, promote administrators, and moderate accounts</p>
+                    </div>
+
+                    <!-- Instant Search Bar -->
+                    <div class="relative min-w-[280px]">
+                        <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 text-xs"></i>
+                        <input id="user-search-input" type="text" placeholder="Search user by name or email..." class="input-pro !min-h-0 !py-2 !pl-9 text-xs">
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto rounded-xl border border-zinc-800">
+                    <table class="table-pro w-full" id="user-table">
+                        <thead>
+                            <tr class="bg-zinc-900/90 text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
+                                <th class="py-3 px-4">User</th>
+                                <th class="py-3 px-4">Email</th>
+                                <th class="py-3 px-4">Joined</th>
+                                <th class="py-3 px-4">Preferred Model</th>
+                                <th class="py-3 px-4">Pro Status</th>
+                                <th class="py-3 px-4">Role</th>
+                                <th class="py-3 px-4">Status</th>
+                                <th class="py-3 px-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zinc-800 text-xs">
+                            {% for u in (all_users or []) %}
+                            <tr data-user-id="{{ u.id }}" class="user-row hover:bg-zinc-900/50 transition-colors">
+                                <td class="py-3 px-4">
+                                    <div class="flex items-center gap-2.5">
+                                        <div class="w-7 h-7 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center font-bold text-white text-[11px]">
+                                            {{ u.username[0].upper() }}
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-white user-name">{{ u.username }}</p>
+                                            <p class="text-[10px] text-zinc-500">ID #{{ u.id }}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-3 px-4 user-email text-zinc-400 font-mono">{{ u.email }}</td>
+                                <td class="py-3 px-4 text-zinc-500">{{ u.created_at.strftime('%Y-%m-%d') }}</td>
+                                <td class="py-3 px-4 text-zinc-400 font-mono text-[11px]">{{ u.preferred_model or 'default' }}</td>
+                                <td class="py-3 px-4">
+                                    {% if u.is_pro %}
+                                    <span class="badge badge-green text-[10px]"><i class="fas fa-crown text-amber-400"></i> PRO Active</span>
+                                    {% else %}
+                                    <span class="badge text-zinc-500 text-[10px] border border-zinc-700">Free</span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3 px-4">
+                                    <span class="badge {{ 'badge-red' if u.is_admin else 'badge-indigo' }} text-[10px]">
+                                        {{ 'Admin' if u.is_admin else 'Member' }}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-4">
+                                    <span class="badge {{ 'badge-red' if u.is_banned else 'badge-green' }} text-[10px]">
+                                        {{ 'Banned' if u.is_banned else 'Active' }}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-4 text-right whitespace-nowrap">
+                                    <div class="flex items-center justify-end gap-1.5">
+                                        <button class="btn-admin-pro btn btn-ghost !min-h-0 !py-1 !px-2 text-[10px] {{ 'text-amber-400 hover:text-amber-300' if not u.is_pro else 'text-zinc-400' }}" title="Toggle Pro Membership">
+                                            <i class="fas fa-crown"></i> {{ 'Revoke Pro' if u.is_pro else 'Grant Pro' }}
+                                        </button>
+                                        <button class="btn-admin-role btn btn-ghost !min-h-0 !py-1 !px-2 text-[10px]" data-action="toggle-admin" title="Toggle Admin Role">
+                                            <i class="fas fa-shield"></i> {{ 'Demote' if u.is_admin else 'Make Admin' }}
+                                        </button>
+                                        <button class="btn-admin-ban btn btn-ghost !min-h-0 !py-1 !px-2 text-[10px] {{ 'text-emerald-400' if u.is_banned else 'text-amber-400' }}" data-action="toggle-ban" title="Toggle Ban">
+                                            <i class="fas {{ 'fa-check' if u.is_banned else 'fa-ban' }}"></i> {{ 'Unban' if u.is_banned else 'Ban' }}
+                                        </button>
+                                        <button class="btn-admin-delete btn btn-danger !min-h-0 !py-1 !px-2 text-[10px]" data-action="delete" title="Delete User">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ TAB 3: REVENUE & PRO SUBSCRIPTIONS ============ -->
+        <div id="tab-finance" class="tab-content hidden space-y-6">
+
+            <!-- Pending Payments Approval Queue -->
+            <div class="card-pro p-6 shadow-2xl border-amber-500/30 !bg-gradient-to-br !from-zinc-900 !to-amber-950/20">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-base font-bold text-white flex items-center gap-2">
+                            <i class="fas fa-hourglass-half text-amber-400"></i> Pending UPI Payments (Verification Queue)
+                        </h3>
+                        <p class="text-xs text-zinc-400">Review submitted transaction IDs (UTR) and activate Pro subscriptions</p>
+                    </div>
+                    <span class="badge badge-amber font-mono">{{ pending_subs|length }} In Review</span>
+                </div>
+
+                <div class="overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-950/80">
+                    <table class="table-pro w-full">
+                        <thead>
+                            <tr class="bg-zinc-900/90 text-[11px] font-bold text-zinc-400 uppercase">
+                                <th class="py-3 px-4">User</th>
+                                <th class="py-3 px-4">Plan</th>
+                                <th class="py-3 px-4">Amount</th>
+                                <th class="py-3 px-4">UPI UTR Ref</th>
+                                <th class="py-3 px-4">Submitted Time</th>
+                                <th class="py-3 px-4 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zinc-800 text-xs">
+                            {% for s in (pending_subs or []) %}
+                            <tr data-sub-id="{{ s.id }}">
+                                <td class="py-3 px-4 font-bold text-white">{{ s.user.username }} ({{ s.user.email }})</td>
+                                <td class="py-3 px-4"><span class="badge badge-indigo text-[10px]">{{ 'Pro Yearly' if s.plan == 'pro_yearly' else 'Pro Monthly' }}</span></td>
+                                <td class="py-3 px-4 font-bold text-emerald-400 text-sm">₹{{ s.amount }}</td>
+                                <td class="py-3 px-4 font-mono text-zinc-300 select-all bg-zinc-900/80 px-2 py-1 rounded">{{ s.utr }}</td>
+                                <td class="py-3 px-4 text-zinc-400">{{ s.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td class="py-3 px-4 text-right whitespace-nowrap">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <button class="sub-action btn btn-primary !min-h-0 !py-1.5 !px-3 text-xs bg-emerald-600 hover:bg-emerald-500 text-white" data-action="approve">
+                                            <i class="fas fa-check-circle mr-1"></i> Approve
+                                        </button>
+                                        <button class="sub-action btn btn-danger !min-h-0 !py-1.5 !px-3 text-xs" data-action="reject">
+                                            <i class="fas fa-times-circle mr-1"></i> Reject
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-8 text-zinc-500 italic text-sm">
+                                    <i class="fas fa-check-double text-emerald-400 text-lg mb-1 block"></i>
+                                    No pending payments. All subscriptions are up to date!
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Complete Subscription History -->
+            <div class="card-pro p-6 shadow-2xl">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-base font-bold text-white flex items-center gap-2">
+                            <i class="fas fa-receipt text-indigo-400"></i> All Subscriptions History
+                        </h3>
+                        <p class="text-xs text-zinc-500">Recent 30 transactions and active subscriptions</p>
+                    </div>
+                    <a href="{{ url_for('main.export_subscriptions') }}" class="btn btn-ghost !min-h-0 !py-1.5 text-xs"><i class="fas fa-file-csv"></i> Download CSV</a>
+                </div>
+
+                <div class="overflow-x-auto rounded-xl border border-zinc-800">
+                    <table class="table-pro w-full">
+                        <thead>
+                            <tr class="bg-zinc-900/90 text-[11px] font-bold text-zinc-400 uppercase">
+                                <th class="py-3 px-4">ID</th>
+                                <th class="py-3 px-4">User</th>
+                                <th class="py-3 px-4">Plan</th>
+                                <th class="py-3 px-4">Amount</th>
+                                <th class="py-3 px-4">UTR</th>
+                                <th class="py-3 px-4">Status</th>
+                                <th class="py-3 px-4">Expires At</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zinc-800 text-xs">
+                            {% for sub in (all_subscriptions or []) %}
+                            <tr class="hover:bg-zinc-900/40">
+                                <td class="py-3 px-4 text-zinc-500">#{{ sub.id }}</td>
+                                <td class="py-3 px-4 font-semibold text-white">{{ sub.user.username if sub.user else 'Unknown' }}</td>
+                                <td class="py-3 px-4">{{ sub.plan }}</td>
+                                <td class="py-3 px-4 font-bold text-white">₹{{ sub.amount }}</td>
+                                <td class="py-3 px-4 font-mono text-zinc-400">{{ sub.utr or '—' }}</td>
+                                <td class="py-3 px-4">
+                                    <span class="badge {{ 'badge-green' if sub.status == 'active' else ('badge-amber' if sub.status == 'pending' else 'badge-red') }} text-[10px]">
+                                        {{ sub.status|upper }}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-4 text-zinc-400">{{ sub.expires_at.strftime('%Y-%m-%d') if sub.expires_at else '—' }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="7" class="text-center py-4 text-zinc-600 italic">No subscriptions found.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ TAB 4: API PLATFORM ============ -->
+        <div id="tab-api" class="tab-content hidden space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="card-pro p-4">
+                    <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Total Issued Keys</p>
+                    <p class="text-2xl font-bold text-white mt-1">{{ api_stats.total_keys }}</p>
+                </div>
+                <div class="card-pro p-4">
+                    <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Requests 24h</p>
+                    <p class="text-2xl font-bold text-emerald-400 mt-1">{{ api_stats.requests_24h }}</p>
+                </div>
+                <div class="card-pro p-4">
+                    <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Avg Latency</p>
+                    <p class="text-2xl font-bold text-cyan-400 mt-1">{{ api_stats.avg_latency_ms }} ms</p>
+                </div>
+                <div class="card-pro p-4">
+                    <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Error Count (4xx/5xx)</p>
+                    <p class="text-2xl font-bold text-red-400 mt-1">{{ api_stats.error_count }}</p>
+                </div>
+            </div>
+
+            <!-- Recent API Traffic Stream -->
+            <div class="card-pro p-6 shadow-2xl">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-base font-bold text-white flex items-center gap-2">
+                            <i class="fas fa-network-wired text-cyan-400"></i> Real-time API Request Stream
+                        </h3>
+                        <p class="text-xs text-zinc-500">Live requests hitting `/api/v1/*` endpoints</p>
+                    </div>
+                    <a href="{{ url_for('main.export_api_logs') }}" class="btn btn-ghost !min-h-0 !py-1.5 text-xs"><i class="fas fa-file-csv"></i> Download CSV</a>
+                </div>
+
+                <div class="overflow-x-auto rounded-xl border border-zinc-800">
+                    <table class="table-pro w-full">
+                        <thead>
+                            <tr class="bg-zinc-900/90 text-[11px] font-bold text-zinc-400 uppercase">
+                                <th class="py-3 px-4">Timestamp</th>
+                                <th class="py-3 px-4">Key Prefix</th>
+                                <th class="py-3 px-4">Method</th>
+                                <th class="py-3 px-4">Endpoint</th>
+                                <th class="py-3 px-4">Status</th>
+                                <th class="py-3 px-4">Latency</th>
+                                <th class="py-3 px-4">Origin IP</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-zinc-800 text-xs">
+                            {% for l in (recent_api_logs or []) %}
+                            <tr class="hover:bg-zinc-900/40">
+                                <td class="py-3 px-4 whitespace-nowrap text-zinc-400">{{ l.created_at.strftime('%m-%d %H:%M:%S') }}</td>
+                                <td class="py-3 px-4 font-mono text-zinc-300">{{ l.api_key.prefix if l.api_key else '—' }}</td>
+                                <td class="py-3 px-4"><span class="badge badge-indigo font-mono text-[10px]">{{ l.method }}</span></td>
+                                <td class="py-3 px-4 font-mono text-white">{{ l.endpoint }}</td>
+                                <td class="py-3 px-4"><span class="badge {{ 'badge-green' if l.status_code < 400 else 'badge-red' }} font-mono text-[10px]">{{ l.status_code }}</span></td>
+                                <td class="py-3 px-4 font-mono text-zinc-300">{{ l.latency_ms or 0 }} ms</td>
+                                <td class="py-3 px-4 font-mono text-zinc-500">{{ l.ip }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="7" class="text-center py-6 text-zinc-600 italic">No API requests recorded yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ TAB 5: SECURITY & AUDITS ============ -->
+        <div id="tab-security" class="tab-content hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Login Audits Feed -->
+                <div class="card-pro p-6 shadow-xl">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-1">
+                        <i class="fas fa-fingerprint text-indigo-400"></i> Recent Login Audits
+                    </h3>
+                    <p class="text-xs text-zinc-500 mb-4">Authentication access logs with IP & Client</p>
+                    <div class="space-y-2 max-h-96 overflow-y-auto custom-scrollbar pr-1">
+                        {% for audit in (recent_logins or []) %}
+                        <div class="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-between text-xs">
+                            <div>
+                                <p class="font-bold text-white">{{ audit.user.username if audit.user else 'Unknown' }}</p>
+                                <p class="text-[10px] font-mono text-zinc-500 mt-0.5 truncate max-w-xs">{{ audit.user_agent or 'Unknown client' }}</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="badge badge-indigo font-mono text-[10px]">{{ audit.ip }}</span>
+                                <p class="text-[10px] text-zinc-500 mt-1">{{ audit.created_at.strftime('%m-%d %H:%M') }}</p>
+                            </div>
+                        </div>
+                        {% else %}
+                        <p class="text-xs text-zinc-600 italic">No login events captured.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Top IP Addresses -->
+                <div class="card-pro p-6 shadow-xl">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-1">
+                        <i class="fas fa-shield-virus text-red-400"></i> Top Origin IPs
+                    </h3>
+                    <p class="text-xs text-zinc-500 mb-4">High-frequency connection sources</p>
+                    <div class="space-y-2.5">
+                        {% for ip, hits in (top_ips or []) %}
+                        <div class="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-between text-xs">
+                            <span class="font-mono text-zinc-300 flex items-center gap-2">
+                                <i class="fas fa-location-dot text-indigo-400"></i> {{ ip or 'Unknown' }}
+                            </span>
+                            <span class="badge {{ 'badge-red' if hits > 30 else 'badge-green' }} font-mono">{{ hits }} hits</span>
+                        </div>
+                        {% else %}
+                        <p class="text-xs text-zinc-600 italic">No IP activity recorded.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ TAB 6: SYSTEM & BROADCAST ============ -->
+        <div id="tab-system" class="tab-content hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Site-wide Broadcast Banner -->
+                <div class="card-pro p-6 shadow-xl border-amber-500/20 !bg-gradient-to-br !from-zinc-900 !to-amber-950/20">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-1">
+                        <i class="fas fa-bullhorn text-amber-400"></i> Site-Wide Broadcast Announcement
+                    </h3>
+                    <p class="text-xs text-zinc-400 mb-4">Displays a prominent banner on all pages. Leave blank to disable.</p>
+                    <textarea id="broadcast-msg" rows="3" class="input-pro text-xs mb-3" placeholder="e.g. 🚀 Scheduled maintenance tonight at 2 AM UTC...">{{ active_broadcast.message if active_broadcast else '' }}</textarea>
+                    <button id="save-broadcast" class="btn btn-accent w-full !min-h-0 !py-2.5 text-xs font-bold">
+                        <i class="fas fa-paper-plane mr-1.5"></i> Publish Broadcast Banner
+                    </button>
+                </div>
+
+                <!-- Error Logs Inspector -->
+                <div class="card-pro p-6 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                                <i class="fas fa-bug text-red-400"></i> Exception & Error Logs
+                            </h3>
+                            <button id="clear-errors" class="btn btn-danger !min-h-0 !py-1 !px-2.5 text-[10px] font-bold">
+                                <i class="fas fa-trash mr-1"></i> Clear Logs
+                            </button>
+                        </div>
+                        <p class="text-xs text-zinc-500 mb-4">Caught server exceptions and provider failures</p>
+                    </div>
+
+                    <div class="space-y-2 max-h-64 overflow-y-auto custom-scrollbar pr-1">
+                        {% for log in (error_logs or []) %}
+                        <div class="p-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-xs">
+                            <div class="flex items-center justify-between text-[11px] mb-1">
+                                <span class="text-red-400 font-bold font-mono">{{ log.error_type }}</span>
+                                <span class="text-zinc-500">{{ log.created_at.strftime('%m-%d %H:%M') }}</span>
+                            </div>
+                            <p class="text-zinc-400 text-[11px] font-mono break-all">{{ log.message }}</p>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-6 text-zinc-500 text-xs italic">
+                            <i class="fas fa-sparkles text-emerald-400 text-sm mb-1 block"></i>
+                            System is completely clean. No errors logged!
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Moderation Chats -->
+            <div class="card-pro p-6 shadow-xl">
+                <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-1">
+                    <i class="fas fa-eye text-indigo-400"></i> Conversation Inspector (Moderation)
+                </h3>
+                <p class="text-xs text-zinc-500 mb-4">Recently active chats for moderation review</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                    {% for c in (all_conversations or []) %}
+                    <a href="{{ url_for('main.inspect_chat', conversation_id=c.id) }}" target="_blank" class="p-3 rounded-xl bg-zinc-900/70 border border-zinc-800 hover:border-indigo-500/50 transition-all lift">
+                        <p class="text-xs font-bold text-white truncate">{{ c.title }}</p>
+                        <p class="text-[10px] text-zinc-500 mt-1">User #{{ c.user_id }} · {{ c.updated_at.strftime('%b %d %H:%M') }}</p>
+                    </a>
+                    {% else %}
+                    <p class="text-xs text-zinc-600 italic">No conversations recorded yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
-</div>
 
+<!-- ============ CHART.JS & DASHBOARD SCRIPTS ============ -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Animated counters
+    const chartData = {{ charts_json | tojson | safe }};
+
+    // ---------- TAB SWITCHER ----------
+    document.querySelectorAll('.nav-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.nav-tab').forEach(b => {
+                b.classList.remove('active', 'bg-indigo-600', 'text-white');
+                b.classList.add('text-zinc-400');
+            });
+            btn.classList.add('active', 'bg-indigo-600', 'text-white');
+            btn.classList.remove('text-zinc-400');
+
+            const tabId = btn.dataset.tab;
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+            const activeEl = document.getElementById(tabId);
+            if (activeEl) activeEl.classList.remove('hidden');
+        });
+    });
+    // Set initial active button style
+    const initialActive = document.querySelector('.nav-tab.active');
+    if (initialActive) {
+        initialActive.classList.add('bg-indigo-600', 'text-white');
+        initialActive.classList.remove('text-zinc-400');
+    }
+
+    // ---------- EXPORT DROPDOWN ----------
+    const exportBtn = document.getElementById('export-dropdown-btn');
+    const exportMenu = document.getElementById('export-menu');
+    if (exportBtn && exportMenu) {
+        exportBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            exportMenu.classList.toggle('hidden');
+        });
+        document.addEventListener('click', () => exportMenu.classList.add('hidden'));
+    }
+
+    // ---------- ANIMATED COUNTERS ----------
     document.querySelectorAll('.counter').forEach(el => {
         const target = parseInt(el.dataset.count || '0', 10);
         const dur = 900, t0 = performance.now();
         (function tick(t) {
             const p = Math.min(1, (t - t0) / dur);
-            el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3)));
+            el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3))).toLocaleString();
             if (p < 1) requestAnimationFrame(tick);
         })(t0);
     });
 
-    // User management
-    document.querySelectorAll('.btn-admin').forEach(btn => {
+    // ---------- CHART.JS INSTANTIATIONS ----------
+    Chart.defaults.color = '#71717a';
+    Chart.defaults.font.family = "'Inter', sans-serif";
+
+    // 1. Timeline Chart (14 Days)
+    const ctxTimeline = document.getElementById('timelineChart')?.getContext('2d');
+    if (ctxTimeline) {
+        const gradIndigo = ctxTimeline.createLinearGradient(0, 0, 0, 240);
+        gradIndigo.addColorStop(0, 'rgba(99, 102, 241, 0.4)');
+        gradIndigo.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
+
+        const gradEmerald = ctxTimeline.createLinearGradient(0, 0, 0, 240);
+        gradEmerald.addColorStop(0, 'rgba(16, 185, 129, 0.3)');
+        gradEmerald.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+
+        new Chart(ctxTimeline, {
+            type: 'line',
+            data: {
+                labels: chartData.timeline_labels,
+                datasets: [
+                    {
+                        label: 'Messages',
+                        data: chartData.daily_messages,
+                        borderColor: '#818cf8',
+                        backgroundColor: gradIndigo,
+                        fill: true,
+                        tension: 0.35,
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#818cf8',
+                    },
+                    {
+                        label: 'User Signups',
+                        data: chartData.daily_signups,
+                        borderColor: '#34d399',
+                        backgroundColor: gradEmerald,
+                        fill: true,
+                        tension: 0.35,
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#34d399',
+                    },
+                    {
+                        label: 'API Requests',
+                        data: chartData.daily_api_reqs,
+                        borderColor: '#22d3ee',
+                        borderDash: [4, 4],
+                        tension: 0.35,
+                        borderWidth: 1.5,
+                        pointRadius: 0,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { font: { size: 10 } } },
+                    y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { font: { size: 10 }, precision: 0 } }
+                }
+            }
+        });
+    }
+
+    // 2. Hourly Traffic Heatmap
+    const ctxHourly = document.getElementById('hourlyChart')?.getContext('2d');
+    if (ctxHourly) {
+        new Chart(ctxHourly, {
+            type: 'bar',
+            data: {
+                labels: chartData.hourly_labels,
+                datasets: [{
+                    label: 'Messages',
+                    data: chartData.hourly_messages,
+                    backgroundColor: 'rgba(99, 102, 241, 0.8)',
+                    borderRadius: 4,
+                    hoverBackgroundColor: '#a855f7'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 9 }, maxTicksLimit: 12 } },
+                    y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { font: { size: 9 }, precision: 0 } }
+                }
+            }
+        });
+    }
+
+    // 3. Model Distribution Doughnut
+    const ctxModel = document.getElementById('modelChart')?.getContext('2d');
+    if (ctxModel) {
+        new Chart(ctxModel, {
+            type: 'doughnut',
+            data: {
+                labels: chartData.model_labels,
+                datasets: [{
+                    data: chartData.model_data,
+                    backgroundColor: ['#6366f1', '#a855f7', '#06b6d4', '#ec4899', '#f59e0b'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } }
+                },
+                cutout: '70%'
+            }
+        });
+    }
+
+    // 4. API Status Codes
+    const ctxStatus = document.getElementById('statusChart')?.getContext('2d');
+    if (ctxStatus) {
+        new Chart(ctxStatus, {
+            type: 'pie',
+            data: {
+                labels: chartData.status_labels,
+                datasets: [{
+                    data: chartData.status_data,
+                    backgroundColor: ['#10b981', '#ef4444', '#f59e0b', '#3b82f6'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } }
+                }
+            }
+        });
+    }
+
+    // ---------- USER SEARCH FILTER ----------
+    const userSearchInput = document.getElementById('user-search-input');
+    if (userSearchInput) {
+        userSearchInput.addEventListener('input', function() {
+            const q = this.value.toLowerCase().trim();
+            document.querySelectorAll('.user-row').forEach(row => {
+                const name = (row.querySelector('.user-name')?.textContent || '').toLowerCase();
+                const email = (row.querySelector('.user-email')?.textContent || '').toLowerCase();
+                const match = name.includes(q) || email.includes(q);
+                row.classList.toggle('hidden', !match);
+            });
+        });
+    }
+
+    // ---------- USER ACTIONS (PRO TOGGLE, ROLE, BAN, DELETE) ----------
+    document.querySelectorAll('.btn-admin-pro').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const row = btn.closest('tr');
+            const id = row.dataset.userId;
+            const res = await fetch(`/admin/users/${id}/toggle-pro`, { method: 'POST' });
+            const data = await res.json();
+            if (res.ok) {
+                showToast(data.message || 'Pro status updated!', 'success');
+                setTimeout(() => location.reload(), 600);
+            } else showToast(data.error || 'Failed to update Pro status', 'error');
+        });
+    });
+
+    document.querySelectorAll('.btn-admin-role, .btn-admin-ban, .btn-admin-delete').forEach(btn => {
         btn.addEventListener('click', async () => {
             const row = btn.closest('tr');
             const id = row.dataset.userId;
             const action = btn.dataset.action;
-            if (action === 'delete' && !confirm('Permanently delete this user and all data?')) return;
+            if (action === 'delete' && !confirm('Permanently delete this user and all their conversations/data?')) return;
             const res = await fetch(`/admin/users/${id}/${action}`, { method: 'POST' });
-            if (res.ok) { action === 'delete' ? row.remove() : location.reload(); }
-            else showToast(((await res.json()).error) || 'Action failed', 'error');
+            if (res.ok) {
+                action === 'delete' ? row.remove() : location.reload();
+                showToast(`User updated successfully`, 'success');
+            } else showToast(((await res.json()).error) || 'Action failed', 'error');
         });
     });
 
-    // Broadcast + errors
-    document.getElementById('save-broadcast').addEventListener('click', async () => {
-        await fetch('/admin/broadcast', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: document.getElementById('broadcast-msg').value }) });
-        showToast('Broadcast updated!', 'success');
-    });
-    document.getElementById('clear-errors').addEventListener('click', async () => {
-        if (!confirm('Clear all error logs?')) return;
-        await fetch('/admin/errors/clear', { method: 'POST' });
-        location.reload();
-    });
-        document.querySelectorAll('.sub-action').forEach(btn => {
+    // ---------- SUBSCRIPTION VERIFICATION QUEUE ----------
+    document.querySelectorAll('.sub-action').forEach(btn => {
         btn.addEventListener('click', async () => {
-            const id = btn.closest('tr').dataset.subId;
-            await fetch(`/admin/subscriptions/${id}/${btn.dataset.action}`, { method: 'POST' });
-            location.reload();
+            const row = btn.closest('tr');
+            const id = row.dataset.subId;
+            const action = btn.dataset.action;
+            const res = await fetch(`/admin/subscriptions/${id}/${action}`, { method: 'POST' });
+            if (res.ok) {
+                showToast(`Payment ${action === 'approve' ? 'approved & Pro activated! 👑' : 'rejected.'}`, 'success');
+                setTimeout(() => location.reload(), 600);
+            } else showToast('Subscription action failed', 'error');
         });
+    });
+
+    // ---------- BROADCAST BANNER & ERRORS ----------
+    document.getElementById('save-broadcast')?.addEventListener('click', async () => {
+        const msg = document.getElementById('broadcast-msg').value;
+        await fetch('/admin/broadcast', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: msg })
+        });
+        showToast(msg.trim() ? 'Broadcast announcement published live! 📢' : 'Broadcast banner disabled', 'success');
+    });
+
+    document.getElementById('clear-errors')?.addEventListener('click', async () => {
+        if (!confirm('Clear all logged errors?')) return;
+        await fetch('/admin/errors/clear', { method: 'POST' });
+        showToast('Error logs cleared ✨', 'success');
+        setTimeout(() => location.reload(), 500);
     });
 </script>
 {% endblock %}

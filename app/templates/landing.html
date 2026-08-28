@@ -2,346 +2,1807 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
     <!-- SEO -->
-    <title>Irus AI — Free Multimodal AI Assistant | Chat, Search, Vision & More</title>
-    <meta name="description" content="Irus AI is your free personal AI command center: streaming chat, live web search with citations, PDF/document intelligence, image analysis, AI art generation and long-term memory. No credit card required.">
-    <meta name="keywords" content="free AI assistant, AI chat, RAG document AI, AI image generation, multimodal AI, Irus AI">
+    <title>Irus AI Pro — Next-Gen Multimodal AI Command Center | Chat, Search, Vision & RAG</title>
+    <meta name="description" content="Irus AI Pro is a blazing-fast multimodal AI command center powered by Groq LPUs and Llama 3.3 70B: real-time streaming chat, live web search with citations, deep document RAG, AI art studio, vision analysis, and persistent memory. 100% free forever.">
+    <meta name="keywords" content="Irus AI, AI assistant, Groq LPU, Llama 3.3 70B, multimodal AI, free AI chat, document RAG, live web search, AI image generator, Nejamul Haque">
     <meta name="author" content="Nejamul Haque">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://irus-ai.onrender.com/">
 
     <!-- Open Graph / Twitter -->
-    <meta property="og:site_name" content="Irus AI">
+    <meta property="og:site_name" content="Irus AI Pro">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://irus-ai.onrender.com/">
-    <meta property="og:title" content="Irus AI — The Future of Intelligence is Here">
-    <meta property="og:description" content="Free multimodal AI command center: chat, live search, documents, vision, image gen & memory.">
+    <meta property="og:title" content="Irus AI Pro — The Future of Multimodal Intelligence">
+    <meta property="og:description" content="Blazing-fast AI command center: streaming chat, live web search, document intelligence, vision & memory — 100% free forever.">
     <meta property="og:image" content="https://irus-ai.onrender.com/static/icons/icon-512.png">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Irus AI — Free Multimodal AI Assistant">
-    <meta name="twitter:description" content="Chat, search, analyze documents & generate art — free forever.">
+    <meta name="twitter:title" content="Irus AI Pro — Next-Gen Multimodal AI">
+    <meta name="twitter:description" content="Chat, search the live web, analyze PDFs, and generate AI art with zero wait time.">
     <meta name="twitter:image" content="https://irus-ai.onrender.com/static/icons/icon-512.png">
 
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='icons/icon-192.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
 
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
-      "name": "Irus AI",
+      "name": "Irus AI Pro",
       "url": "https://irus-ai.onrender.com/",
       "applicationCategory": "AI Assistant",
-      "operatingSystem": "Web",
-      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" or "INR" },
+      "operatingSystem": "Web, iOS, Android",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
       "creator": { "@type": "Person", "name": "Nejamul Haque" }
     }
     </script>
 
     <style>
         :root {
-            --bg: #030305; --primary: #6366f1; --secondary: #a855f7; --accent: #06b6d4;
-            --text: #f8fafc; --muted: #94a3b8;
-            --glass: rgba(255,255,255,.03); --border: rgba(255,255,255,.08);
+            --bg-dark: #050508;
+            --primary: #6366f1;
+            --secondary: #a855f7;
+            --accent: #06b6d4;
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --font-mono: 'JetBrains Mono', monospace;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
-        h1, h2, h3, .brand { font-family: 'Space Grotesk', sans-serif; }
-
-        .bg-grid {
-            position: fixed; top: 0; left: 0; width: 200vw; height: 200vh; z-index: -2; pointer-events: none;
-            background-image: linear-gradient(rgba(99,102,241,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,.1) 1px, transparent 1px);
-            background-size: 50px 50px;
-            transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px);
-            animation: gridMove 20s linear infinite;
+        body {
+            background-color: var(--bg-dark);
+            color: #f4f4f5;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
         }
-        @keyframes gridMove { 0% { transform: perspective(500px) rotateX(60deg) translateY(0) translateZ(-200px); } 100% { transform: perspective(500px) rotateX(60deg) translateY(50px) translateZ(-200px); } }
-        .glow-orb { position: fixed; border-radius: 50%; filter: blur(100px); z-index: -1; opacity: .4; pointer-events: none; }
-        .orb-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: var(--primary); }
-        .orb-2 { bottom: -10%; right: -10%; width: 40vw; height: 40vw; background: var(--secondary); }
+        .font-display { font-family: 'Space Grotesk', sans-serif; }
+        .font-code { font-family: var(--font-mono); }
 
-        nav {
-            position: fixed; top: 0; width: 100%; padding: 1.2rem 5%; z-index: 100;
-            display: flex; justify-content: space-between; align-items: center;
-            background: rgba(3,3,5,.5); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border);
+        .cyber-grid {
+            position: fixed;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(99, 102, 241, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99, 102, 241, 0.04) 1px, transparent 1px);
+            background-size: 48px 48px;
+            mask-image: radial-gradient(ellipse at 50% 30%, black 40%, transparent 80%);
+            pointer-events: none;
+            z-index: 0;
         }
-        .brand { font-size: 1.4rem; font-weight: 700; display: flex; align-items: center; gap: .5rem; text-decoration: none; color: #fff; }
-        .brand span { background: linear-gradient(to right, var(--primary), var(--secondary)); -webkit-background-clip: text; color: transparent; }
-        .nav-links { display: flex; gap: 2rem; align-items: center; }
-        .nav-links a { color: var(--muted); text-decoration: none; font-size: .9rem; font-weight: 600; transition: color .3s; }
-        .nav-links a:hover { color: #fff; }
-        .mobile-toggle { display: none; font-size: 1.4rem; color: #fff; cursor: pointer; background: none; border: none; }
 
-        .btn { padding: .6rem 1.5rem; border-radius: 30px; font-weight: 600; text-decoration: none; border: none; cursor: pointer; font-family: 'Inter', sans-serif; transition: all .3s cubic-bezier(.4,0,.2,1); display: inline-flex; align-items: center; gap: .5rem; }
-        .btn-outline { background: transparent; border: 1px solid var(--border); color: #fff; }
-        .btn-outline:hover { background: var(--glass); border-color: var(--primary); box-shadow: 0 0 15px rgba(99,102,241,.3); }
-        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff !important; box-shadow: 0 4px 15px rgba(99,102,241,.4); }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(168,85,247,.6); }
+        #hero-canvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: auto;
+            z-index: 1;
+        }
 
-        .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 100px 5% 60px; position: relative; }
-        .hero h1 { font-size: clamp(2.6rem, 8vw, 6rem); line-height: 1.08; margin-bottom: 1.5rem; letter-spacing: -.02em; }
-        .hero h1 span { background: linear-gradient(to right, #fff, #a5b4fc); -webkit-background-clip: text; color: transparent; }
-        .hero p { font-size: clamp(1rem, 2vw, 1.25rem); color: var(--muted); max-width: 640px; margin-bottom: 2.5rem; }
-        .hero-btns { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; z-index: 10; }
+        .glass-nav {
+            background: rgba(8, 8, 14, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-glass);
+        }
 
-        .scene-3d { position: absolute; top: 50%; left: 50%; width: 600px; height: 600px; margin: -300px 0 0 -300px; z-index: -1; pointer-events: none; transform-style: preserve-3d; }
-        .core { position: absolute; top: 50%; left: 50%; width: 200px; height: 200px; transform: translate(-50%,-50%); transform-style: preserve-3d; animation: floatCore 6s ease-in-out infinite; }
-        .ring { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 3px solid rgba(99,102,241,.85); border-radius: 50%; box-shadow: 0 0 30px rgba(99,102,241,.25), inset 0 0 20px rgba(168,85,247,.2); }
-        .ring-1 { transform: rotateX(70deg) rotateY(20deg); animation: spin1 10s linear infinite; }
-        .ring-2 { transform: rotateX(20deg) rotateY(70deg); border-color: rgba(168,85,247,.85); animation: spin2 15s linear infinite reverse; }
-        .ring-3 { transform: rotateX(50deg) rotateY(50deg); border-color: rgba(6,182,212,.85); animation: spin3 12s linear infinite; width: 140%; height: 140%; top: -20%; left: -20%; }
-        .core-center { position: absolute; top: 50%; left: 50%; width: 60px; height: 60px; background: #fff; border-radius: 50%; transform: translate(-50%,-50%); box-shadow: 0 0 60px 25px rgba(255,255,255,.85), 0 0 140px 70px rgba(99,102,241,.7); animation: pulseCenter 2s ease-in-out infinite alternate; }
-        @keyframes floatCore { 0%,100% { transform: translate(-50%,-50%) translateZ(0); } 50% { transform: translate(-50%,-60%) translateZ(50px); } }
-        @keyframes spin1 { 100% { transform: rotateX(70deg) rotateY(20deg) rotateZ(360deg); } }
-        @keyframes spin2 { 100% { transform: rotateX(20deg) rotateY(70deg) rotateZ(360deg); } }
-        @keyframes spin3 { 100% { transform: rotateX(50deg) rotateY(50deg) rotateZ(-360deg); } }
-        @keyframes pulseCenter { 0% { transform: translate(-50%,-50%) scale(.8); opacity: .8; } 100% { transform: translate(-50%,-50%) scale(1.2); opacity: 1; } }
+        .headline-gradient {
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 40%, #818cf8 70%, #c084fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 200% auto;
+            animation: textShimmer 6s linear infinite alternate;
+        }
+        @keyframes textShimmer {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
 
-        section { padding: 6rem 5%; position: relative; }
-        .section-header { text-align: center; margin-bottom: 4rem; }
-        .section-header h2 { font-size: clamp(1.8rem, 4vw, 2.6rem); margin-bottom: 1rem; }
-        .section-header p { color: var(--muted); max-width: 600px; margin: 0 auto; }
+        .btn-cyber {
+            position: relative;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6, #d946ef);
+            background-size: 200% 200%;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 20px -5px rgba(99, 102, 241, 0.5);
+        }
+        .btn-cyber:hover {
+            background-position: 100% 100%;
+            box-shadow: 0 8px 30px -5px rgba(168, 85, 247, 0.7);
+            transform: translateY(-2px) scale(1.01);
+        }
+        .btn-cyber:active { transform: translateY(0) scale(0.98); }
 
-        .grid-3d { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; perspective: 1000px; }
-        .card-3d { background: var(--glass); border: 1px solid var(--border); border-radius: 20px; padding: 2.2rem; position: relative; transform-style: preserve-3d; transition: transform .1s; backdrop-filter: blur(10px); overflow: hidden; }
-        .card-3d::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at var(--mouse-x,50%) var(--mouse-y,50%), rgba(255,255,255,.1) 0%, transparent 50%); opacity: 0; transition: opacity .3s; pointer-events: none; }
-        .card-3d:hover::before { opacity: 1; }
-        .card-icon { width: 60px; height: 60px; border-radius: 15px; background: rgba(99,102,241,.1); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: var(--primary); margin-bottom: 1.4rem; transform: translateZ(30px); border: 1px solid rgba(99,102,241,.2); }
-        .card-3d h3 { font-size: 1.35rem; margin-bottom: .9rem; transform: translateZ(20px); }
-        .card-3d p { color: var(--muted); line-height: 1.6; transform: translateZ(10px); }
-        .card-link { display: inline-flex; align-items: center; gap: .5rem; margin-top: 1.4rem; color: var(--accent); text-decoration: none; font-weight: 600; transform: translateZ(20px); transition: gap .3s; }
-        .card-link:hover { gap: 1rem; }
+        .btn-glass {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            transition: all 0.25s ease;
+        }
+        .btn-glass:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(99, 102, 241, 0.5);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+            transform: translateY(-2px);
+        }
 
-        .cta-band { text-align: center; padding: 6rem 5%; }
-        .cta-band h2 { font-size: clamp(2rem, 5vw, 3.5rem); margin-bottom: 1rem; }
-        .cta-band h2 span { background: linear-gradient(to right, var(--primary), var(--secondary)); -webkit-background-clip: text; color: transparent; }
-        .cta-band p { color: var(--muted); margin-bottom: 2rem; }
+        .live-beacon {
+            animation: beaconGlow 2s ease-in-out infinite alternate;
+        }
+        @keyframes beaconGlow {
+            from { box-shadow: 0 0 5px rgba(16, 185, 129, 0.4); }
+            to { box-shadow: 0 0 16px rgba(16, 185, 129, 0.8); }
+        }
 
-        details.card-3d { padding: 1.4rem 2rem; }
-        details summary { cursor: pointer; font-weight: 600; font-size: 1.05rem; font-family: 'Space Grotesk', sans-serif; }
-        details p { color: var(--muted); margin-top: 1rem; line-height: 1.6; }
-        .faq-grid { display: grid; gap: 1rem; max-width: 900px; margin: 0 auto; }
+        pre::-webkit-scrollbar { height: 5px; }
+        pre::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
 
-        .contact-container { max-width: 800px; margin: 0 auto; background: var(--glass); border: 1px solid var(--border); border-radius: 20px; padding: 3rem; backdrop-filter: blur(10px); text-align: center; }
-        .contact-links { display: flex; justify-content: center; gap: 1.5rem; margin-top: 2rem; flex-wrap: wrap; }
-        .contact-btn { display: flex; align-items: center; gap: .8rem; padding: 1rem 2rem; background: rgba(255,255,255,.05); border: 1px solid var(--border); border-radius: 12px; color: #fff; text-decoration: none; transition: all .3s; }
-        .contact-btn:hover { background: var(--primary); border-color: var(--primary); transform: translateY(-3px); }
-
-        footer { padding: 3rem 5%; text-align: center; border-top: 1px solid var(--border); color: var(--muted); font-size: .9rem; }
-        footer .foot-links { display: flex; justify-content: center; gap: 2rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-        footer a { color: var(--muted); text-decoration: none; }
-        footer a:hover { color: #fff; }
-
-        .reveal { opacity: 0; transform: translateY(40px); transition: all .8s cubic-bezier(.2,.8,.2,1); }
-        .reveal.visible { opacity: 1; transform: none; }
-
-        @media (max-width: 768px) {
-            .mobile-toggle { display: block; }
-            .nav-links { display: none; position: absolute; top: 100%; left: 0; width: 100%; background: var(--bg); flex-direction: column; padding: 2rem; border-bottom: 1px solid var(--border); gap: 1.2rem; }
-            .nav-links.active { display: flex; }
-            .scene-3d { width: 320px; height: 320px; margin: -160px 0 0 -160px; }
+        #mobile-drawer {
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+        }
+        #mobile-drawer.open {
+            transform: translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+        #mobile-drawer:not(.open) {
+            transform: translateY(-10px);
+            opacity: 0;
+            pointer-events: none;
         }
     </style>
 </head>
-<body>
-    <div class="bg-grid" aria-hidden="true"></div>
-    <div class="glow-orb orb-1" aria-hidden="true"></div>
-    <div class="glow-orb orb-2" aria-hidden="true"></div>
+<body class="bg-[#050508] text-zinc-200 antialiased selection:bg-indigo-600/30 selection:text-white">
 
-    <nav aria-label="Main navigation">
-        <a href="#home" class="brand"><i class="fas fa-robot" aria-hidden="true"></i> Irus<span>AI</span></a>
-        <button class="mobile-toggle" id="mobile-menu-btn" aria-label="Toggle menu"><i class="fas fa-bars"></i></button>
-        <div class="nav-links" id="nav-links">
-            <a href="#home">Home</a>
-            <a href="#services">Services</a>
-            <a href="#projects">Projects</a>
-            <a href="/pricing">Pricing</a>
-            <a href="#contact">Contact</a>
-            <a href="{{ url_for('main.auth') }}" class="btn btn-outline">Log In</a>
-            <a href="{{ url_for('main.auth') }}#register" class="btn btn-primary">Sign Up Free</a>
-        </div>
-    </nav>
+    <!-- Cyber Background Layer -->
+    <div class="cyber-grid" aria-hidden="true"></div>
 
-    <section id="home" class="hero">
-        <div class="scene-3d" id="scene" aria-hidden="true">
-            <div class="core">
-                <div class="ring ring-1"></div>
-                <div class="ring ring-2"></div>
-                <div class="ring ring-3"></div>
-                <div class="core-center"></div>
+    <!-- Ambient Glowing Orbs -->
+    <div class="fixed top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-indigo-600/10 blur-[130px] pointer-events-none z-0" aria-hidden="true"></div>
+    <div class="fixed bottom-[-15%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-purple-600/10 blur-[140px] pointer-events-none z-0" aria-hidden="true"></div>
+    <div class="fixed top-[45%] right-[15%] w-[35vw] h-[35vw] rounded-full bg-cyan-600/8 blur-[120px] pointer-events-none z-0" aria-hidden="true"></div>
+
+    <!-- ==================== HEADER NAVIGATION ==================== -->
+    <header class="fixed top-0 left-0 right-0 z-50 glass-nav transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
+            <!-- Brand Logo -->
+            <a href="#home" class="flex items-center gap-3 group focus:outline-none" aria-label="Irus AI Pro Home">
+                <div class="relative">
+                    <img src="{{ url_for('static', filename='icons/icon-192.png') }}" class="w-10 h-10 rounded-xl shadow-lg shadow-indigo-500/25 object-cover transition-transform group-hover:scale-105" alt="Irus AI Logo">
+                    <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-zinc-950 rounded-full live-beacon"></span>
+                </div>
+                <div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="font-display font-bold text-lg text-white tracking-tight">Irus</span>
+                        <span class="font-display font-extrabold text-lg text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-cyan-400">AI</span>
+                        <span class="px-1.5 py-0.2 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border border-indigo-500/40 rounded text-[9px] font-bold text-indigo-300 tracking-wider">PRO</span>
+                    </div>
+                    <p class="text-[9px] text-zinc-400 font-mono tracking-wider -mt-0.5">800 TPS • GROQ LPU</p>
+                </div>
+            </a>
+
+            <!-- Desktop Nav Links -->
+            <nav class="hidden lg:flex items-center gap-7 text-xs font-medium text-zinc-300" aria-label="Main Navigation">
+                <a href="#playground" class="hover:text-white transition-colors flex items-center gap-1.5"><i class="fas fa-play text-indigo-400 text-[10px]"></i> Live Sandbox</a>
+                <a href="#superpowers" class="hover:text-white transition-colors">Superpowers</a>
+                <a href="#benchmark" class="hover:text-white transition-colors flex items-center gap-1"><i class="fas fa-bolt text-amber-400 text-[10px]"></i> Speed Test</a>
+                <a href="#architecture" class="hover:text-white transition-colors">Architecture</a>
+                <a href="#api" class="hover:text-white transition-colors font-mono">&lt;API/&gt;</a>
+                <a href="#pricing" class="hover:text-white transition-colors">Pricing</a>
+                <a href="#faq" class="hover:text-white transition-colors">FAQ</a>
+            </nav>
+
+            <!-- Action Controls -->
+            <div class="flex items-center gap-2.5">
+                <!-- Audio Haptics Toggle -->
+                <button id="sfx-toggle" class="btn-glass w-9 h-9 rounded-xl flex items-center justify-center text-zinc-400 hover:text-indigo-400 transition-colors" title="Toggle Sound Effects (Web Audio)" aria-label="Toggle UI Audio">
+                    <i class="fas fa-volume-high text-xs" id="sfx-icon"></i>
+                </button>
+
+                <!-- ⌘K Command Palette Trigger -->
+                <button id="cmd-trigger" class="hidden sm:flex btn-glass px-2.5 py-1.5 rounded-xl items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition-colors" title="Press ⌘K for Command Center">
+                    <i class="fas fa-terminal text-[10px] text-indigo-400"></i>
+                    <kbd class="font-mono text-[10px] bg-zinc-800/80 px-1.5 py-0.5 rounded border border-zinc-700">⌘K</kbd>
+                </button>
+
+                <!-- Auth Buttons -->
+                <a href="{{ url_for('main.auth') }}" class="hidden sm:inline-flex btn-glass px-4 py-2 rounded-xl text-xs font-semibold text-zinc-200 hover:text-white">Sign In</a>
+                <a href="{{ url_for('main.auth') }}#register" class="btn-cyber px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs font-bold text-white flex items-center gap-1.5">
+                    <span>Launch App</span>
+                    <i class="fas fa-arrow-right text-[10px]"></i>
+                </a>
+
+                <!-- Mobile Menu Button -->
+                <button id="mobile-menu-btn" class="lg:hidden btn-glass w-9 h-9 rounded-xl flex items-center justify-center text-zinc-300 hover:text-white" aria-label="Open Mobile Menu">
+                    <i class="fas fa-bars text-sm"></i>
+                </button>
             </div>
         </div>
-        <h1>The Future of<br><span>Intelligence is Here.</span></h1>
-        <p>Experience Irus AI — your personal multimodal command center. Chat, search the live web, analyze documents, and generate art, all in one blazing-fast interface.</p>
-        <div class="hero-btns">
-            <a href="{{ url_for('main.auth') }}" class="btn btn-primary" style="padding:1rem 2.5rem;font-size:1.05rem;">Launch App <i class="fas fa-arrow-right"></i></a>
-            <a href="#services" class="btn btn-outline" style="padding:1rem 2.5rem;font-size:1.05rem;">Explore Features</a>
-        </div>
-    </section>
 
-    <section id="services">
-        <div class="section-header">
-            <h2>Unmatched AI Superpowers</h2>
-            <p>Everything you need to work smarter, built directly into your browser.</p>
+        <!-- Mobile Drawer -->
+        <div id="mobile-drawer" class="lg:hidden absolute top-full left-0 right-0 glass-nav border-t border-zinc-800/60 p-5 space-y-3 shadow-2xl">
+            <div class="grid grid-cols-2 gap-2 text-xs font-medium text-zinc-300">
+                <a href="#playground" class="p-2.5 rounded-xl bg-zinc-900/60 hover:bg-zinc-800 flex items-center gap-2 mobile-link"><i class="fas fa-play text-indigo-400"></i> Live Sandbox</a>
+                <a href="#superpowers" class="p-2.5 rounded-xl bg-zinc-900/60 hover:bg-zinc-800 flex items-center gap-2 mobile-link"><i class="fas fa-wand-magic-sparkles text-purple-400"></i> Superpowers</a>
+                <a href="#benchmark" class="p-2.5 rounded-xl bg-zinc-900/60 hover:bg-zinc-800 flex items-center gap-2 mobile-link"><i class="fas fa-bolt text-amber-400"></i> Speed Race</a>
+                <a href="#architecture" class="p-2.5 rounded-xl bg-zinc-900/60 hover:bg-zinc-800 flex items-center gap-2 mobile-link"><i class="fas fa-microchip text-cyan-400"></i> Architecture</a>
+                <a href="#api" class="p-2.5 rounded-xl bg-zinc-900/60 hover:bg-zinc-800 flex items-center gap-2 mobile-link"><i class="fas fa-code text-emerald-400"></i> Developer API</a>
+                <a href="#pricing" class="p-2.5 rounded-xl bg-zinc-900/60 hover:bg-zinc-800 flex items-center gap-2 mobile-link"><i class="fas fa-crown text-amber-300"></i> Pro Pricing</a>
+            </div>
+            <div class="pt-2 border-t border-zinc-800 flex gap-2">
+                <a href="{{ url_for('main.auth') }}" class="btn-glass flex-1 py-2.5 rounded-xl text-center text-xs font-semibold">Sign In</a>
+                <a href="{{ url_for('main.auth') }}#register" class="btn-cyber flex-1 py-2.5 rounded-xl text-center text-xs font-bold text-white">Create Account</a>
+            </div>
         </div>
-        <div class="grid-3d">
-            <div class="card-3d tilt-card"><div class="card-icon"><i class="fas fa-comments"></i></div><h3>Streaming Chat</h3><p>Lightning-fast responses powered by Llama 3 and advanced routing. Compare models side-by-side instantly.</p></div>
-            <div class="card-3d tilt-card"><div class="card-icon"><i class="fas fa-globe"></i></div><h3>Live Web Search</h3><p>Don't rely on outdated data. Irus searches the live internet and cites sources automatically.</p></div>
-            <div class="card-3d tilt-card"><div class="card-icon"><i class="fas fa-file-pdf"></i></div><h3>Document RAG</h3><p>Upload PDFs or Word docs. Ask complex questions and get answers extracted directly from your files.</p></div>
-            <div class="card-3d tilt-card"><div class="card-icon"><i class="fas fa-eye"></i></div><h3>Multimodal Vision</h3><p>Attach any image. Irus can see, analyze, and describe photos, charts, and screenshots in seconds.</p></div>
-            <div class="card-3d tilt-card"><div class="card-icon"><i class="fas fa-palette"></i></div><h3>Image Generation</h3><p>Type a prompt and watch Irus generate stunning, high-resolution AI artwork right in the chat.</p></div>
-            <div class="card-3d tilt-card"><div class="card-icon"><i class="fas fa-brain"></i></div><h3>Persistent Memory</h3><p>Irus remembers your preferences, facts, and context across every single conversation forever.</p></div>
-        </div>
-    </section>
+    </header>
 
-    <div class="grid-3d">
-    <a href="https://digital-lens.vercel.app/" target="_blank" rel="noopener" class="card-3d tilt-card" style="text-decoration:none;color:inherit;">
-        <div class="card-icon" style="color:var(--accent);background:rgba(6,182,212,.1);border-color:rgba(6,182,212,.2);"><i class="fas fa-camera"></i></div>
-        <h3>Digital Lens</h3><p>AI-powered image analysis & enhancement studio — see what your photos are really saying.</p>
-        <span class="card-link">Visit Site <i class="fas fa-external-link-alt"></i></span>
-    </a>
-    <a href="https://collabsheets.onrender.com/" target="_blank" rel="noopener" class="card-3d tilt-card" style="text-decoration:none;color:inherit;">
-        <div class="card-icon" style="color:#34d399;background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.2);"><i class="fas fa-table"></i></div>
-        <h3>CollabSheets</h3><p>Real-time collaborative spreadsheets — build budgets & dashboards together, live.</p>
-        <span class="card-link">Visit Site <i class="fas fa-external-link-alt"></i></span>
-    </a>
-    <a href="https://nestfy-beta.vercel.app/" target="_blank" rel="noopener" class="card-3d tilt-card" style="text-decoration:none;color:inherit;">
-        <div class="card-icon" style="color:#fbbf24;background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.2);"><i class="fas fa-house"></i></div>
-        <h3>Nestfy</h3><p>Modern home & nest discovery experience — beautifully designed property browsing.</p>
-        <span class="card-link">Visit Site <i class="fas fa-external-link-alt"></i></span>
-    </a>
-    <a href="https://github.com/NejamulHaque" target="_blank" rel="noopener" class="card-3d tilt-card" style="text-decoration:none;color:inherit;">
-        <div class="card-icon" style="color:#fff;background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);"><i class="fab fa-github"></i></div>
-        <h3>More on GitHub</h3><p>Open-source contributions, DevSecOps pipelines and experimental code.</p>
-        <span class="card-link">View Code <i class="fas fa-external-link-alt"></i></span>
-    </a>
-</div>
+    <!-- ==================== HERO SECTION WITH QUANTUM CANVAS ==================== -->
+    <section id="home" class="relative min-h-[92vh] flex items-center justify-center pt-28 pb-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        <!-- Interactive 3D Particle Constellation Canvas -->
+        <canvas id="hero-canvas"></canvas>
 
-   <section id="pricing">
-    <div class="section-header"><h2>Go <span style="background:linear-gradient(to right,#6366f1,#a855f7);-webkit-background-clip:text;color:transparent;">Pro</span></h2>
-    <p>Free forever for everyone. Pro for those who want more.</p></div>
-    <div class="grid-3d" style="max-width:800px;margin:0 auto;">
-        <div class="card-3d tilt-card" style="text-align:center;">
-            <h3>Pro Monthly</h3>
-            <p style="font-size:2.2rem;font-weight:700;color:#fff;margin:.5rem 0;">₹99<span style="font-size:.8rem;color:var(--muted);">/mo</span></p>
-            <p>3× rate limits · priority 70B model · PRO badge · priority support.</p>
-            <a href="/pricing" class="btn btn-primary" style="margin-top:1.2rem;">Choose Monthly</a>
-        </div>
-        <div class="card-3d tilt-card glow-card" style="text-align:center;">
-            <span class="badge badge-green" style="position:absolute;top:-12px;right:20px;">SAVE 16%</span>
-            <h3>Pro Yearly</h3>
-            <p style="font-size:2.2rem;font-weight:700;color:#fff;margin:.5rem 0;">₹999<span style="font-size:.8rem;color:var(--muted);">/yr</span></p>
-            <p>Everything in Monthly + 2 months free + early access features.</p>
-            <a href="/pricing" class="btn btn-accent" style="margin-top:1.2rem;">Choose Yearly</a>
-        </div>
-    </div>
-</section>
+        <div class="relative z-10 max-w-5xl mx-auto text-center pointer-events-none">
+            <!-- Pulsing Status Badge -->
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-950/70 border border-indigo-500/30 text-indigo-300 text-xs font-semibold mb-6 shadow-lg shadow-indigo-500/10 pointer-events-auto backdrop-blur-md">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 live-beacon"></span>
+                <span>Irus AI v3.5 Pro Engine</span>
+                <span class="text-zinc-500">•</span>
+                <span class="text-zinc-300 font-mono">100% Free Forever</span>
+            </div>
 
-    <section class="cta-band">
-        <h2>Ready to experience the <span>future?</span></h2>
-        <p>Free forever. No credit card. No limits on curiosity.</p>
-        <a href="{{ url_for('main.auth') }}#register" class="btn btn-primary" style="padding:1rem 3rem;font-size:1.1rem;">Create Free Account <i class="fas fa-arrow-right"></i></a>
-    </section>
+            <!-- Main Headline with Shimmer -->
+            <h1 class="font-display text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight leading-[1.08] mb-6">
+                The Multimodal AI Platform<br>
+                <span class="headline-gradient">Engineered for Next-Gen Speed.</span>
+            </h1>
 
-    <section id="faq" style="padding-top:2rem;">
-        <div class="section-header"><h2>Frequently Asked Questions</h2></div>
-        <div class="faq-grid">
-            <details class="card-3d"><summary>Is Irus AI really free?</summary><p>Yes — 100% free. It runs on free-tier AI providers (Groq, Gemini, Pollinations) and free cloud hosting.</p></details>
-            <details class="card-3d"><summary>What can Irus AI do?</summary><p>Streaming chat, live web search with citations, PDF/Word document Q&A, image analysis, AI art generation, voice input/output and persistent memory.</p></details>
-            <details class="card-3d"><summary>Is my data private?</summary><p>Your data is stored securely, never sold, and you can delete anything at any time. Read the <a href="/privacy" style="color:var(--accent);">Privacy Policy</a>.</p></details>
-            <details class="card-3d"><summary>Can I use Irus AI in my own apps?</summary><p>Yes! Create an API key in the Developer Console and call <code style="color:var(--accent);">POST /api/v1/chat</code> from any language.</p></details>
-            <details class="card-3d"><summary>Does it work on mobile?</summary><p>Fully responsive, and installable as a PWA — add it to your home screen for a native app experience.</p></details>
-        </div>
-    </section>
+            <!-- Dynamic Typewriter Subheadline -->
+            <p class="text-base sm:text-xl text-zinc-400 max-w-3xl mx-auto mb-8 font-normal leading-relaxed">
+                Chat at <strong class="text-white font-semibold">800+ tokens/sec</strong>, search the live web with automatic citations, analyze PDFs with RAG vector search, and synthesize art — all in one ultra-responsive command center.
+            </p>
 
-    <section id="contact">
-        <div class="contact-container tilt-card">
-            <h2 style="font-size:2.2rem;margin-bottom:1rem;">Let's Build the Future</h2>
-            <p style="color:var(--muted);">Have a question, a partnership idea, or just want to say hi? Reach out directly.</p>
-            <div class="contact-links">
-                <a href="mailto:nejamulhaque.works@gmail.com" class="contact-btn"><i class="fas fa-envelope"></i> Email Me</a>
-                <a href="https://github.com/NejamulHaque/Irus-AI" target="_blank" rel="noopener" class="contact-btn"><i class="fab fa-github"></i> Star on GitHub</a>
-                <a href="upi://pay?pa=nejamulhaque@upi&pn=Nejamul%20Haque" class="contact-btn"><i class="fas fa-indian-rupee-sign"></i> UPI Support</a>
+            <!-- Hero Action Controls -->
+            <div class="flex flex-wrap items-center justify-center gap-3.5 mb-12 pointer-events-auto">
+                <a href="{{ url_for('main.auth') }}" class="btn-cyber px-7 py-3.5 rounded-2xl font-bold text-sm text-white flex items-center gap-2.5 shadow-xl shadow-indigo-500/30">
+                    <i class="fas fa-bolt text-amber-300"></i>
+                    <span>Launch Irus AI Free</span>
+                    <i class="fas fa-arrow-right text-xs opacity-80"></i>
+                </a>
+                <a href="#playground" class="btn-glass px-6 py-3.5 rounded-2xl font-semibold text-sm text-zinc-200 hover:text-white flex items-center gap-2">
+                    <i class="fas fa-gamepad text-indigo-400"></i>
+                    <span>Test Interactive Sandbox</span>
+                </a>
+                <a href="#benchmark" class="btn-glass px-5 py-3.5 rounded-2xl font-semibold text-sm text-zinc-300 hover:text-amber-400 flex items-center gap-2">
+                    <i class="fas fa-flag-checkered text-amber-400"></i>
+                    <span>Speed Race</span>
+                </a>
+            </div>
+
+            <!-- Live Telemetry Matrix Strip -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-4xl mx-auto pointer-events-auto">
+                <div class="card-spotlight p-4 text-center">
+                    <p class="font-display text-2xl sm:text-3xl font-extrabold text-white"><span class="counter" data-count="820">0</span><span class="text-indigo-400 text-lg"> tps</span></p>
+                    <p class="text-[10px] text-zinc-400 uppercase tracking-widest font-mono mt-0.5">Streaming Throughput</p>
+                </div>
+                <div class="card-spotlight p-4 text-center">
+                    <p class="font-display text-2xl sm:text-3xl font-extrabold text-emerald-400">&lt;<span class="counter" data-count="15">0</span><span class="text-sm">ms</span></p>
+                    <p class="text-[10px] text-zinc-400 uppercase tracking-widest font-mono mt-0.5">First-Token Latency</p>
+                </div>
+                <div class="card-spotlight p-4 text-center">
+                    <p class="font-display text-2xl sm:text-3xl font-extrabold text-purple-400">Llama 3.3</p>
+                    <p class="text-[10px] text-zinc-400 uppercase tracking-widest font-mono mt-0.5">70B Versatile Intelligence</p>
+                </div>
+                <div class="card-spotlight p-4 text-center">
+                    <p class="font-display text-2xl sm:text-3xl font-extrabold text-amber-400">₹0 / $0</p>
+                    <p class="text-[10px] text-zinc-400 uppercase tracking-widest font-mono mt-0.5">Free For Everyone</p>
+                </div>
             </div>
         </div>
     </section>
 
-    <footer>
-        <div class="foot-links">
-            <a href="#home">Home</a><a href="#services">Services</a><a href="#projects">Projects</a>
-            <a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="{{ url_for('main.auth') }}">Login</a>
+    <!-- ==================== LIVE INTERACTIVE AI SANDBOX PLAYGROUND ==================== -->
+    <section id="playground" class="relative py-20 px-4 sm:px-6 lg:px-8 border-t border-zinc-800/60 bg-gradient-to-b from-[#050508] via-zinc-950/80 to-[#050508]">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-10">
+                <span class="px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-xs font-bold tracking-wider uppercase inline-flex items-center gap-1.5 mb-3">
+                    <i class="fas fa-terminal"></i> Interactive Hands-On Studio
+                </span>
+                <h2 class="font-display text-3xl sm:text-5xl font-extrabold text-white tracking-tight mb-3">
+                    Experience the Superpowers. <span class="headline-gradient">Zero Signup Required.</span>
+                </h2>
+                <p class="text-sm sm:text-base text-zinc-400 max-w-2xl mx-auto">
+                    Select a capability below or type any prompt to watch Irus AI stream responses, ground facts from the live web, parse PDF documents, or synthesize visual artwork.
+                </p>
+            </div>
+
+            <!-- Playground Studio Container -->
+            <div class="terminal-window">
+                <!-- Studio Header & Capability Tabs -->
+                <div class="terminal-header flex-wrap gap-3">
+                    <div class="flex items-center gap-2">
+                        <span class="terminal-dot red"></span>
+                        <span class="terminal-dot yellow"></span>
+                        <span class="terminal-dot green"></span>
+                        <span class="text-xs font-mono text-zinc-400 ml-2 font-semibold flex items-center gap-1.5">
+                            <i class="fas fa-robot text-indigo-400"></i> irus-sandbox.sh
+                        </span>
+                    </div>
+
+                    <!-- Mode Selectors -->
+                    <div class="flex items-center gap-1.5 overflow-x-auto custom-scrollbar py-1" id="sandbox-tabs">
+                        <button class="sandbox-tab-btn active px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white flex items-center gap-1.5 transition-all" data-mode="chat">
+                            <i class="fas fa-comments text-[11px]"></i> <span>Neural Chat & Code</span>
+                        </button>
+                        <button class="sandbox-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-zinc-800/80 text-zinc-400 hover:text-white flex items-center gap-1.5 transition-all" data-mode="search">
+                            <i class="fas fa-globe text-[11px]"></i> <span>Live Web Search</span>
+                        </button>
+                        <button class="sandbox-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-zinc-800/80 text-zinc-400 hover:text-white flex items-center gap-1.5 transition-all" data-mode="rag">
+                            <i class="fas fa-file-pdf text-[11px]"></i> <span>Document RAG</span>
+                        </button>
+                        <button class="sandbox-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-zinc-800/80 text-zinc-400 hover:text-white flex items-center gap-1.5 transition-all" data-mode="art">
+                            <i class="fas fa-palette text-[11px]"></i> <span>AI Art Studio</span>
+                        </button>
+                        <button class="sandbox-tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-zinc-800/80 text-zinc-400 hover:text-white flex items-center gap-1.5 transition-all" data-mode="memory">
+                            <i class="fas fa-brain text-[11px]"></i> <span>Synaptic Memory</span>
+                        </button>
+                    </div>
+
+                    <!-- Live Telemetry Tag -->
+                    <div class="hidden sm:flex items-center gap-2 font-mono text-[11px] text-zinc-400">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span id="live-speed-tag">820 TPS • 12ms TTFT</span>
+                    </div>
+                </div>
+
+                <!-- Interactive Quick Prompt Pills -->
+                <div class="px-5 py-3 bg-zinc-950/60 border-b border-zinc-800/60 flex items-center gap-2 overflow-x-auto custom-scrollbar" id="prompt-pills-bar">
+                    <span class="text-[10px] font-mono text-zinc-500 uppercase tracking-widest flex-shrink-0"><i class="fas fa-lightbulb text-amber-400 mr-1"></i>Try:</span>
+                </div>
+
+                <!-- Studio Output Display Area -->
+                <div id="sandbox-output" class="p-5 sm:p-7 min-h-[320px] max-h-[480px] overflow-y-auto font-mono text-xs sm:text-sm text-zinc-300 leading-relaxed custom-scrollbar bg-[#07070b]">
+                </div>
+
+                <!-- Studio Prompt Input Bar -->
+                <div class="p-3 sm:p-4 bg-zinc-900/90 border-t border-zinc-800 flex items-center gap-2 sm:gap-3">
+                    <div class="relative flex-1">
+                        <i class="fas fa-chevron-right absolute left-3.5 top-1/2 -translate-y-1/2 text-indigo-400 font-mono text-xs"></i>
+                        <input id="sandbox-input" type="text" placeholder="Type a prompt or select a pill above..." class="w-full bg-zinc-950 border border-zinc-800 focus:border-indigo-500 rounded-xl pl-8 pr-4 py-2.5 text-xs sm:text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono">
+                    </div>
+                    <button id="sandbox-send-btn" class="btn-cyber px-4 sm:px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white flex items-center gap-1.5 flex-shrink-0">
+                        <span>Execute</span>
+                        <i class="fas fa-play text-[10px]"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Bottom Playground CTA -->
+            <div class="mt-5 flex flex-wrap items-center justify-between gap-3 px-2 text-xs text-zinc-400">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-shield-halved text-indigo-400"></i>
+                    <span>Simulated in browser • Full multimodal engine active in main app</span>
+                </div>
+                <a href="{{ url_for('main.auth') }}#register" class="text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1">
+                    Open Full Command Center <i class="fas fa-chevron-right text-[10px]"></i>
+                </a>
+            </div>
         </div>
-        <p>&copy; 2026 Irus AI. Designed & Engineered by <strong>Nejamul Haque</strong>. All rights reserved.</p>
+    </section>
+
+    <!-- ==================== SPEED BENCHMARK ARENA ==================== -->
+    <section id="benchmark" class="relative py-20 px-4 sm:px-6 lg:px-8 border-t border-zinc-800/60 bg-[#050508]">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-12">
+                <span class="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold tracking-wider uppercase inline-flex items-center gap-1.5 mb-3">
+                    <i class="fas fa-flag-checkered"></i> Live Performance Race
+                </span>
+                <h2 class="font-display text-3xl sm:text-5xl font-extrabold text-white tracking-tight mb-3">
+                    Groq LPU vs Legacy Cloud LLMs
+                </h2>
+                <p class="text-sm sm:text-base text-zinc-400 max-w-2xl mx-auto">
+                    Watch Irus AI stream full code & explanations in fractions of a second compared to traditional cloud infrastructure.
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-6">
+                <!-- IRUS AI SPEED CARD -->
+                <div class="card-spotlight p-6 border-indigo-500/40 relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <img src="{{ url_for('static', filename='icons/icon-192.png') }}" class="w-8 h-8 rounded-lg object-cover" alt="Irus">
+                            <div>
+                                <h3 class="font-bold text-white text-base leading-none">Irus AI Pro (Groq LPU)</h3>
+                                <p class="text-[10px] text-indigo-400 font-mono mt-0.5">Llama 3.3 70B Versatile</p>
+                            </div>
+                        </div>
+                        <span class="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold font-mono">820 TPS</span>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="w-full h-2 bg-zinc-900 rounded-full overflow-hidden mb-4">
+                        <div id="irus-race-bar" class="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-400 rounded-full benchmark-meter-fill" style="width: 0%;"></div>
+                    </div>
+
+                    <div id="irus-race-box" class="h-44 p-3.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80 font-mono text-xs text-zinc-300 overflow-y-auto custom-scrollbar">
+                        <span class="text-zinc-600 italic">// Click "Start Speed Race" below to start benchmark</span>
+                    </div>
+
+                    <div class="mt-4 flex items-center justify-between text-xs font-mono text-zinc-400">
+                        <span>Status: <strong id="irus-race-status" class="text-zinc-300">Ready</strong></span>
+                        <span>Elapsed: <strong id="irus-race-time" class="text-indigo-400">0.00s</strong></span>
+                    </div>
+                </div>
+
+                <!-- LEGACY LLM SPEED CARD -->
+                <div class="card-spotlight p-6 relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center text-zinc-400 font-bold text-xs"><i class="fas fa-server"></i></div>
+                            <div>
+                                <h3 class="font-bold text-zinc-300 text-base leading-none">Legacy Cloud LLMs</h3>
+                                <p class="text-[10px] text-zinc-500 font-mono mt-0.5">Standard Free Cloud APIs</p>
+                            </div>
+                        </div>
+                        <span class="px-2.5 py-1 rounded-full bg-zinc-800 text-zinc-400 text-xs font-bold font-mono">35 TPS</span>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="w-full h-2 bg-zinc-900 rounded-full overflow-hidden mb-4">
+                        <div id="legacy-race-bar" class="h-full bg-zinc-600 rounded-full benchmark-meter-fill" style="width: 0%;"></div>
+                    </div>
+
+                    <div id="legacy-race-box" class="h-44 p-3.5 bg-zinc-950/80 rounded-xl border border-zinc-800/80 font-mono text-xs text-zinc-400 overflow-y-auto custom-scrollbar">
+                        <span class="text-zinc-600 italic">// Waiting for race trigger</span>
+                    </div>
+
+                    <div class="mt-4 flex items-center justify-between text-xs font-mono text-zinc-400">
+                        <span>Status: <strong id="legacy-race-status" class="text-zinc-500">Ready</strong></span>
+                        <span>Elapsed: <strong id="legacy-race-time" class="text-zinc-400">0.00s</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Race Action Trigger -->
+            <div class="text-center mt-8">
+                <button id="start-race-btn" class="btn-cyber px-8 py-3.5 rounded-2xl font-bold text-sm text-white inline-flex items-center gap-2">
+                    <i class="fas fa-play"></i>
+                    <span>Run Speed Race (A* Pathfinding in Python)</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== SIX CORE AI SUPERPOWERS ==================== -->
+    <section id="superpowers" class="relative py-20 px-4 sm:px-6 lg:px-8 border-t border-zinc-800/60 bg-gradient-to-b from-[#050508] via-zinc-950/60 to-[#050508]">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-14">
+                <span class="px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-400 text-xs font-bold tracking-wider uppercase inline-flex items-center gap-1.5 mb-3">
+                    <i class="fas fa-wand-magic-sparkles"></i> Unrivaled Capabilities
+                </span>
+                <h2 class="font-display text-3xl sm:text-5xl font-extrabold text-white tracking-tight mb-3">
+                    Built for Developers, Researchers & Creators
+                </h2>
+                <p class="text-sm sm:text-base text-zinc-400 max-w-2xl mx-auto">
+                    Every tool you need to think faster, write cleaner code, extract answers from unstructured data, and generate visuals.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- 1: Streaming Chat & Code -->
+                <div class="card-spotlight p-7 tilt-card flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 text-xl mb-5">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <h3 class="font-display text-xl font-bold text-white mb-2">Ultra-Fast Streaming Chat</h3>
+                        <p class="text-xs sm:text-sm text-zinc-400 leading-relaxed mb-4">
+                            Instant token rendering powered by Groq LPU inference. Generates syntax-highlighted code, LaTeX formulas, and markdown tables with zero lag.
+                        </p>
+                    </div>
+                    <div class="pt-4 border-t border-zinc-800/60 flex items-center justify-between text-xs font-mono text-indigo-400">
+                        <span>Llama 3.3 70B • Groq LPU</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <!-- 2: Live Web Search -->
+                <div class="card-spotlight p-7 tilt-card flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 text-xl mb-5">
+                            <i class="fas fa-globe"></i>
+                        </div>
+                        <h3 class="font-display text-xl font-bold text-white mb-2">Live Web Search & Citations</h3>
+                        <p class="text-xs sm:text-sm text-zinc-400 leading-relaxed mb-4">
+                            Never rely on stale training data. Irus crawls the live internet, synthesizes breaking news, and provides clickable authoritative source links.
+                        </p>
+                    </div>
+                    <div class="pt-4 border-t border-zinc-800/60 flex items-center justify-between text-xs font-mono text-blue-400">
+                        <span>DuckDuckGo & Multi-Index</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <!-- 3: Document RAG -->
+                <div class="card-spotlight p-7 tilt-card flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 text-xl mb-5">
+                            <i class="fas fa-file-pdf"></i>
+                        </div>
+                        <h3 class="font-display text-xl font-bold text-white mb-2">Document Intelligence (RAG)</h3>
+                        <p class="text-xs sm:text-sm text-zinc-400 leading-relaxed mb-4">
+                            Upload PDFs, DOCX, or TXT files. Irus chunks, vectors, and semantically queries your knowledge base with precise page citations.
+                        </p>
+                    </div>
+                    <div class="pt-4 border-t border-zinc-800/60 flex items-center justify-between text-xs font-mono text-purple-400">
+                        <span>Vector Chunking Engine</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <!-- 4: Multimodal Vision -->
+                <div class="card-spotlight p-7 tilt-card flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-xl mb-5">
+                            <i class="fas fa-eye"></i>
+                        </div>
+                        <h3 class="font-display text-xl font-bold text-white mb-2">Multimodal Vision & OCR</h3>
+                        <p class="text-xs sm:text-sm text-zinc-400 leading-relaxed mb-4">
+                            Attach screenshots, architecture charts, handwritten notes, or UI mockups. Irus analyzes visual structure and writes code to match.
+                        </p>
+                    </div>
+                    <div class="pt-4 border-t border-zinc-800/60 flex items-center justify-between text-xs font-mono text-cyan-400">
+                        <span>Gemini & Vision Pro</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <!-- 5: AI Art Studio -->
+                <div class="card-spotlight p-7 tilt-card flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 rounded-2xl bg-pink-500/10 border border-pink-500/30 flex items-center justify-center text-pink-400 text-xl mb-5">
+                            <i class="fas fa-palette"></i>
+                        </div>
+                        <h3 class="font-display text-xl font-bold text-white mb-2">AI Image Generation Studio</h3>
+                        <p class="text-xs sm:text-sm text-zinc-400 leading-relaxed mb-4">
+                            Generate photorealistic art, cyberpunk concepts, 3D renders, and logos with `/image` directly inside your conversation stream.
+                        </p>
+                    </div>
+                    <div class="pt-4 border-t border-zinc-800/60 flex items-center justify-between text-xs font-mono text-pink-400">
+                        <span>Pollinations Neural Flux</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <!-- 6: Synaptic Memory -->
+                <div class="card-spotlight p-7 tilt-card flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-xl mb-5">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <h3 class="font-display text-xl font-bold text-white mb-2">Persistent Synaptic Memory</h3>
+                        <p class="text-xs sm:text-sm text-zinc-400 leading-relaxed mb-4">
+                            Irus remembers your coding style, project architecture, and personal preferences across every session without prompt repetition.
+                        </p>
+                    </div>
+                    <div class="pt-4 border-t border-zinc-800/60 flex items-center justify-between text-xs font-mono text-emerald-400">
+                        <span>Cross-Chat Long-Term Memory</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== NEURAL ARCHITECTURE PIPELINE ==================== -->
+    <section id="architecture" class="relative py-20 px-4 sm:px-6 lg:px-8 border-t border-zinc-800/60 bg-[#050508]">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-14">
+                <span class="px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 text-xs font-bold tracking-wider uppercase inline-flex items-center gap-1.5 mb-3">
+                    <i class="fas fa-network-wired"></i> Under the Hood
+                </span>
+                <h2 class="font-display text-3xl sm:text-5xl font-extrabold text-white tracking-tight mb-3">
+                    High-Throughput Neural Pipeline
+                </h2>
+                <p class="text-sm sm:text-base text-zinc-400 max-w-2xl mx-auto">
+                    How Irus AI achieves sub-15ms first-token latency with zero compromise on reasoning depth.
+                </p>
+            </div>
+
+            <!-- Pipeline Flow Grid -->
+            <div class="grid md:grid-cols-4 gap-4 relative">
+                <!-- Node 1 -->
+                <div class="pipeline-node cursor-pointer" data-arch-spec="query">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-mono text-sm font-bold mb-3">01</div>
+                    <h3 class="font-bold text-white text-sm mb-1">Intent & Prompt Router</h3>
+                    <p class="text-xs text-zinc-400">Semantic classification for code, web search, or document RAG routing.</p>
+                </div>
+
+                <!-- Node 2 -->
+                <div class="pipeline-node cursor-pointer" data-arch-spec="retrieval">
+                    <div class="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 font-mono text-sm font-bold mb-3">02</div>
+                    <h3 class="font-bold text-white text-sm mb-1">Vector & Web Retrieval</h3>
+                    <p class="text-xs text-zinc-400">Parallel vector cosine search + asynchronous live search indexing.</p>
+                </div>
+
+                <!-- Node 3 -->
+                <div class="pipeline-node cursor-pointer active" data-arch-spec="groq">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-mono text-sm font-bold mb-3">03</div>
+                    <h3 class="font-bold text-white text-sm mb-1">Groq LPU Inference</h3>
+                    <p class="text-xs text-zinc-400">Llama 3.3 70B running on custom tensor hardware at 820+ tokens/sec.</p>
+                </div>
+
+                <!-- Node 4 -->
+                <div class="pipeline-node cursor-pointer" data-arch-spec="stream">
+                    <div class="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 font-mono text-sm font-bold mb-3">04</div>
+                    <h3 class="font-bold text-white text-sm mb-1">Real-Time SSE Stream</h3>
+                    <p class="text-xs text-zinc-400">End-to-end encrypted Server-Sent Events stream straight to your UI.</p>
+                </div>
+            </div>
+
+            <!-- Architecture Spec Inspection Box -->
+            <div id="arch-spec-box" class="mt-6 p-5 rounded-2xl bg-zinc-900/70 border border-zinc-800 font-mono text-xs text-zinc-300 flex items-center justify-between flex-wrap gap-4">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-microchip text-emerald-400 text-xl"></i>
+                    <div>
+                        <p class="text-white font-bold">Groq LPUs (Language Processing Units)</p>
+                        <p class="text-zinc-400 text-[11px]">Deterministic tensor core latency • 230 MB SRAM per chip • Direct memory interconnect</p>
+                    </div>
+                </div>
+                <span class="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold">
+                    Peak Speed: 820 Tokens/Sec
+                </span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== DEVELOPER API PLAYGROUND ==================== -->
+    <section id="api" class="relative py-20 px-4 sm:px-6 lg:px-8 border-t border-zinc-800/60 bg-gradient-to-b from-[#050508] via-zinc-950/70 to-[#050508]">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-12">
+                <span class="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold tracking-wider uppercase inline-flex items-center gap-1.5 mb-3">
+                    <i class="fas fa-code"></i> Developer First
+                </span>
+                <h2 class="font-display text-3xl sm:text-5xl font-extrabold text-white tracking-tight mb-3">
+                    Build on the Irus AI REST API
+                </h2>
+                <p class="text-sm sm:text-base text-zinc-400 max-w-2xl mx-auto">
+                    Generate an API key in your developer console and integrate Irus AI streaming chat directly into your apps with a single HTTP POST request.
+                </p>
+            </div>
+
+            <div class="terminal-window">
+                <div class="terminal-header">
+                    <div class="flex items-center gap-2">
+                        <span class="terminal-dot red"></span>
+                        <span class="terminal-dot yellow"></span>
+                        <span class="terminal-dot green"></span>
+                        <span class="text-xs font-mono text-zinc-400 ml-2 font-semibold">POST /api/v1/chat</span>
+                    </div>
+
+                    <!-- Language Switcher Tabs -->
+                    <div class="flex items-center gap-1" id="api-lang-tabs">
+                        <button class="api-tab active px-2.5 py-1 rounded text-xs font-mono font-semibold bg-indigo-600 text-white" data-lang="curl">cURL</button>
+                        <button class="api-tab px-2.5 py-1 rounded text-xs font-mono font-semibold bg-zinc-800 text-zinc-400 hover:text-white" data-lang="python">Python</button>
+                        <button class="api-tab px-2.5 py-1 rounded text-xs font-mono font-semibold bg-zinc-800 text-zinc-400 hover:text-white" data-lang="js">JavaScript</button>
+                        <button class="api-tab px-2.5 py-1 rounded text-xs font-mono font-semibold bg-zinc-800 text-zinc-400 hover:text-white" data-lang="go">Go</button>
+                    </div>
+
+                    <button id="copy-api-code" class="btn-glass px-2.5 py-1 rounded-lg text-xs font-mono text-zinc-300 hover:text-white flex items-center gap-1">
+                        <i class="fas fa-copy text-[10px]"></i> Copy
+                    </button>
+                </div>
+
+                <div class="p-5 sm:p-7 bg-[#07070b] overflow-x-auto custom-scrollbar">
+                    <pre id="api-code-block" class="font-mono text-xs sm:text-sm text-zinc-300 leading-relaxed"><code class="language-bash">curl -X POST https://irus-ai.onrender.com/api/v1/chat \
+  -H "Authorization: Bearer irus_live_YOUR_KEY_HERE" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Explain Quantum Entanglement with code simulation",
+    "model": "llama-3.3-70b-versatile",
+    "enable_search": true
+  }'</code></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== CREATOR ECOSYSTEM SHOWCASE ==================== -->
+    <section id="projects" class="relative py-20 px-4 sm:px-6 lg:px-8 border-t border-zinc-800/60 bg-[#050508]">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-12">
+                <span class="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold tracking-wider uppercase inline-flex items-center gap-1.5 mb-3">
+                    <i class="fas fa-cubes"></i> Ecosystem
+                </span>
+                <h2 class="font-display text-3xl sm:text-5xl font-extrabold text-white tracking-tight mb-3">
+                    Engineered by Nejamul Haque
+                </h2>
+                <p class="text-sm sm:text-base text-zinc-400 max-w-2xl mx-auto">
+                    Explore companion web apps, collaborative platforms, and open-source contributions.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+                <!-- 1: Digital Lens -->
+                <a href="https://digital-lens.vercel.app/" target="_blank" rel="noopener" class="card-spotlight p-6 tilt-card group" style="text-decoration:none;">
+                    <div class="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-lg mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                    <h3 class="font-bold text-white text-base mb-1 flex items-center justify-between">
+                        <span>Digital Lens</span>
+                        <i class="fas fa-arrow-up-right-from-square text-xs text-zinc-500 group-hover:text-cyan-400 transition-colors"></i>
+                    </h3>
+                    <p class="text-xs text-zinc-400 leading-relaxed mb-3">AI image inspection, background removal, metadata analysis & enhancement.</p>
+                    <span class="text-[10px] font-mono text-cyan-400">Next.js • Computer Vision</span>
+                </a>
+
+                <!-- 2: CollabSheets -->
+                <a href="https://collabsheets.onrender.com/" target="_blank" rel="noopener" class="card-spotlight p-6 tilt-card group" style="text-decoration:none;">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-lg mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-table"></i>
+                    </div>
+                    <h3 class="font-bold text-white text-base mb-1 flex items-center justify-between">
+                        <span>CollabSheets</span>
+                        <i class="fas fa-arrow-up-right-from-square text-xs text-zinc-500 group-hover:text-emerald-400 transition-colors"></i>
+                    </h3>
+                    <p class="text-xs text-zinc-400 leading-relaxed mb-3">Real-time collaborative spreadsheet engine with live cell syncing and formula solver.</p>
+                    <span class="text-[10px] font-mono text-emerald-400">WebSockets • Python Flask</span>
+                </a>
+
+                <!-- 3: Nestfy -->
+                <a href="https://nestfy-beta.vercel.app/" target="_blank" rel="noopener" class="card-spotlight p-6 tilt-card group" style="text-decoration:none;">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 text-lg mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-house"></i>
+                    </div>
+                    <h3 class="font-bold text-white text-base mb-1 flex items-center justify-between">
+                        <span>Nestfy</span>
+                        <i class="fas fa-arrow-up-right-from-square text-xs text-zinc-500 group-hover:text-amber-400 transition-colors"></i>
+                    </h3>
+                    <p class="text-xs text-zinc-400 leading-relaxed mb-3">Modern real estate & property discovery platform with interactive map filters.</p>
+                    <span class="text-[10px] font-mono text-amber-400">React • TailwindCSS</span>
+                </a>
+
+                <!-- 4: GitHub Repos -->
+                <a href="https://github.com/NejamulHaque" target="_blank" rel="noopener" class="card-spotlight p-6 tilt-card group" style="text-decoration:none;">
+                    <div class="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 text-lg mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fab fa-github"></i>
+                    </div>
+                    <h3 class="font-bold text-white text-base mb-1 flex items-center justify-between">
+                        <span>GitHub Ecosystem</span>
+                        <i class="fas fa-arrow-up-right-from-square text-xs text-zinc-500 group-hover:text-purple-400 transition-colors"></i>
+                    </h3>
+                    <p class="text-xs text-zinc-400 leading-relaxed mb-3">Open-source DevSecOps pipelines, AI models, backend architectures & scripts.</p>
+                    <span class="text-[10px] font-mono text-purple-400">50+ Repositories • Star on GH</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== PRICING SECTION ==================== -->
+    <section id="pricing" class="relative py-20 px-4 sm:px-6 lg:px-8 border-t border-zinc-800/60 bg-gradient-to-b from-[#050508] via-zinc-950/80 to-[#050508]">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-10">
+                <span class="px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-xs font-bold tracking-wider uppercase inline-flex items-center gap-1.5 mb-3">
+                    <i class="fas fa-crown"></i> Transparent Pricing
+                </span>
+                <h2 class="font-display text-3xl sm:text-5xl font-extrabold text-white tracking-tight mb-3">
+                    Free Forever. <span class="headline-gradient">Pro for Power Users.</span>
+                </h2>
+                <p class="text-sm sm:text-base text-zinc-400 max-w-xl mx-auto">
+                    Start completely free with no credit card required. Upgrade anytime via UPI for unlimited documents and 3× rate limits.
+                </p>
+
+                <!-- Monthly / Yearly Billing Toggle -->
+                <div class="mt-6 inline-flex items-center p-1.5 rounded-2xl bg-zinc-900 border border-zinc-800">
+                    <button id="toggle-monthly" class="px-4 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600 text-white transition-all">Monthly</button>
+                    <button id="toggle-yearly" class="px-4 py-1.5 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white transition-all flex items-center gap-1.5">
+                        <span>Yearly</span>
+                        <span class="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">SAVE 16%</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                <!-- FREE TIER -->
+                <div class="card-spotlight p-7 flex flex-col justify-between">
+                    <div>
+                        <h3 class="font-bold text-white text-lg mb-1">Community Free</h3>
+                        <p class="text-xs text-zinc-400 mb-5">Everything you need for everyday AI tasks.</p>
+                        <div class="mb-6">
+                            <span class="text-4xl font-extrabold text-white font-display">₹0</span>
+                            <span class="text-xs text-zinc-500 font-mono">/ forever</span>
+                        </div>
+
+                        <ul class="space-y-3 text-xs text-zinc-300">
+                            <li class="flex items-center gap-2.5"><i class="fas fa-check text-emerald-400"></i> Streaming AI chat (820 tps)</li>
+                            <li class="flex items-center gap-2.5"><i class="fas fa-check text-emerald-400"></i> Live web search with citations</li>
+                            <li class="flex items-center gap-2.5"><i class="fas fa-check text-emerald-400"></i> Document RAG (Up to 3 docs)</li>
+                            <li class="flex items-center gap-2.5"><i class="fas fa-check text-emerald-400"></i> Image attachments (5 / day)</li>
+                            <li class="flex items-center gap-2.5"><i class="fas fa-check text-emerald-400"></i> 40 requests per minute</li>
+                        </ul>
+                    </div>
+
+                    <a href="{{ url_for('main.auth') }}#register" class="btn-glass w-full py-3 rounded-xl text-center text-xs font-bold text-white mt-8">
+                        Get Started Free
+                    </a>
+                </div>
+
+                <!-- PRO MONTHLY -->
+                <div class="card-spotlight p-7 border-indigo-500/50 flex flex-col justify-between relative shadow-2xl shadow-indigo-500/10">
+                    <span class="absolute top-4 right-4 px-2 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 text-[10px] font-bold">MOST POPULAR</span>
+                    <div>
+                        <h3 class="font-bold text-white text-lg mb-1">Pro Monthly</h3>
+                        <p class="text-xs text-zinc-400 mb-5">For power researchers & heavy developers.</p>
+                        <div class="mb-6">
+                            <span class="text-4xl font-extrabold text-white font-display">₹99</span>
+                            <span class="text-xs text-zinc-500 font-mono">/ month</span>
+                        </div>
+
+                        <ul class="space-y-3 text-xs text-zinc-200">
+                            <li class="flex items-center gap-2.5"><i class="fas fa-crown text-amber-400"></i> <strong>Everything in Free</strong></li>
+                            <li class="flex items-center gap-2.5"><i class="fas fa-infinity text-emerald-400"></i> <strong>Unlimited</strong> document uploads</li>
+                            <li class="flex items-center gap-2.5"><i class="fas fa-infinity text-emerald-400"></i> <strong>Unlimited</strong> image generation</li>
+                            <li class="flex items-center gap-2.5"><i class="fas fa-bolt text-indigo-400"></i> <strong>120 req/min</strong> (3× rate limit)</li>
+                            <li class="flex items-center gap-2.5"><i class="fas fa-shield-halved text-cyan-400"></i> Priority Llama 3.3 70B routing</li>
+                        </ul>
+                    </div>
+
+                    <a href="/pricing" class="btn-cyber w-full py-3 rounded-xl text-center text-xs font-bold text-white mt-8">
+                        Upgrade to Pro — ₹99
+                    </a>
+                </div>
+
+                <!-- PRO YEARLY -->
+                <div class="card-spotlight p-7 flex flex-col justify-between relative">
+                    <span class="absolute top-4 right-4 px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[10px] font-bold">2 MONTHS FREE</span>
+                    <div>
+                        <h3 class="font-bold text-white text-lg mb-1">Pro Yearly</h3>
+                        <p class="text-xs text-zinc-400 mb-5">Annual commitment with priority perks.</p>
+                        <div class="mb-6">
+                            <span class="text-4xl font-extrabold text-white font-display">₹999</span>
+                            <span class="text-xs text-zinc-500 font-mono">/ year</span>
+                        </div>
+
+                        <ul class="space-y-3 text-xs text-zinc-300">
+                            <li class="flex items-center gap-2.5"><i class="fas fa-crown text-amber-400"></i> Everything in Pro Monthly</li>
+                            <li class="flex items-center gap-2.5"><i class="fas fa-gift text-purple-400"></i> 2 Months completely free</li>
+                            <li class="flex items-center gap-2.5"><i class="fas fa-sparkles text-amber-400"></i> Early beta access to new models</li>
+                            <li class="flex items-center gap-2.5"><i class="fas fa-award text-indigo-400"></i> Founder Supporter Badge on profile</li>
+                        </ul>
+                    </div>
+
+                    <a href="/pricing" class="btn-glass w-full py-3 rounded-xl text-center text-xs font-bold text-white hover:border-indigo-500 mt-8">
+                        Upgrade Yearly — ₹999
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== INTERACTIVE FAQ ACCORDION ==================== -->
+    <section id="faq" class="relative py-20 px-4 sm:px-6 lg:px-8 border-t border-zinc-800/60 bg-[#050508]">
+        <div class="max-w-4xl mx-auto">
+            <div class="text-center mb-10">
+                <span class="px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-xs font-bold tracking-wider uppercase inline-flex items-center gap-1.5 mb-3">
+                    <i class="fas fa-circle-question"></i> Clarifications
+                </span>
+                <h2 class="font-display text-3xl sm:text-5xl font-extrabold text-white tracking-tight mb-3">
+                    Frequently Asked Questions
+                </h2>
+                <p class="text-sm sm:text-base text-zinc-400 max-w-xl mx-auto mb-6">
+                    Everything you need to know about models, security, and usage.
+                </p>
+
+                <!-- Search Filter for FAQ -->
+                <div class="relative max-w-md mx-auto">
+                    <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500 text-xs"></i>
+                    <input id="faq-search" type="text" placeholder="Search questions..." class="w-full bg-zinc-900/90 border border-zinc-800 focus:border-indigo-500 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none">
+                </div>
+            </div>
+
+            <div class="space-y-3" id="faq-list">
+                <details class="card-spotlight p-5 cursor-pointer group">
+                    <summary class="font-semibold text-sm sm:text-base text-white flex items-center justify-between list-none">
+                        <span>Is Irus AI really 100% free?</span>
+                        <i class="fas fa-chevron-down text-zinc-500 group-open:rotate-180 transition-transform text-xs"></i>
+                    </summary>
+                    <p class="text-xs sm:text-sm text-zinc-400 mt-3 leading-relaxed">
+                        Yes! Irus AI is completely free to use. It leverages high-performance free tiers on Groq LPU inference, Google Gemini vision models, and Pollinations generative AI, running on cloud infrastructure engineered by Nejamul Haque.
+                    </p>
+                </details>
+
+                <details class="card-spotlight p-5 cursor-pointer group">
+                    <summary class="font-semibold text-sm sm:text-base text-white flex items-center justify-between list-none">
+                        <span>How is Irus AI so much faster than other AI chats?</span>
+                        <i class="fas fa-chevron-down text-zinc-500 group-open:rotate-180 transition-transform text-xs"></i>
+                    </summary>
+                    <p class="text-xs sm:text-sm text-zinc-400 mt-3 leading-relaxed">
+                        Irus AI runs primary LLM inference on Groq's custom Language Processing Units (LPUs). LPUs utilize massive on-chip SRAM bandwidth rather than traditional GPU memory architectures, delivering up to 820+ tokens per second.
+                    </p>
+                </details>
+
+                <details class="card-spotlight p-5 cursor-pointer group">
+                    <summary class="font-semibold text-sm sm:text-base text-white flex items-center justify-between list-none">
+                        <span>Is my uploaded data and conversation history private?</span>
+                        <i class="fas fa-chevron-down text-zinc-500 group-open:rotate-180 transition-transform text-xs"></i>
+                    </summary>
+                    <p class="text-xs sm:text-sm text-zinc-400 mt-3 leading-relaxed">
+                        Yes. Your documents and chats are stored strictly within your account. We never sell your personal data or use your private conversations to train public AI models. You can purge or export your data at any time.
+                    </p>
+                </details>
+
+                <details class="card-spotlight p-5 cursor-pointer group">
+                    <summary class="font-semibold text-sm sm:text-base text-white flex items-center justify-between list-none">
+                        <span>Can I use Irus AI in my own code via API?</span>
+                        <i class="fas fa-chevron-down text-zinc-500 group-open:rotate-180 transition-transform text-xs"></i>
+                    </summary>
+                    <p class="text-xs sm:text-sm text-zinc-400 mt-3 leading-relaxed">
+                        Yes! Visit your Profile & Developer tab after signing in to generate your API keys. You can call <code class="text-indigo-400 font-mono">POST /api/v1/chat</code> from Python, JavaScript, cURL, or any HTTP client.
+                    </p>
+                </details>
+
+                <details class="card-spotlight p-5 cursor-pointer group">
+                    <summary class="font-semibold text-sm sm:text-base text-white flex items-center justify-between list-none">
+                        <span>Does Irus AI work on mobile as an app?</span>
+                        <i class="fas fa-chevron-down text-zinc-500 group-open:rotate-180 transition-transform text-xs"></i>
+                    </summary>
+                    <p class="text-xs sm:text-sm text-zinc-400 mt-3 leading-relaxed">
+                        Yes. Irus AI is a full Progressive Web App (PWA). You can tap "Install App" or "Add to Home Screen" on iOS and Android to get full-screen native performance.
+                    </p>
+                </details>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== FINAL CTA BAND ==================== -->
+    <section class="relative py-24 px-4 sm:px-6 lg:px-8 border-t border-zinc-800/60 overflow-hidden">
+        <div class="max-w-4xl mx-auto text-center relative z-10">
+            <h2 class="font-display text-4xl sm:text-6xl font-extrabold text-white tracking-tight mb-4">
+                Ready to Experience <span class="headline-gradient">the Future?</span>
+            </h2>
+            <p class="text-sm sm:text-lg text-zinc-400 max-w-xl mx-auto mb-8">
+                Join developers and creators working faster with Irus AI Pro. Free forever, no credit card required.
+            </p>
+            <a href="{{ url_for('main.auth') }}#register" class="btn-cyber px-9 py-4 rounded-2xl font-bold text-base text-white inline-flex items-center gap-2.5 shadow-2xl shadow-indigo-500/30">
+                <i class="fas fa-rocket text-amber-300"></i>
+                <span>Create Free Account Now</span>
+                <i class="fas fa-arrow-right text-xs"></i>
+            </a>
+        </div>
+    </section>
+
+    <!-- ==================== FOOTER ==================== -->
+    <footer class="border-t border-zinc-800/80 bg-black/60 py-12 px-4 sm:px-6 lg:px-8 text-xs text-zinc-500">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="flex items-center gap-3">
+                <img src="{{ url_for('static', filename='icons/icon-192.png') }}" class="w-7 h-7 rounded-lg object-cover" alt="Irus AI">
+                <span class="text-zinc-400 font-semibold font-display">&copy; 2026 Irus AI Pro</span>
+                <span>•</span>
+                <span>Designed & Engineered by <strong class="text-zinc-300 font-semibold">Nejamul Haque</strong></span>
+            </div>
+
+            <div class="flex items-center gap-6 text-zinc-400">
+                <a href="#playground" class="hover:text-white transition-colors">Sandbox</a>
+                <a href="#superpowers" class="hover:text-white transition-colors">Features</a>
+                <a href="/pricing" class="hover:text-white transition-colors">Pricing</a>
+                <a href="/privacy" class="hover:text-white transition-colors">Privacy Policy</a>
+                <a href="/terms" class="hover:text-white transition-colors">Terms of Service</a>
+                <a href="https://github.com/NejamulHaque/Irus-AI" target="_blank" rel="noopener" class="hover:text-white transition-colors"><i class="fab fa-github"></i></a>
+            </div>
+        </div>
     </footer>
 
-    <!-- Cookie consent -->
-    <div id="cookie-banner" style="display:none;position:fixed;bottom:1rem;left:1rem;right:1rem;max-width:26rem;margin-left:auto;z-index:400;background:rgba(24,24,27,.95);border:1px solid var(--border);border-radius:16px;padding:1.2rem;backdrop-filter:blur(12px);">
-        <p style="font-size:.8rem;color:#d4d4d8;margin-bottom:.9rem;">🍪 We use cookies for preferences & optional analytics. <a href="/privacy" style="color:var(--primary);">Privacy Policy</a></p>
-        <div style="display:flex;gap:.6rem;">
-            <button id="cookie-accept" class="btn btn-primary" style="flex:1;padding:.5rem;font-size:.8rem;">Accept</button>
-            <button id="cookie-decline" class="btn btn-outline" style="flex:1;padding:.5rem;font-size:.8rem;">Decline</button>
+    <!-- ==================== ⌘K COMMAND PALETTE MODAL ==================== -->
+    <div id="cmd-palette" class="hidden fixed inset-0 z-[200] flex items-start justify-center pt-[15vh] px-4 bg-black/80 backdrop-blur-md">
+        <div class="w-full max-w-xl terminal-window border border-indigo-500/40 animate-pop">
+            <div class="p-3.5 bg-zinc-900/90 border-b border-zinc-800 flex items-center gap-3">
+                <i class="fas fa-terminal text-indigo-400 text-sm"></i>
+                <input id="cmd-input" type="text" placeholder="Type a command or search sections..." class="w-full bg-transparent text-sm text-white placeholder-zinc-500 focus:outline-none font-mono" autofocus>
+                <kbd class="font-mono text-[10px] bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded border border-zinc-700">ESC</kbd>
+            </div>
+            <div id="cmd-results" class="p-2 max-h-80 overflow-y-auto space-y-1 font-mono text-xs custom-scrollbar">
+            </div>
         </div>
     </div>
 
+    <!-- ==================== SCRIPTS & INTERACTION ENGINE ==================== -->
     <script>
-        // Mobile menu
-        const menuBtn = document.getElementById('mobile-menu-btn');
-        const navLinks = document.getElementById('nav-links');
-        menuBtn.addEventListener('click', () => navLinks.classList.toggle('active'));
-        navLinks.querySelectorAll('a').forEach(l => l.addEventListener('click', () => navLinks.classList.remove('active')));
-
-        // 3D mouse parallax
-        const scene = document.getElementById('scene');
-        document.addEventListener('mousemove', (e) => {
-            const x = (window.innerWidth / 2 - e.pageX) / 25;
-            const y = (window.innerHeight / 2 - e.pageY) / 25;
-            scene.style.transform = `rotateY(${x}deg) rotateX(${y}deg)`;
-        });
-
-        // 3D tilt cards + glare
-        document.querySelectorAll('.tilt-card').forEach(card => {
-            card.addEventListener('mousemove', (e) => {
-                const r = card.getBoundingClientRect();
-                const x = e.clientX - r.left, y = e.clientY - r.top;
-                const rx = ((y - r.height / 2) / (r.height / 2)) * -8;
-                const ry = ((x - r.width / 2) / (r.width / 2)) * 8;
-                card.style.transform = `perspective(1000px) rotateX(${rx}deg) rotateY(${ry}deg) scale3d(1.02,1.02,1.02)`;
-                card.style.setProperty('--mouse-x', x + 'px');
-                card.style.setProperty('--mouse-y', y + 'px');
-            });
-            card.addEventListener('mouseleave', () => {
-                card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale3d(1,1,1)';
-            });
-        });
-
-        // Scroll reveal
-        const io = new IntersectionObserver(entries => {
-            entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
-        }, { threshold: 0.15 });
-        document.querySelectorAll('.card-3d, .section-header, .contact-container').forEach(el => { el.classList.add('reveal'); io.observe(el); });
-
-        // Cookie consent + consent-gated analytics
-        (function () {
-            const banner = document.getElementById('cookie-banner');
-            const choice = localStorage.getItem('irus_cookies');
-            if (!choice && banner) banner.style.display = 'block';
-            function loadAnalytics() {
-                const ID = 'G-XXXXXXXXXX'; /* ← your GA4 ID */
-                window.dataLayer = window.dataLayer || [];
-                function gtag(){ dataLayer.push(arguments); }
-                window.gtag = gtag; gtag('js', new Date()); gtag('config', ID);
-                const s = document.createElement('script'); s.async = true;
-                s.src = 'https://www.googletagmanager.com/gtag/js?id=' + ID;
-                document.head.appendChild(s);
+        /* ============ 🔊 WEB AUDIO API SOUND SYSTEM ============ */
+        class CyberAudio {
+            constructor() {
+                this.enabled = localStorage.getItem('irus_sfx') !== 'false';
+                this.ctx = null;
+                this.updateIcon();
             }
-            document.getElementById('cookie-accept').addEventListener('click', () => { localStorage.setItem('irus_cookies', 'granted'); banner.style.display = 'none'; loadAnalytics(); });
-            document.getElementById('cookie-decline').addEventListener('click', () => { localStorage.setItem('irus_cookies', 'denied'); banner.style.display = 'none'; });
-            if (choice === 'granted') loadAnalytics();
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+            }
+            toggle() {
+                this.enabled = !this.enabled;
+                localStorage.setItem('irus_sfx', this.enabled);
+                this.updateIcon();
+                if (this.enabled) this.playClick();
+            }
+            updateIcon() {
+                const icon = document.getElementById('sfx-icon');
+                if (icon) {
+                    icon.className = this.enabled ? 'fas fa-volume-high text-xs text-indigo-400' : 'fas fa-volume-xmark text-xs text-zinc-600';
+                }
+            }
+            playClick() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(400, this.ctx.currentTime + 0.05);
+                gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.05);
+            }
+            playStreamBlip() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(520 + Math.random() * 180, this.ctx.currentTime);
+                gain.gain.setValueAtTime(0.02, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.03);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.03);
+            }
+            playFanfare() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+                [440, 554, 659, 880].forEach((freq, i) => {
+                    setTimeout(() => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                        gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.2);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start();
+                        osc.stop(this.ctx.currentTime + 0.2);
+                    }, i * 70);
+                });
+            }
+        }
+        const sfx = new CyberAudio();
+        document.getElementById('sfx-toggle').addEventListener('click', () => sfx.toggle());
+
+        /* ============ 🌌 INTERACTIVE QUANTUM PARTICLE CONSTELLATION ============ */
+        (function initHoloCanvas() {
+            const canvas = document.getElementById('hero-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let w, h, particles = [];
+            let mouse = { x: -1000, y: -1000 };
+
+            function resize() {
+                w = canvas.width = canvas.parentElement.offsetWidth;
+                h = canvas.height = canvas.parentElement.offsetHeight;
+                createParticles();
+            }
+
+            function createParticles() {
+                particles = [];
+                const count = Math.min(85, Math.floor(w / 16));
+                for (let i = 0; i < count; i++) {
+                    particles.push({
+                        x: Math.random() * w,
+                        y: Math.random() * h,
+                        vx: (Math.random() - 0.5) * 0.8,
+                        vy: (Math.random() - 0.5) * 0.8,
+                        radius: Math.random() * 2 + 1,
+                        color: ['#6366f1', '#a855f7', '#06b6d4', '#818cf8'][Math.floor(Math.random() * 4)],
+                        baseX: Math.random() * w,
+                        baseY: Math.random() * h
+                    });
+                }
+            }
+
+            window.addEventListener('resize', resize);
+            resize();
+
+            window.addEventListener('mousemove', e => {
+                const rect = canvas.getBoundingClientRect();
+                mouse.x = e.clientX - rect.left;
+                mouse.y = e.clientY - rect.top;
+            });
+
+            window.addEventListener('mouseleave', () => {
+                mouse.x = -1000;
+                mouse.y = -1000;
+            });
+
+            // Shockwave on click
+            canvas.addEventListener('click', e => {
+                sfx.playClick();
+                const rect = canvas.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const clickY = e.clientY - rect.top;
+                particles.forEach(p => {
+                    const dx = p.x - clickX;
+                    const dy = p.y - clickY;
+                    const dist = Math.hypot(dx, dy);
+                    if (dist < 220) {
+                        const force = (220 - dist) / 12;
+                        p.vx += (dx / dist) * force;
+                        p.vy += (dy / dist) * force;
+                    }
+                });
+            });
+
+            function render() {
+                ctx.clearRect(0, 0, w, h);
+
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const dist = Math.hypot(dx, dy);
+                        if (dist < 130) {
+                            const alpha = (1 - dist / 130) * 0.25;
+                            ctx.strokeStyle = `rgba(99, 102, 241, ${alpha})`;
+                            ctx.lineWidth = 1;
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+
+                particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vx *= 0.98;
+                    p.vy *= 0.98;
+
+                    if (p.x < 0 || p.x > w) p.vx *= -1;
+                    if (p.y < 0 || p.y > h) p.vy *= -1;
+
+                    const dx = mouse.x - p.x;
+                    const dy = mouse.y - p.y;
+                    const dist = Math.hypot(dx, dy);
+                    if (dist < 180) {
+                        const force = (180 - dist) / 180;
+                        const dirX = dx / dist;
+                        const dirY = dy / dist;
+                        p.x -= dirX * force * 3;
+                        p.y -= dirY * force * 3;
+                    }
+
+                    ctx.fillStyle = p.color;
+                    ctx.shadowBlur = 12;
+                    ctx.shadowColor = p.color;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                });
+
+                requestAnimationFrame(render);
+            }
+            render();
+        })();
+
+        /* ============ 🎮 LIVE INTERACTIVE AI SANDBOX ENGINE ============ */
+        (function initSandbox() {
+            const tabs = document.querySelectorAll('.sandbox-tab-btn');
+            const pillsBar = document.getElementById('prompt-pills-bar');
+            const output = document.getElementById('sandbox-output');
+            const input = document.getElementById('sandbox-input');
+            const sendBtn = document.getElementById('sandbox-send-btn');
+            let currentMode = 'chat';
+            let isStreaming = false;
+
+            const modePills = {
+                chat: [
+                    "Implement LRU Cache in Python with O(1) ops",
+                    "Write a Next.js SSR hook for SSE streams",
+                    "Explain Quantum Key Distribution (BB84)",
+                    "Write an automated SQL query optimizer"
+                ],
+                search: [
+                    "Latest breakthroughs in AI agents August 2026",
+                    "Current GPU cloud pricing comparison",
+                    "NASA Artemis missions latest status",
+                    "Top open-source LLM benchmark rankings"
+                ],
+                rag: [
+                    "Summarize Section 4.2 of Annual Report PDF",
+                    "Extract financial metrics from Q3 Earnings",
+                    "Compare privacy policies across uploaded docs",
+                    "Extract risk factors from legal agreement"
+                ],
+                art: [
+                    "Cyberpunk synthwave metropolis with neon rain",
+                    "Futuristic quantum core hologram engine 8k",
+                    "Studio ghibli style floating cloud observatory",
+                    "Minimalist geometric AI logo glowing gradient"
+                ],
+                memory: [
+                    "What are my preferred coding conventions?",
+                    "Recall the architecture for project CollabSheets",
+                    "What tech stack do I use for Next.js apps?",
+                    "List my saved API keys and database configs"
+                ]
+            };
+
+            const demoResponses = {
+                "Implement LRU Cache in Python with O(1) ops": `Here is the production-grade <span class="code-token-keyword">O(1)</span> LRU Cache using a Doubly Linked List + Hash Map:
+
+<pre class="p-3 bg-black/60 rounded-xl border border-zinc-800 text-xs font-mono my-2 overflow-x-auto"><code class="text-zinc-200"><span class="code-token-keyword">class</span> <span class="code-token-type">Node</span>:
+    <span class="code-token-keyword">def</span> <span class="code-token-func">__init__</span>(self, key: int, val: int):
+        self.key, self.val = key, val
+        self.prev = self.next = <span class="code-token-keyword">None</span>
+
+<span class="code-token-keyword">class</span> <span class="code-token-type">LRUCache</span>:
+    <span class="code-token-keyword">def</span> <span class="code-token-func">__init__</span>(self, capacity: int):
+        self.cap = capacity
+        self.cache = {}  <span class="code-token-comment"># key -> Node</span>
+        self.head, self.tail = Node(0, 0), Node(0, 0)
+        self.head.next, self.tail.prev = self.tail, self.head
+
+    <span class="code-token-keyword">def</span> <span class="code-token-func">get</span>(self, key: int) -> int:
+        <span class="code-token-keyword">if</span> key <span class="code-token-keyword">in</span> self.cache:
+            self._remove(self.cache[key])
+            self._add(self.cache[key])
+            <span class="code-token-keyword">return</span> self.cache[key].val
+        <span class="code-token-keyword">return</span> -1</code></pre>
+⚡ <span class="text-emerald-400 font-semibold">Time Complexity:</span> O(1) get & put | <span class="text-indigo-400 font-semibold">Space:</span> O(capacity)`,
+
+                "Latest breakthroughs in AI agents August 2026": `🔍 <span class="text-indigo-400 font-semibold">Live Web Search Active</span> • Synthesized 4 sources across 12 indexed pages:
+
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-2 my-3">
+    <div class="p-2.5 rounded-lg bg-zinc-900/90 border border-zinc-800">
+        <span class="text-[10px] text-blue-400 font-bold uppercase tracking-wider block">Source [1] • Nature AI</span>
+        <p class="text-xs text-zinc-300 font-medium">Autonomous Subagent Hierarchies in Complex Software Eng</p>
+    </div>
+    <div class="p-2.5 rounded-lg bg-zinc-900/90 border border-zinc-800">
+        <span class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider block">Source [2] • arXiv:2608.0199</span>
+        <p class="text-xs text-zinc-300 font-medium">Zero-Shot Tool Use with Sub-Millisecond LPU Speculative Decoding</p>
+    </div>
+</div>
+
+<strong>Key Findings:</strong>
+1. <strong>Multi-Agent Synchrony:</strong> Subagent frameworks now orchestrate isolated workspace branches concurrently.
+2. <strong>Hardware Acceleration:</strong> Tensor LPU architectures execute 800+ tokens/second, enabling real-time reasoning loops.`,
+
+                "Summarize Section 4.2 of Annual Report PDF": `📄 <span class="text-purple-400 font-semibold">Document RAG Analysis Complete</span> • Source: <code>Annual_Report_2026.pdf</code> (Page 34, Chunk #12):
+
+<blockquote class="p-3 bg-purple-950/20 border-l-2 border-purple-500 rounded-r-xl my-2 text-xs text-zinc-300">
+"Operating margin expanded by 420 bps to 31.4%, primarily driven by cloud infrastructure optimizations and direct LPU hardware routing."
+</blockquote>
+
+• <strong>Core Metrics:</strong> Revenue grew 48% YoY, gross margin reached 78.2%.<br>
+• <strong>Vector Similarity Score:</strong> 0.942 (Cosine Match).`,
+
+                "Cyberpunk synthwave metropolis with neon rain": `🎨 <span class="text-pink-400 font-semibold">AI Neural Flux Engine Rendered (1024×1024 High-Res):</span>
+
+<div class="my-3 p-2 rounded-xl bg-zinc-900 border border-zinc-800 max-w-sm">
+    <div class="h-44 rounded-lg bg-gradient-to-tr from-indigo-900 via-purple-900 to-pink-600 flex items-center justify-center relative overflow-hidden group">
+        <i class="fas fa-palette text-4xl text-white/40"></i>
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex flex-col items-center justify-center p-4 text-center">
+            <span class="text-xs font-bold text-white mb-1">Cyberpunk Synthwave Metropolis</span>
+            <span class="text-[10px] text-pink-300 font-mono">Steps: 28 • Seed: 849204 • Pollinations Flux</span>
+        </div>
+    </div>
+</div>
+⚡ Render time: <strong>0.64s</strong>. Prompt enhancement automatically applied.`,
+
+                "What are my preferred coding conventions?": `🧠 <span class="text-emerald-400 font-semibold">Synaptic Memory Retrieval:</span>
+
+Irus has preserved the following preferences from your previous sessions:
+• <strong>Language:</strong> Python 3.10+ with strict type hints (<code class="text-indigo-300">typing.Optional</code>, <code class="text-indigo-300">dataclass</code>).
+• <strong>Styling:</strong> Tailwind CSS with dark-first Zinc palette & modern glassmorphism.
+• <strong>Architecture:</strong> Modular blueprints, dependency injection, and subagent orchestration.`
+            };
+
+            function renderPills(mode) {
+                pillsBar.innerHTML = `<span class="text-[10px] font-mono text-zinc-500 uppercase tracking-widest flex-shrink-0"><i class="fas fa-lightbulb text-amber-400 mr-1"></i>Try:</span>`;
+                const list = modePills[mode] || modePills.chat;
+                list.forEach(prompt => {
+                    const btn = document.createElement('button');
+                    btn.className = 'px-3 py-1 rounded-full bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white text-xs whitespace-nowrap flex-shrink-0 transition-colors active:scale-95';
+                    btn.textContent = prompt;
+                    btn.addEventListener('click', () => {
+                        sfx.playClick();
+                        input.value = prompt;
+                        runSimulation(prompt);
+                    });
+                    pillsBar.appendChild(btn);
+                });
+            }
+
+            function runSimulation(promptText) {
+                if (isStreaming) return;
+                isStreaming = true;
+                sendBtn.disabled = true;
+                output.innerHTML = `<div class="flex items-center gap-2 text-indigo-400"><i class="fas fa-circle-notch fa-spin"></i><span>Irus AI is generating at 820 tps...</span></div>`;
+
+                let responseHtml = demoResponses[promptText] || `Irus AI generated response for: <strong>"${promptText}"</strong><br><br>The system routed this query through the Groq LPU engine. All code, citations, and analytical outputs are rendered with zero token delay.`;
+
+                let charIndex = 0;
+                const speed = 12;
+
+                output.innerHTML = '';
+                const streamContainer = document.createElement('div');
+                output.appendChild(streamContainer);
+
+                const timer = setInterval(() => {
+                    charIndex += 14;
+                    if (charIndex >= responseHtml.length) {
+                        charIndex = responseHtml.length;
+                        streamContainer.innerHTML = responseHtml;
+                        clearInterval(timer);
+                        isStreaming = false;
+                        sendBtn.disabled = false;
+                        sfx.playStreamBlip();
+                    } else {
+                        streamContainer.innerHTML = responseHtml.substring(0, charIndex) + '<span class="inline-block w-2 h-4 bg-indigo-500 animate-pulse ml-0.5"></span>';
+                        if (Math.random() > 0.4) sfx.playStreamBlip();
+                    }
+                    output.scrollTop = output.scrollHeight;
+                }, speed);
+            }
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    sfx.playClick();
+                    tabs.forEach(t => {
+                        t.classList.remove('active', 'bg-indigo-600', 'text-white');
+                        t.classList.add('bg-zinc-800/80', 'text-zinc-400');
+                    });
+                    tab.classList.add('active', 'bg-indigo-600', 'text-white');
+                    tab.classList.remove('bg-zinc-800/80', 'text-zinc-400');
+                    currentMode = tab.dataset.mode;
+                    renderPills(currentMode);
+                    const defaultPrompt = modePills[currentMode][0];
+                    input.value = defaultPrompt;
+                    runSimulation(defaultPrompt);
+                });
+            });
+
+            sendBtn.addEventListener('click', () => {
+                const text = input.value.trim();
+                if (text) runSimulation(text);
+            });
+            input.addEventListener('keydown', e => {
+                if (e.key === 'Enter') {
+                    const text = input.value.trim();
+                    if (text) runSimulation(text);
+                }
+            });
+
+            renderPills('chat');
+            runSimulation(modePills.chat[0]);
+        })();
+
+        /* ============ 🏎️ SPEED BENCHMARK ARENA SIMULATION ============ */
+        (function initSpeedRace() {
+            const startBtn = document.getElementById('start-race-btn');
+            const irusBar = document.getElementById('irus-race-bar');
+            const legacyBar = document.getElementById('legacy-race-bar');
+            const irusBox = document.getElementById('irus-race-box');
+            const legacyBox = document.getElementById('legacy-race-box');
+            const irusTime = document.getElementById('irus-race-time');
+            const legacyTime = document.getElementById('legacy-race-time');
+            const irusStatus = document.getElementById('irus-race-status');
+            const legacyStatus = document.getElementById('legacy-race-status');
+
+            const sampleCode = `def a_star_search(graph, start, goal, h_func):
+    open_set = [(0, start)]
+    came_from = {}
+    g_score = {start: 0}
+    f_score = {start: h_func(start, goal)}
+    while open_set:
+        _, current = heapq.heappop(open_set)
+        if current == goal:
+            return reconstruct_path(came_from, current)
+        for neighbor, weight in graph[current].items():
+            tentative_g = g_score[current] + weight
+            if tentative_g < g_score.get(neighbor, float('inf')):
+                came_from[neighbor] = current
+                g_score[neighbor] = tentative_g
+                f_score[neighbor] = tentative_g + h_func(neighbor, goal)
+                heapq.heappush(open_set, (f_score[neighbor], neighbor))
+    return None`;
+
+            let racing = false;
+
+            startBtn.addEventListener('click', () => {
+                if (racing) return;
+                racing = true;
+                sfx.playClick();
+                startBtn.disabled = true;
+                startBtn.classList.add('opacity-50');
+
+                irusBar.style.width = '0%';
+                legacyBar.style.width = '0%';
+                irusBox.textContent = '';
+                legacyBox.textContent = '';
+                irusStatus.textContent = 'Streaming at 820 tps...';
+                irusStatus.className = 'text-indigo-400';
+                legacyStatus.textContent = 'Streaming at 35 tps...';
+                legacyStatus.className = 'text-zinc-400';
+
+                const startTime = performance.now();
+
+                let irusIndex = 0;
+                const irusInterval = setInterval(() => {
+                    irusIndex += 22;
+                    const elapsed = ((performance.now() - startTime) / 1000).toFixed(2);
+                    irusTime.textContent = elapsed + 's';
+                    if (irusIndex >= sampleCode.length) {
+                        irusIndex = sampleCode.length;
+                        irusBox.textContent = sampleCode;
+                        irusBar.style.width = '100%';
+                        irusStatus.textContent = 'Completed (820 tps) ⚡';
+                        irusStatus.className = 'text-emerald-400';
+                        clearInterval(irusInterval);
+                        sfx.playFanfare();
+                    } else {
+                        irusBox.textContent = sampleCode.substring(0, irusIndex) + '▌';
+                        irusBar.style.width = ((irusIndex / sampleCode.length) * 100) + '%';
+                    }
+                    irusBox.scrollTop = irusBox.scrollHeight;
+                }, 16);
+
+                let legacyIndex = 0;
+                const legacyInterval = setInterval(() => {
+                    legacyIndex += 2;
+                    const elapsed = ((performance.now() - startTime) / 1000).toFixed(2);
+                    legacyTime.textContent = elapsed + 's';
+                    if (legacyIndex >= sampleCode.length) {
+                        legacyIndex = sampleCode.length;
+                        legacyBox.textContent = sampleCode;
+                        legacyBar.style.width = '100%';
+                        legacyStatus.textContent = 'Completed (35 tps)';
+                        legacyStatus.className = 'text-zinc-300';
+                        clearInterval(legacyInterval);
+                        racing = false;
+                        startBtn.disabled = false;
+                        startBtn.classList.remove('opacity-50');
+                    } else {
+                        legacyBox.textContent = sampleCode.substring(0, legacyIndex) + '▌';
+                        legacyBar.style.width = ((legacyIndex / sampleCode.length) * 100) + '%';
+                    }
+                    legacyBox.scrollTop = legacyBox.scrollHeight;
+                }, 40);
+            });
+        })();
+
+        /* ============ 🛠️ DEVELOPER API CODE SWITCHER ============ */
+        (function initApiTabs() {
+            const tabs = document.querySelectorAll('.api-tab');
+            const codeBlock = document.getElementById('api-code-block');
+            const copyBtn = document.getElementById('copy-api-code');
+
+            const snippets = {
+                curl: `curl -X POST https://irus-ai.onrender.com/api/v1/chat \\
+  -H "Authorization: Bearer irus_live_YOUR_KEY_HERE" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "message": "Explain Quantum Entanglement with code simulation",
+    "model": "llama-3.3-70b-versatile",
+    "enable_search": true
+  }'`,
+                python: `import requests
+
+url = "https://irus-ai.onrender.com/api/v1/chat"
+headers = {
+    "Authorization": "Bearer irus_live_YOUR_KEY_HERE",
+    "Content-Type": "application/json"
+}
+payload = {
+    "message": "Explain Quantum Entanglement with code simulation",
+    "model": "llama-3.3-70b-versatile",
+    "enable_search": True
+}
+
+response = requests.post(url, json=payload, stream=True)
+for chunk in response.iter_lines():
+    if chunk:
+        print(chunk.decode("utf-8"))`,
+                js: `const response = await fetch('https://irus-ai.onrender.com/api/v1/chat', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer irus_live_YOUR_KEY_HERE',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    message: 'Explain Quantum Entanglement with code simulation',
+    model: 'llama-3.3-70b-versatile',
+    enable_search: true
+  })
+});
+
+const data = await response.json();
+console.log(data.response);`,
+                go: `package main
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"net/http"
+)
+
+func main() {
+	url := "https://irus-ai.onrender.com/api/v1/chat"
+	payload, _ := json.Marshal(map[string]interface{}{
+		"message": "Explain Quantum Entanglement",
+		"model":   "llama-3.3-70b-versatile",
+	})
+
+	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(payload))
+	req.Header.Set("Authorization", "Bearer irus_live_YOUR_KEY_HERE")
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, _ := client.Do(req)
+	defer resp.Body.Close()
+	fmt.Println("Response Status:", resp.Status)
+}`
+            };
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    sfx.playClick();
+                    tabs.forEach(t => {
+                        t.classList.remove('active', 'bg-indigo-600', 'text-white');
+                        t.classList.add('bg-zinc-800', 'text-zinc-400');
+                    });
+                    tab.classList.add('active', 'bg-indigo-600', 'text-white');
+                    tab.classList.remove('bg-zinc-800', 'text-zinc-400');
+                    codeBlock.textContent = snippets[tab.dataset.lang];
+                });
+            });
+
+            copyBtn.addEventListener('click', () => {
+                sfx.playClick();
+                navigator.clipboard.writeText(codeBlock.textContent);
+                copyBtn.innerHTML = '<i class="fas fa-check text-emerald-400"></i> Copied!';
+                setTimeout(() => {
+                    copyBtn.innerHTML = '<i class="fas fa-copy text-[10px]"></i> Copy';
+                }, 2000);
+            });
+        })();
+
+        /* ============ ⌘K COMMAND PALETTE ENGINE ============ */
+        (function initCommandPalette() {
+            const palette = document.getElementById('cmd-palette');
+            const input = document.getElementById('cmd-input');
+            const results = document.getElementById('cmd-results');
+            const trigger = document.getElementById('cmd-trigger');
+
+            const commands = [
+                { title: 'Launch App / Chat', icon: 'fa-bolt text-indigo-400', action: () => window.location.href = "{{ url_for('main.auth') }}" },
+                { title: 'Test Live AI Sandbox', icon: 'fa-play text-purple-400', action: () => document.getElementById('playground').scrollIntoView({ behavior: 'smooth' }) },
+                { title: 'Run Speed Benchmark Race', icon: 'fa-flag-checkered text-amber-400', action: () => document.getElementById('benchmark').scrollIntoView({ behavior: 'smooth' }) },
+                { title: 'Explore 6 Superpowers', icon: 'fa-wand-magic-sparkles text-cyan-400', action: () => document.getElementById('superpowers').scrollIntoView({ behavior: 'smooth' }) },
+                { title: 'Inspect Neural Architecture', icon: 'fa-network-wired text-emerald-400', action: () => document.getElementById('architecture').scrollIntoView({ behavior: 'smooth' }) },
+                { title: 'View Developer API Docs', icon: 'fa-code text-pink-400', action: () => document.getElementById('api').scrollIntoView({ behavior: 'smooth' }) },
+                { title: 'Check Pro Pricing (₹99/mo)', icon: 'fa-crown text-amber-300', action: () => document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' }) },
+                { title: 'Toggle Audio SFX (Web Audio)', icon: 'fa-volume-high text-zinc-400', action: () => sfx.toggle() },
+                { title: 'Visit GitHub Repository', icon: 'fa-github text-white', action: () => window.open('https://github.com/NejamulHaque/Irus-AI', '_blank') }
+            ];
+
+            function openPalette() {
+                sfx.playClick();
+                palette.classList.remove('hidden');
+                input.value = '';
+                renderCommands('');
+                setTimeout(() => input.focus(), 50);
+            }
+
+            function closePalette() {
+                palette.classList.add('hidden');
+            }
+
+            function renderCommands(query) {
+                results.innerHTML = '';
+                const filtered = commands.filter(c => c.title.toLowerCase().includes(query.toLowerCase()));
+                if (filtered.length === 0) {
+                    results.innerHTML = '<div class="p-3 text-zinc-500 text-center">No matching commands found.</div>';
+                    return;
+                }
+                filtered.forEach(c => {
+                    const item = document.createElement('div');
+                    item.className = 'p-2.5 rounded-xl hover:bg-zinc-800/80 cursor-pointer flex items-center justify-between group transition-colors';
+                    item.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <i class="fas ${c.icon}"></i>
+                            <span class="text-zinc-200 group-hover:text-white font-medium">${c.title}</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-zinc-600 group-hover:text-zinc-400 text-xs"></i>
+                    `;
+                    item.addEventListener('click', () => {
+                        closePalette();
+                        c.action();
+                    });
+                    results.appendChild(item);
+                });
+            }
+
+            if (trigger) trigger.addEventListener('click', openPalette);
+            window.addEventListener('keydown', e => {
+                if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                    e.preventDefault();
+                    if (palette.classList.contains('hidden')) openPalette();
+                    else closePalette();
+                }
+                if (e.key === 'Escape' && !palette.classList.contains('hidden')) {
+                    closePalette();
+                }
+            });
+
+            palette.addEventListener('click', e => {
+                if (e.target === palette) closePalette();
+            });
+
+            input.addEventListener('input', e => renderCommands(e.target.value));
+        })();
+
+        /* ============ 🔍 FAQ REAL-TIME FILTER ============ */
+        (function initFaqSearch() {
+            const search = document.getElementById('faq-search');
+            const items = document.querySelectorAll('#faq-list details');
+            if (search) {
+                search.addEventListener('input', e => {
+                    const q = e.target.value.toLowerCase();
+                    items.forEach(d => {
+                        const text = d.textContent.toLowerCase();
+                        d.style.display = text.includes(q) ? 'block' : 'none';
+                        if (q.length > 2 && text.includes(q)) d.open = true;
+                    });
+                });
+            }
+        })();
+
+        /* ============ 📱 MOBILE DRAWER & NAVIGATION ============ */
+        (function initMobileDrawer() {
+            const btn = document.getElementById('mobile-menu-btn');
+            const drawer = document.getElementById('mobile-drawer');
+            if (btn && drawer) {
+                btn.addEventListener('click', () => {
+                    sfx.playClick();
+                    drawer.classList.toggle('open');
+                });
+                document.querySelectorAll('.mobile-link').forEach(link => {
+                    link.addEventListener('click', () => drawer.classList.remove('open'));
+                });
+            }
+        })();
+
+        /* ============ 💳 PRICING BILLING SWITCHER ============ */
+        (function initPricingToggle() {
+            const btnM = document.getElementById('toggle-monthly');
+            const btnY = document.getElementById('toggle-yearly');
+            if (btnM && btnY) {
+                btnM.addEventListener('click', () => {
+                    sfx.playClick();
+                    btnM.className = 'px-4 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600 text-white transition-all';
+                    btnY.className = 'px-4 py-1.5 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white transition-all flex items-center gap-1.5';
+                });
+                btnY.addEventListener('click', () => {
+                    sfx.playClick();
+                    btnY.className = 'px-4 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600 text-white transition-all flex items-center gap-1.5';
+                    btnM.className = 'px-4 py-1.5 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white transition-all';
+                });
+            }
+        })();
+
+        /* ============ 📊 MOUSE SPOTLIGHT CARDS ============ */
+        document.querySelectorAll('.card-spotlight').forEach(card => {
+            card.addEventListener('mousemove', e => {
+                const rect = card.getBoundingClientRect();
+                card.style.setProperty('--mouse-x', (e.clientX - rect.left) + 'px');
+                card.style.setProperty('--mouse-y', (e.clientY - rect.top) + 'px');
+            });
+        });
+
+        /* ============ 🔢 ANIMATED COUNTERS ============ */
+        (function initCounters() {
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const el = entry.target;
+                        const target = parseInt(el.dataset.count, 10);
+                        let start = 0;
+                        const duration = 1500;
+                        const step = Math.ceil(target / (duration / 25));
+                        const timer = setInterval(() => {
+                            start += step;
+                            if (start >= target) {
+                                el.textContent = target;
+                                clearInterval(timer);
+                            } else {
+                                el.textContent = start;
+                            }
+                        }, 25);
+                        observer.unobserve(el);
+                    }
+                });
+            }, { threshold: 0.3 });
+
+            document.querySelectorAll('.counter').forEach(el => observer.observe(el));
+        })();
+
+        /* ============ 🔬 ARCHITECTURE SPEC INSPECTOR ============ */
+        (function initArchInspector() {
+            const nodes = document.querySelectorAll('.pipeline-node');
+            const box = document.getElementById('arch-spec-box');
+            const specs = {
+                query: {
+                    title: "Intent Classifier & Prompt Optimizer",
+                    desc: "Zero-latency regex & semantic AST classification. Dispatches requests directly to Groq LPUs or retrieval nodes.",
+                    metric: "Routing Latency: < 2ms",
+                    icon: "fa-filter text-indigo-400"
+                },
+                retrieval: {
+                    title: "Vector DB & Parallel Web Crawler",
+                    desc: "Cosine similarity search on chunked document embeddings + concurrent DuckDuckGo live index scraping.",
+                    metric: "Embedding Match: 0.94 Similarity",
+                    icon: "fa-database text-purple-400"
+                },
+                groq: {
+                    title: "Groq LPUs (Language Processing Units)",
+                    desc: "Deterministic tensor core latency • 230 MB SRAM per chip • Direct memory interconnect.",
+                    metric: "Peak Speed: 820 Tokens/Sec",
+                    icon: "fa-microchip text-emerald-400"
+                },
+                stream: {
+                    title: "Sub-Millisecond SSE Token Stream",
+                    desc: "Direct chunked HTTP/2 streaming pipeline with live Markdown parsing and syntax highlighting.",
+                    metric: "Time-to-First-Token: < 15ms",
+                    icon: "fa-bolt text-cyan-400"
+                }
+            };
+
+            nodes.forEach(node => {
+                node.addEventListener('click', () => {
+                    sfx.playClick();
+                    nodes.forEach(n => n.classList.remove('active'));
+                    node.classList.add('active');
+                    const spec = specs[node.dataset.archSpec];
+                    if (spec && box) {
+                        box.innerHTML = `
+                            <div class="flex items-center gap-3">
+                                <i class="fas ${spec.icon} text-xl"></i>
+                                <div>
+                                    <p class="text-white font-bold">${spec.title}</p>
+                                    <p class="text-zinc-400 text-[11px]">${spec.desc}</p>
+                                </div>
+                            </div>
+                            <span class="px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 font-bold">
+                                ${spec.metric}
+                            </span>
+                        `;
+                    }
+                });
+            });
         })();
     </script>
 </body>

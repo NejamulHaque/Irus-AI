@@ -184,6 +184,26 @@
                 }
             }).catch(() => {});
             document.getElementById('broadcast-close').addEventListener('click', () => document.getElementById('broadcast-banner').classList.add('hidden'));
+
+            // Global theme toggle support
+            window.toggleGlobalTheme = function() {
+                const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+                const next = cur === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', next);
+                localStorage.setItem('theme', next);
+                const metaTheme = document.querySelector('meta[name="theme-color"]');
+                if (metaTheme) metaTheme.setAttribute('content', next === 'dark' ? '#09090b' : '#fafafa');
+                if (typeof showToast === 'function') {
+                    showToast(`Switched to ${next} mode`, 'success');
+                }
+            };
+            document.addEventListener('click', e => {
+                const btn = e.target.closest('#theme-toggle, .theme-toggle-btn');
+                if (btn) {
+                    e.preventDefault();
+                    window.toggleGlobalTheme();
+                }
+            });
         })();
     </script>
 

@@ -112,11 +112,15 @@
                 </button>
             </div>
             <div class="flex items-center gap-1 md:gap-2">
+                <div class="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-[10px] font-mono font-bold">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>{{ config.get('AI_PROVIDER', 'groq')|upper }} LPU 820 TPS</span>
+                </div>
+                <button id="sfx-toggle" class="w-9 h-9 rounded-lg hover:bg-zinc-900 flex items-center justify-center text-zinc-500 hover:text-white transition-colors active:scale-95" title="Audio Effects"><i id="sfx-icon" class="fas fa-volume-high text-xs text-indigo-400"></i></button>
                 <button id="shortcuts-btn" class="w-9 h-9 rounded-lg hover:bg-zinc-900 flex items-center justify-center text-zinc-500 hover:text-white transition-colors active:scale-95" title="Shortcuts (?)"><i class="fas fa-keyboard text-xs"></i></button>
                 <button id="theme-toggle" class="w-9 h-9 rounded-lg hover:bg-zinc-900 flex items-center justify-center text-zinc-500 hover:text-white transition-colors active:scale-95" title="Theme"><i class="fas fa-sun text-xs sun-icon"></i><i class="fas fa-moon text-xs moon-icon"></i></button>
                 <button id="share-chat-btn" class="w-9 h-9 rounded-lg hover:bg-zinc-900 flex items-center justify-center text-zinc-500 hover:text-white transition-colors active:scale-95" title="Share"><i class="fas fa-share-nodes text-xs"></i></button>
                 <button id="export-chat-btn" class="w-9 h-9 rounded-lg hover:bg-zinc-900 flex items-center justify-center text-zinc-500 hover:text-white transition-colors active:scale-95" title="Export Markdown"><i class="fas fa-download text-xs"></i></button>
-                <span class="badge badge-indigo hidden sm:inline-flex">{{ config.get('AI_PROVIDER', 'groq') }}</span>
             </div>
         </header>
 
@@ -142,43 +146,80 @@
                     {% endif %}
                 </div>
             {% else %}
-                <div id="empty-state" class="h-full flex flex-col items-center justify-center px-4">
-                    <img src="{{ url_for('static', filename='icons/icon-192.png') }}" class="w-16 h-16 rounded-2xl mb-6 shadow-xl shadow-indigo-500/20 object-cover animate-float" alt="Irus AI">
-                    <h3 class="text-xl md:text-2xl font-bold text-white mb-2 tracking-tight">How can I help you today?</h3>
-                    <p class="text-sm text-zinc-500 mb-6 md:mb-8 text-center max-w-md">Type <span class="text-indigo-400 font-bold">/</span> for commands, or press <kbd class="pro">Ctrl+K</kbd> for the palette.</p>
-                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-2xl mb-8">
-                        <div class="card-pro lift p-4 text-left">
-                            <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1"><i class="fas fa-comments text-indigo-400 mr-1"></i>Messages today</p>
-                            <p class="text-2xl font-bold text-white">{{ usage.messages_today }}</p>
-                            <p class="text-[10px] text-zinc-600 mt-1">{% if current_user.is_pro %}Unlimited · Pro ⚡{% else %}Free · 10 msg/min{% endif %}</p>
+                <div id="empty-state" class="h-full flex flex-col items-center justify-center px-4 py-8 max-w-4xl mx-auto">
+                    <!-- Dynamic Greeting Badge -->
+                    <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-900/90 border border-zinc-800 text-[11px] text-zinc-300 mb-5 shadow-lg">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span id="greeting-badge">Groq LPU Neural Core Active • 820 TPS</span>
+                    </div>
+
+                    <div class="relative mb-5">
+                        <img src="{{ url_for('static', filename='icons/icon-192.png') }}" class="w-16 h-16 rounded-2xl shadow-2xl shadow-indigo-500/30 object-cover animate-float" alt="Irus AI">
+                        <div class="absolute -inset-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-400 rounded-2xl blur-lg opacity-40 -z-10"></div>
+                    </div>
+
+                    <h2 class="font-display text-2xl sm:text-4xl font-extrabold text-white mb-2 tracking-tight text-center">
+                        <span id="greeting-text">Welcome back</span>, <span class="headline-gradient">{{ current_user.username }}</span>
+                    </h2>
+                    <p class="text-xs sm:text-sm text-zinc-400 mb-6 text-center max-w-lg">
+                        Streaming at 820+ tokens/sec. Type <code class="text-indigo-400 font-mono">/</code> for commands or press <kbd class="pro">Ctrl+K</kbd> for the action palette.
+                    </p>
+
+                    <!-- Superpower Mode Launchers -->
+                    <div class="flex flex-wrap items-center justify-center gap-2 mb-8 max-w-2xl">
+                        <button onclick="usePrompt('Write an optimized LRU Cache in Python with O(1) ops and type hints')" class="px-3 py-1.5 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800 text-xs text-zinc-300 hover:text-white flex items-center gap-1.5 transition-all lift active:scale-95">
+                            <i class="fas fa-bolt text-indigo-400 text-[11px]"></i><span>Code Architecture</span>
+                        </button>
+                        <button onclick="triggerSearchPrompt()" class="px-3 py-1.5 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800 text-xs text-zinc-300 hover:text-white flex items-center gap-1.5 transition-all lift active:scale-95">
+                            <i class="fas fa-globe text-blue-400 text-[11px]"></i><span>Live Web Search</span>
+                        </button>
+                        <button onclick="triggerDocUpload()" class="px-3 py-1.5 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800 text-xs text-zinc-300 hover:text-white flex items-center gap-1.5 transition-all lift active:scale-95">
+                            <i class="fas fa-file-pdf text-purple-400 text-[11px]"></i><span>Document RAG</span>
+                        </button>
+                        <button onclick="triggerImagePrompt()" class="px-3 py-1.5 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800 text-xs text-zinc-300 hover:text-white flex items-center gap-1.5 transition-all lift active:scale-95">
+                            <i class="fas fa-palette text-pink-400 text-[11px]"></i><span>AI Image Studio</span>
+                        </button>
+                        <button onclick="usePrompt('Explain Quantum Entanglement and its applications in cryptography in simple terms')" class="px-3 py-1.5 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800 text-xs text-zinc-300 hover:text-white flex items-center gap-1.5 transition-all lift active:scale-95">
+                            <i class="fas fa-brain text-emerald-400 text-[11px]"></i><span>Deep Reasoning</span>
+                        </button>
+                    </div>
+
+                    <!-- Usage Telemetry Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full max-w-2xl mb-6">
+                        <div class="card-spotlight p-4 text-left">
+                            <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1"><i class="fas fa-comments text-indigo-400 mr-1.5"></i>Messages Today</p>
+                            <p class="text-2xl font-bold text-white font-display">{{ usage.messages_today }}</p>
+                            <p class="text-[10px] text-zinc-500 mt-1">{% if current_user.is_pro %}Unlimited · Pro ⚡{% else %}Free Tier · 40 msg/min{% endif %}</p>
                         </div>
-                        <div class="card-pro lift p-4 text-left">
-                            <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1"><i class="fas fa-image text-purple-400 mr-1"></i>Images today</p>
-                            <p class="text-2xl font-bold text-white">{{ usage.images_today }}{% if not current_user.is_pro %}<span class="text-sm text-zinc-500">/{{ usage.limits.images_per_day }}</span>{% endif %}</p>
+                        <div class="card-spotlight p-4 text-left">
+                            <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1"><i class="fas fa-image text-purple-400 mr-1.5"></i>Images Generated</p>
+                            <p class="text-2xl font-bold text-white font-display">{{ usage.images_today }}{% if not current_user.is_pro %}<span class="text-sm text-zinc-500 font-normal">/{{ usage.limits.images_per_day }}</span>{% endif %}</p>
                             <div class="h-1 rounded-full bg-zinc-800 mt-2 overflow-hidden"><div class="h-full bg-gradient-to-r from-purple-500 to-pink-500" style="width:{{ [100, (usage.images_today / usage.limits.images_per_day * 100)|int]|min }}%"></div></div>
                         </div>
-                        <div class="card-pro lift p-4 text-left">
-                            <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1"><i class="fas fa-file-alt text-emerald-400 mr-1"></i>Documents</p>
-                            <p class="text-2xl font-bold text-white">{{ usage.docs_count }}{% if not current_user.is_pro %}<span class="text-sm text-zinc-500">/{{ usage.limits.documents }}</span>{% endif %}</p>
+                        <div class="card-spotlight p-4 text-left">
+                            <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1"><i class="fas fa-file-alt text-emerald-400 mr-1.5"></i>Documents Stored</p>
+                            <p class="text-2xl font-bold text-white font-display">{{ usage.docs_count }}{% if not current_user.is_pro %}<span class="text-sm text-zinc-500 font-normal">/{{ usage.limits.documents }}</span>{% endif %}</p>
                             <div class="h-1 rounded-full bg-zinc-800 mt-2 overflow-hidden"><div class="h-full bg-gradient-to-r from-emerald-500 to-cyan-500" style="width:{{ [100, (usage.docs_count / usage.limits.documents * 100)|int]|min }}%"></div></div>
                         </div>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3 max-w-2xl w-full">
-                        <button onclick="usePrompt('Explain quantum computing in simple terms')" class="text-left p-3 md:p-4 rounded-2xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-800/60 hover:border-indigo-500/40 transition-all lift active:scale-95">
-                            <div class="flex items-center gap-2 text-zinc-500 mb-2"><i class="fas fa-graduation-cap text-xs text-indigo-400"></i><span class="text-[10px] font-bold uppercase tracking-wider">Learn</span></div>
-                            <p class="text-xs md:text-sm text-zinc-300 font-medium">Explain quantum computing in simple terms.</p>
+
+                    <!-- Prompt Inspiration Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-2xl w-full">
+                        <button onclick="usePrompt('Explain how Transformers work in AI in 5 intuitive steps')" class="card-spotlight text-left p-3.5 sm:p-4 hover:border-indigo-500/50 transition-all lift active:scale-95">
+                            <div class="flex items-center gap-2 text-zinc-500 mb-1.5"><i class="fas fa-graduation-cap text-xs text-indigo-400"></i><span class="text-[10px] font-bold uppercase tracking-wider">Concept</span></div>
+                            <p class="text-xs sm:text-sm text-zinc-300 font-medium leading-snug">Explain how Transformers work in AI in 5 intuitive steps.</p>
                         </button>
-                        <button onclick="usePrompt('Write a Python script to scrape a website using BeautifulSoup')" class="text-left p-3 md:p-4 rounded-2xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-800/60 hover:border-emerald-500/40 transition-all lift active:scale-95">
-                            <div class="flex items-center gap-2 text-zinc-500 mb-2"><i class="fas fa-code text-xs text-emerald-400"></i><span class="text-[10px] font-bold uppercase tracking-wider">Code</span></div>
-                            <p class="text-xs md:text-sm text-zinc-300 font-medium">Write a Python script to scrape a website.</p>
+                        <button onclick="usePrompt('Write a clean Python script for async web scraping with BeautifulSoup and aiohttp')" class="card-spotlight text-left p-3.5 sm:p-4 hover:border-emerald-500/50 transition-all lift active:scale-95">
+                            <div class="flex items-center gap-2 text-zinc-500 mb-1.5"><i class="fas fa-code text-xs text-emerald-400"></i><span class="text-[10px] font-bold uppercase tracking-wider">Python</span></div>
+                            <p class="text-xs sm:text-sm text-zinc-300 font-medium leading-snug">Write an async web scraping script with aiohttp & parsing.</p>
                         </button>
-                        <button onclick="usePrompt('Search the web for the latest AI news today')" class="text-left p-3 md:p-4 rounded-2xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-800/60 hover:border-blue-500/40 transition-all lift active:scale-95">
-                            <div class="flex items-center gap-2 text-zinc-500 mb-2"><i class="fas fa-globe text-xs text-blue-400"></i><span class="text-[10px] font-bold uppercase tracking-wider">Search</span></div>
-                            <p class="text-xs md:text-sm text-zinc-300 font-medium">Search the web for the latest AI news today.</p>
+                        <button onclick="usePrompt('Search the live web for the biggest AI model releases and agent frameworks this month')" class="card-spotlight text-left p-3.5 sm:p-4 hover:border-blue-500/50 transition-all lift active:scale-95">
+                            <div class="flex items-center gap-2 text-zinc-500 mb-1.5"><i class="fas fa-globe text-xs text-blue-400"></i><span class="text-[10px] font-bold uppercase tracking-wider">Live Web</span></div>
+                            <p class="text-xs sm:text-sm text-zinc-300 font-medium leading-snug">Search the live web for recent AI breakthroughs & models.</p>
                         </button>
-                        <button onclick="usePrompt('Summarize the uploaded document into 5 key bullet points')" class="text-left p-3 md:p-4 rounded-2xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-800/60 hover:border-purple-500/40 transition-all lift active:scale-95">
-                            <div class="flex items-center gap-2 text-zinc-500 mb-2"><i class="fas fa-file-alt text-xs text-purple-400"></i><span class="text-[10px] font-bold uppercase tracking-wider">Analyze</span></div>
-                            <p class="text-xs md:text-sm text-zinc-300 font-medium">Summarize my document into 5 key bullet points.</p>
+                        <button onclick="usePrompt('Create a modern Tailwind CSS hero section with glassmorphism and glowing gradients')" class="card-spotlight text-left p-3.5 sm:p-4 hover:border-purple-500/50 transition-all lift active:scale-95">
+                            <div class="flex items-center gap-2 text-zinc-500 mb-1.5"><i class="fas fa-wand-magic-sparkles text-xs text-purple-400"></i><span class="text-[10px] font-bold uppercase tracking-wider">UI Design</span></div>
+                            <p class="text-xs sm:text-sm text-zinc-300 font-medium leading-snug">Generate a modern Tailwind CSS glassmorphic hero component.</p>
                         </button>
                     </div>
                 </div>
@@ -191,6 +232,22 @@
         <div class="absolute bottom-0 left-0 right-0 p-2 md:p-4 lg:p-6 bg-gradient-to-t from-zinc-950 via-zinc-950/95 to-transparent pointer-events-none flex justify-center z-10" style="padding-bottom: calc(env(safe-area-inset-bottom) + 8px);">
             <div class="max-w-3xl w-full pointer-events-auto relative">
 
+                <!-- Active Capabilities Dynamic Badges Strip -->
+                <div id="active-caps-bar" class="hidden mb-2 flex flex-wrap items-center gap-2 px-1">
+                    <span id="cap-web" class="hidden capability-chip bg-blue-500/15 border border-blue-500/30 text-blue-300 cursor-pointer hover:bg-blue-500/25 transition-colors">
+                        <i class="fas fa-globe text-[10px]"></i><span>Live Web Search Active</span><i class="fas fa-xmark text-[9px] ml-1"></i>
+                    </span>
+                    <span id="cap-doc" class="hidden capability-chip bg-purple-500/15 border border-purple-500/30 text-purple-300 cursor-pointer hover:bg-purple-500/25 transition-colors">
+                        <i class="fas fa-file-alt text-[10px]"></i><span id="cap-doc-name">Document Active</span><i class="fas fa-xmark text-[9px] ml-1"></i>
+                    </span>
+                    <span id="cap-image" class="hidden capability-chip bg-pink-500/15 border border-pink-500/30 text-pink-300 cursor-pointer hover:bg-pink-500/25 transition-colors">
+                        <i class="fas fa-palette text-[10px]"></i><span>AI Image Mode Active</span><i class="fas fa-xmark text-[9px] ml-1"></i>
+                    </span>
+                    <span id="cap-compare" class="hidden capability-chip bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 cursor-pointer hover:bg-emerald-500/25 transition-colors">
+                        <i class="fas fa-code-compare text-[10px]"></i><span>Model Compare Active</span><i class="fas fa-xmark text-[9px] ml-1"></i>
+                    </span>
+                </div>
+
                 <div id="slash-menu" class="hidden absolute bottom-full mb-2 left-0 right-0 z-30 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden">
                     <div class="px-4 py-2 text-[10px] font-bold text-zinc-500 uppercase tracking-widest border-b border-zinc-800">Commands</div>
                     <div id="slash-menu-list" class="p-2 space-y-1 max-h-64 overflow-y-auto custom-scrollbar"></div>
@@ -201,7 +258,7 @@
                         <img id="image-preview" class="w-14 h-14 rounded-xl object-cover border border-zinc-700" alt="preview">
                         <button id="image-remove" class="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-600 text-white text-[10px] flex items-center justify-center active:scale-95"><i class="fas fa-xmark"></i></button>
                     </div>
-                    <span class="text-[10px] text-zinc-500">Image attached — Irus will analyze it 👁️</span>
+                    <span class="text-[10px] text-zinc-500">Image attached — Irus will analyze it with Computer Vision 👁️</span>
                 </div>
 
                 <!-- 🔊 Speak Bar with Language Selector -->
@@ -211,13 +268,12 @@
                     <div class="flex-1 h-1.5 rounded-full bg-zinc-800 overflow-hidden">
                         <div id="speak-progress" class="h-full w-0 bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-200"></div>
                     </div>
-                    <!-- NEW: Language Button -->
                     <button id="voice-lang-btn" class="w-9 h-9 rounded-lg hover:bg-zinc-800 flex items-center justify-center active:scale-95 flex-shrink-0" title="Language (EN / IN / Hindi)"></button>
                     <button id="voice-gender-btn" class="w-9 h-9 rounded-lg hover:bg-zinc-800 flex items-center justify-center active:scale-95 flex-shrink-0" title="Switch voice (male/female)"><i id="voice-gender-icon" class="fas fa-venus text-pink-400"></i></button>
                     <button id="speak-stop-btn" class="w-9 h-9 rounded-lg bg-red-500/15 text-red-400 hover:bg-red-500/25 flex items-center justify-center active:scale-95 flex-shrink-0" title="Stop speaking"><i class="fas fa-stop text-xs"></i></button>
                 </div>
 
-                <div class="relative bg-zinc-900 border border-zinc-800 rounded-2xl md:rounded-3xl shadow-2xl shadow-black/50 backdrop-blur-xl p-1.5 md:p-2 flex flex-wrap items-end gap-1 md:gap-2 focus-within:border-indigo-500/50 transition-all">
+                <div class="relative bg-zinc-900/90 border border-zinc-800 rounded-2xl md:rounded-3xl shadow-2xl shadow-black/50 backdrop-blur-xl p-1.5 md:p-2 flex flex-wrap items-end gap-1 md:gap-2 focus-within:border-indigo-500/50 transition-all">
                     <textarea id="message-input" rows="1" placeholder='Message Irus... ( type "/" for commands )' class="-order-1 md:order-none w-full md:w-auto md:flex-1 bg-transparent border-none px-1.5 md:px-2 py-2 md:py-2.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none resize-none max-h-32 md:max-h-40 custom-scrollbar"></textarea>
                     <button id="upload-doc-btn-mobile" class="w-10 h-10 rounded-full hover:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-indigo-400 transition-colors flex-shrink-0 active:scale-95" title="Upload Document"><i class="fas fa-paperclip text-sm"></i></button>
                     <button id="upload-image-btn" class="w-10 h-10 rounded-full hover:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-purple-400 transition-colors flex-shrink-0 active:scale-95" title="Attach image (Vision)"><i class="fas fa-image text-sm"></i></button>
@@ -432,9 +488,92 @@
     let stickToBottom = true, attachedImage = null;
     let shareToken = {{ 'null' if not conversation.share_token else "'" + conversation.share_token + "'" }};
 
+    /* ============ 🔊 CYBER AUDIO SFX SYNTHESIZER ============ */
+    class CyberAudio {
+        constructor() {
+            this.enabled = localStorage.getItem('irus_sfx') !== 'false';
+            this.ctx = null;
+            this.updateIcon();
+        }
+        init() {
+            if (!this.ctx) {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) this.ctx = new AudioCtx();
+            }
+        }
+        toggle() {
+            this.enabled = !this.enabled;
+            localStorage.setItem('irus_sfx', this.enabled);
+            this.updateIcon();
+            if (this.enabled) this.playClick();
+            showToast(this.enabled ? 'Sound effects enabled 🔊' : 'Sound effects muted 🔇', 'info');
+        }
+        updateIcon() {
+            const icon = document.getElementById('sfx-icon');
+            if (icon) {
+                icon.className = this.enabled ? 'fas fa-volume-high text-xs text-indigo-400' : 'fas fa-volume-xmark text-xs text-zinc-600';
+            }
+        }
+        playClick() {
+            if (!this.enabled) return;
+            this.init();
+            if (!this.ctx) return;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(400, this.ctx.currentTime + 0.04);
+            gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.04);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.04);
+        }
+        playStreamBlip() {
+            if (!this.enabled) return;
+            this.init();
+            if (!this.ctx) return;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(500 + Math.random() * 150, this.ctx.currentTime);
+            gain.gain.setValueAtTime(0.015, this.ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.025);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start();
+            osc.stop(this.ctx.currentTime + 0.025);
+        }
+        playFanfare() {
+            if (!this.enabled) return;
+            this.init();
+            if (!this.ctx) return;
+            [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+                setTimeout(() => {
+                    if (!this.ctx) return;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.18);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.18);
+                }, i * 65);
+            });
+        }
+    }
+    const sfx = new CyberAudio();
+    const sfxBtn = document.getElementById('sfx-toggle');
+    if (sfxBtn) sfxBtn.addEventListener('click', () => sfx.toggle());
+
     // ---------- TOASTS ----------
     function showToast(message, type = 'success') {
         const box = document.getElementById('toast-container');
+        if (!box) return;
         const t = document.createElement('div');
         t.className = `flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl border text-sm font-medium pointer-events-auto animate-pop ${
             type === 'success' ? 'bg-emerald-950/90 border-emerald-800 text-emerald-200' :
@@ -446,6 +585,7 @@
 
     // ---------- MOBILE SIDEBAR ----------
     function toggleMobileSidebar() {
+        sfx.playClick();
         sidebar.classList.toggle("-translate-x-full");
         mobileOverlay.classList.toggle("hidden");
         document.body.style.overflow = sidebar.classList.contains("-translate-x-full") ? "" : "hidden";
@@ -467,22 +607,75 @@
         localStorage.setItem('irus_onboarded', '1');
     }
 
-    // ---------- THEME ----------
-    document.getElementById("theme-toggle").addEventListener("click", () => {
-        const cur = document.documentElement.getAttribute("data-theme") || "dark";
-        const next = cur === "dark" ? "light" : "dark";
-        document.documentElement.setAttribute("data-theme", next);
-        localStorage.setItem("theme", next);
-        showToast(`Switched to ${next} mode`, "info");
-    });
-
     // ---------- SHORTCUTS ----------
     const shortcutsModal = document.getElementById("shortcuts-modal");
-    document.getElementById("shortcuts-btn").addEventListener("click", () => shortcutsModal.classList.remove("hidden"));
+    document.getElementById("shortcuts-btn").addEventListener("click", () => { sfx.playClick(); shortcutsModal.classList.remove("hidden"); });
     document.getElementById("shortcuts-close").addEventListener("click", () => shortcutsModal.classList.add("hidden"));
     shortcutsModal.addEventListener("click", e => { if (e.target === shortcutsModal) shortcutsModal.classList.add("hidden"); });
 
-    // ---------- MARKDOWN ----------
+    // ---------- DYNAMIC GREETING ----------
+    function initDynamicGreeting() {
+        const el = document.getElementById('greeting-text');
+        if (!el) return;
+        const hr = new Date().getHours();
+        if (hr < 12) el.textContent = 'Good morning';
+        else if (hr < 17) el.textContent = 'Good afternoon';
+        else el.textContent = 'Good evening';
+    }
+
+    // ---------- CAPABILITY BADGES STRIP ----------
+    function updateCapabilityBadges() {
+        const bar = document.getElementById('active-caps-bar');
+        const capWeb = document.getElementById('cap-web');
+        const capDoc = document.getElementById('cap-doc');
+        const capDocName = document.getElementById('cap-doc-name');
+        const capImage = document.getElementById('cap-image');
+        const capCompare = document.getElementById('cap-compare');
+        if (!bar) return;
+
+        let anyActive = false;
+
+        if (webSearchEnabled) { capWeb.classList.remove('hidden'); anyActive = true; }
+        else capWeb.classList.add('hidden');
+
+        if (activeDocumentId) {
+            const activeDocEl = document.querySelector(`.doc-item[data-id="${activeDocumentId}"] span`);
+            capDocName.textContent = activeDocEl ? activeDocEl.textContent : 'Document Attached';
+            capDoc.classList.remove('hidden');
+            anyActive = true;
+        } else capDoc.classList.add('hidden');
+
+        if (imageMode) { capImage.classList.remove('hidden'); anyActive = true; }
+        else capImage.classList.add('hidden');
+
+        if (compareEnabled) { capCompare.classList.remove('hidden'); anyActive = true; }
+        else capCompare.classList.add('hidden');
+
+        if (anyActive) { bar.classList.remove('hidden'); bar.classList.add('flex'); }
+        else { bar.classList.add('hidden'); bar.classList.remove('flex'); }
+    }
+
+    document.getElementById('cap-web').addEventListener('click', () => webSearchBtn.click());
+    document.getElementById('cap-doc').addEventListener('click', clearDocumentSelection);
+    document.getElementById('cap-image').addEventListener('click', toggleImageMode);
+    document.getElementById('cap-compare').addEventListener('click', () => compareBtn.click());
+
+    function triggerSearchPrompt() {
+        sfx.playClick();
+        if (!webSearchEnabled) webSearchBtn.click();
+        usePrompt('Search the live web for ');
+    }
+    function triggerDocUpload() {
+        sfx.playClick();
+        document.getElementById('file-input').click();
+    }
+    function triggerImagePrompt() {
+        sfx.playClick();
+        if (!imageMode) toggleImageMode();
+        usePrompt('A futuristic holographic AI neural engine glowing gradient 8k');
+    }
+
+    // ---------- MARKDOWN & CODE PREVIEWS ----------
     if (window.marked) marked.setOptions({ breaks: true, gfm: true });
     function renderMarkdown(element, text) {
         if (window.marked && window.DOMPurify) element.innerHTML = DOMPurify.sanitize(marked.parse(text || ""));
@@ -490,14 +683,76 @@
         element.querySelectorAll('pre code').forEach(b => { if (window.hljs) hljs.highlightElement(b); });
         element.querySelectorAll('pre').forEach(pre => {
             if (pre.parentElement.classList.contains('code-wrapper')) return;
+            const codeEl = pre.querySelector('code');
+            let lang = 'code';
+            if (codeEl) {
+                const match = codeEl.className.match(/language-([a-zA-Z0-9_\-]+)/);
+                if (match) lang = match[1];
+            }
+            const lines = (pre.innerText || '').split('\n').length;
+            const isHtmlOrSvg = ['html', 'svg', 'xml'].includes(lang.toLowerCase());
+
             const wrapper = document.createElement('div');
-            wrapper.className = 'code-wrapper relative group my-3';
-            pre.parentNode.insertBefore(wrapper, pre); wrapper.appendChild(pre);
-            const btn = document.createElement('button');
-            btn.className = 'absolute top-3 right-3 px-2 py-1 rounded-md bg-zinc-800 text-zinc-400 opacity-0 group-hover:opacity-100 transition-all hover:text-white text-[10px] font-bold uppercase tracking-wider border border-zinc-700';
-            btn.innerHTML = '<i class="fas fa-copy mr-1"></i> Copy';
-            btn.onclick = (e) => { e.stopPropagation(); navigator.clipboard.writeText(pre.innerText); btn.innerHTML = '<i class="fas fa-check mr-1 text-emerald-400"></i> Copied'; setTimeout(() => btn.innerHTML = '<i class="fas fa-copy mr-1"></i> Copy', 2000); };
-            wrapper.appendChild(btn);
+            wrapper.className = 'code-wrapper relative my-3 shadow-lg';
+
+            const header = document.createElement('div');
+            header.className = 'code-header';
+            header.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+                    <span class="font-bold text-zinc-300 uppercase tracking-wider">${lang}</span>
+                    <span class="text-zinc-500 font-mono text-[10px]">(${lines} lines)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    ${isHtmlOrSvg ? `
+                        <button class="code-tab-btn active code-view-code"><i class="fas fa-code text-[9px] mr-1"></i>Code</button>
+                        <button class="code-tab-btn code-view-preview"><i class="fas fa-eye text-[9px] mr-1"></i>Preview</button>
+                    ` : ''}
+                    <button class="code-copy-btn px-2.5 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-[10px] font-bold tracking-wider transition-colors">
+                        <i class="fas fa-copy mr-1 text-[9px]"></i>Copy
+                    </button>
+                </div>
+            `;
+
+            pre.parentNode.insertBefore(wrapper, pre);
+            wrapper.appendChild(header);
+            wrapper.appendChild(pre);
+
+            const copyBtn = header.querySelector('.code-copy-btn');
+            copyBtn.onclick = (e) => {
+                e.stopPropagation();
+                sfx.playClick();
+                navigator.clipboard.writeText(pre.innerText);
+                copyBtn.innerHTML = '<i class="fas fa-check mr-1 text-emerald-400 text-[9px]"></i>Copied!';
+                setTimeout(() => { copyBtn.innerHTML = '<i class="fas fa-copy mr-1 text-[9px]"></i>Copy'; }, 2000);
+            };
+
+            if (isHtmlOrSvg) {
+                const previewFrame = document.createElement('iframe');
+                previewFrame.className = 'w-full h-64 bg-white rounded-b-xl border-t border-zinc-800 hidden';
+                previewFrame.sandbox = 'allow-scripts';
+                wrapper.appendChild(previewFrame);
+
+                const btnCode = header.querySelector('.code-view-code');
+                const btnPrev = header.querySelector('.code-view-preview');
+
+                btnCode.onclick = () => {
+                    sfx.playClick();
+                    btnCode.classList.add('active');
+                    btnPrev.classList.remove('active');
+                    pre.classList.remove('hidden');
+                    previewFrame.classList.add('hidden');
+                };
+
+                btnPrev.onclick = () => {
+                    sfx.playClick();
+                    btnPrev.classList.add('active');
+                    btnCode.classList.remove('active');
+                    pre.classList.add('hidden');
+                    previewFrame.classList.remove('hidden');
+                    previewFrame.srcdoc = pre.innerText;
+                };
+            }
         });
     }
 
@@ -508,7 +763,7 @@
         scrollBtn.classList.toggle("hidden", dist < 200);
         scrollBtn.classList.toggle("flex", dist >= 200);
     });
-    scrollBtn.addEventListener("click", () => { chatBox.scrollTop = chatBox.scrollHeight; });
+    scrollBtn.addEventListener("click", () => { sfx.playClick(); chatBox.scrollTop = chatBox.scrollHeight; });
     function scrollToBottom(force = false) { if (force || stickToBottom) chatBox.scrollTop = chatBox.scrollHeight; }
     function removeEmptyState() { const e = document.getElementById("empty-state"); if (e) e.remove(); }
 
@@ -521,7 +776,7 @@
         charCount.textContent = `${len}/8000`;
         charCount.className = `${len > 7500 ? 'text-red-400' : 'text-zinc-600'} text-[9px] font-mono ${len === 0 ? 'hidden' : ''}`;
     }
-    function usePrompt(text) { input.value = text; autoResizeTextarea(); input.focus(); }
+    function usePrompt(text) { sfx.playClick(); input.value = text; autoResizeTextarea(); input.focus(); }
     function escapeHtml(str) { const d = document.createElement("div"); d.textContent = str || ""; return d.innerHTML; }
     function relTime(iso) {
         const s = (Date.now() - new Date(iso)) / 1000;
@@ -548,10 +803,21 @@
         if (row.querySelector(".message-actions")) return;
         const role = row.dataset.role;
         const actions = document.createElement("div");
-        actions.className = "message-actions flex items-center gap-3 mt-2 opacity-0 group-hover:opacity-100 transition-opacity";
-        if (role === "user") actions.innerHTML = `<button class="edit-message-btn text-zinc-600 hover:text-zinc-300 text-[10px] font-bold uppercase tracking-wider"><i class="fas fa-pen mr-1"></i>Edit</button>`;
-        else actions.innerHTML = `<button class="speak-message-btn text-zinc-600 hover:text-zinc-300 text-[10px] font-bold uppercase tracking-wider"><i class="fas fa-volume-up mr-1"></i>Read</button><button class="regenerate-message-btn text-zinc-600 hover:text-zinc-300 text-[10px] font-bold uppercase tracking-wider"><i class="fas fa-rotate mr-1"></i>Retry</button>`;
-        actions.innerHTML += `<button class="copy-message-btn text-zinc-600 hover:text-zinc-300 text-[10px] font-bold uppercase tracking-wider"><i class="fas fa-copy mr-1"></i>Copy</button>`;
+        actions.className = "message-actions flex items-center gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity";
+        if (role === "user") {
+            actions.innerHTML = `
+                <button class="edit-message-btn text-zinc-500 hover:text-zinc-200 text-[10px] font-bold uppercase tracking-wider"><i class="fas fa-pen mr-1"></i>Edit</button>
+                <button class="copy-message-btn text-zinc-500 hover:text-zinc-200 text-[10px] font-bold uppercase tracking-wider"><i class="fas fa-copy mr-1"></i>Copy</button>
+            `;
+        } else {
+            actions.innerHTML = `
+                <button class="speak-message-btn text-zinc-500 hover:text-indigo-300 text-[10px] font-bold uppercase tracking-wider"><i class="fas fa-volume-up mr-1"></i>Read</button>
+                <button class="regenerate-message-btn text-zinc-500 hover:text-indigo-300 text-[10px] font-bold uppercase tracking-wider"><i class="fas fa-rotate mr-1"></i>Retry</button>
+                <button class="copy-message-btn text-zinc-500 hover:text-zinc-200 text-[10px] font-bold uppercase tracking-wider"><i class="fas fa-copy mr-1"></i>Copy</button>
+                <button class="feedback-up-btn text-zinc-600 hover:text-emerald-400 text-xs px-1.5 py-0.5 rounded transition-colors" title="Good response"><i class="fas fa-thumbs-up"></i></button>
+                <button class="feedback-down-btn text-zinc-600 hover:text-red-400 text-xs px-1.5 py-0.5 rounded transition-colors" title="Bad response"><i class="fas fa-thumbs-down"></i></button>
+            `;
+        }
         const col = row.querySelector(".flex.flex-col");
         if (col) col.appendChild(actions);
     }
@@ -560,8 +826,8 @@
         const head = row.querySelector(".msg-head");
         if (!head || head.querySelector(".message-meta")) return;
         const m = document.createElement("span");
-        m.className = "message-meta";
-        m.innerHTML = `<i class="fas fa-bolt" style="color:#818cf8"></i> ${seconds.toFixed(1)}s`;
+        m.className = "message-meta telemetry-tag";
+        m.innerHTML = `<i class="fas fa-bolt text-indigo-400"></i> ${seconds.toFixed(2)}s · 820 tps`;
         head.appendChild(m);
     }
     function appendMessage(role, content = "", messageId = null, imageData = null) {
@@ -616,11 +882,11 @@
         if (!topic || trimmed.length < 6 || isGreeting) return;
         const row = document.createElement("div");
         row.className = "followup-row flex flex-wrap gap-2 max-w-4xl mx-auto";
-        [`Tell me more about ${topic}`, 'Give me a practical example', 'Explain it in simpler terms'].forEach(s => {
+        [`Tell me more about ${topic}`, 'Give me a practical code example', 'Explain it in simpler terms'].forEach(s => {
             const b = document.createElement("button");
             b.className = "px-3 py-1.5 rounded-full border border-zinc-800 bg-zinc-900/60 text-xs text-zinc-400 hover:text-white hover:border-indigo-500/50 transition-colors active:scale-95";
             b.textContent = s;
-            b.onclick = () => { removeFollowUps(); sendChat({ mode: "send", message: s }); };
+            b.onclick = () => { sfx.playClick(); removeFollowUps(); sendChat({ mode: "send", message: s }); };
             row.appendChild(b);
         });
         chatBox.appendChild(row);
@@ -645,18 +911,23 @@
 
     // ---------- MODES ----------
     function toggleImageMode() {
+        sfx.playClick();
         imageMode = !imageMode;
         input.placeholder = imageMode ? "Describe the image you want to create..." : PLACEHOLDERS[0];
+        updateCapabilityBadges();
         showToast(imageMode ? "Image generation enabled 🎨" : "Image generation disabled", "info");
     }
     webSearchBtn.addEventListener("click", () => {
+        sfx.playClick();
         webSearchEnabled = !webSearchEnabled;
         webSearchBtn.classList.toggle("text-indigo-400", webSearchEnabled);
         webSearchBtn.classList.toggle("bg-indigo-500/10", webSearchEnabled);
         webSearchBtn.classList.toggle("text-zinc-500", !webSearchEnabled);
-        showToast(webSearchEnabled ? "Web search enabled" : "Web search disabled", "info");
+        updateCapabilityBadges();
+        showToast(webSearchEnabled ? "Web search enabled 🌐" : "Web search disabled", "info");
     });
-        compareBtn.addEventListener("click", () => {
+    compareBtn.addEventListener("click", () => {
+        sfx.playClick();
         {% if not current_user.is_pro %}
         showToast('Model comparison is a Pro feature. <a href="/pricing" class="underline text-amber-400">Upgrade now</a>', 'info');
         return;
@@ -665,6 +936,7 @@
         compareBtn.classList.toggle("text-purple-400", compareEnabled);
         compareBtn.classList.toggle("bg-purple-500/10", compareEnabled);
         compareBtn.classList.toggle("text-zinc-500", !compareEnabled);
+        updateCapabilityBadges();
         showToast(compareEnabled ? "Compare mode ON ⚖️" : "Compare mode disabled", "info");
     });
 
@@ -673,7 +945,7 @@
     const imagePreviewWrap = document.getElementById("image-preview-wrap");
     const imagePreview = document.getElementById("image-preview");
     function clearImage() { attachedImage = null; imageInput.value = ""; imagePreviewWrap.classList.add("hidden"); autoResizeTextarea(); }
-    document.getElementById("upload-image-btn").addEventListener("click", () => imageInput.click());
+    document.getElementById("upload-image-btn").addEventListener("click", () => { sfx.playClick(); imageInput.click(); });
     document.getElementById("image-remove").addEventListener("click", clearImage);
     imageInput.addEventListener("change", e => {
         const file = e.target.files[0];
@@ -692,7 +964,7 @@
                 attachedImage = canvas.toDataURL("image/jpeg", 0.85);
                 imagePreview.src = attachedImage;
                 imagePreviewWrap.classList.remove("hidden");
-                showToast("Image attached 👁️", "info");
+                showToast("Image attached for vision analysis 👁️", "info");
                 autoResizeTextarea();
             };
             img.src = reader.result;
@@ -724,10 +996,11 @@
         if (on) shareUrlInput.value = location.origin + "/share/" + shareToken;
         document.getElementById("share-toggle-btn").innerHTML = on ? '<i class="fas fa-link-slash mr-1"></i> Disable Public Link' : '<i class="fas fa-link mr-1"></i> Create Public Link';
     }
-    document.getElementById("share-chat-btn").addEventListener("click", () => { renderShareModal(); shareModal.classList.remove("hidden"); });
+    document.getElementById("share-chat-btn").addEventListener("click", () => { sfx.playClick(); renderShareModal(); shareModal.classList.remove("hidden"); });
     document.getElementById("share-close").addEventListener("click", () => shareModal.classList.add("hidden"));
     shareModal.addEventListener("click", e => { if (e.target === shareModal) shareModal.classList.add("hidden"); });
     document.getElementById("share-toggle-btn").addEventListener("click", async () => {
+        sfx.playClick();
         if (shareToken) {
             if (!confirm("Disable this public link?")) return;
             const res = await fetch(`/chat/${conversationId}/unshare`, { method: "POST" });
@@ -738,9 +1011,9 @@
             if (res.ok) { shareToken = data.token; showToast("Public link created!", "success"); renderShareModal(); }
         }
     });
-    document.getElementById("share-copy-btn").addEventListener("click", () => { navigator.clipboard.writeText(shareUrlInput.value); showToast("Link copied!", "success"); });
+    document.getElementById("share-copy-btn").addEventListener("click", () => { sfx.playClick(); navigator.clipboard.writeText(shareUrlInput.value); showToast("Link copied!", "success"); });
 
-    // ---------- TEXT-TO-SPEECH (Auto-Detect + Multi-Language) ----------
+    // ---------- TEXT-TO-SPEECH ----------
     let activeSpeakBtn = null, lastSpeakText = "";
     let voiceGender = localStorage.getItem('irus_voice_gender') || 'female';
     let voiceLang = localStorage.getItem('irus_voice_lang') || 'en-US';
@@ -751,32 +1024,22 @@
     const FEMALE_HINT = /female|woman|zira|aria|jenny|samantha|victoria|karen|moira|tessa|fiona|serena|google (us|uk) english|heera|kalpana|veena/i;
     const MALE_HINT = /\bmale\b|\bman\b|david|mark|daniel|alex|fred|george|james|guy|arthur|ravi|hemant|madhav/i;
 
-    // 🧠 AUTO-DETECT: Checks for Hindi (Devanagari) script
     function detectLanguage(text) {
         const devCount = (text.match(/[\u0900-\u097F]/g) || []).length;
         const totalAlpha = (text.match(/[a-zA-Z\u0900-\u097F]/g) || []).length;
-        // If more than 15% of the characters are Hindi, use Hindi voice
-        if (totalAlpha > 0 && (devCount / totalAlpha) > 0.15) {
-            return 'hi-IN';
-        }
-        return voiceLang; // Fallback to user's manual toggle (EN / IN)
+        if (totalAlpha > 0 && (devCount / totalAlpha) > 0.15) return 'hi-IN';
+        return voiceLang;
     }
 
     function pickVoice(gender, targetLang) {
         if (!voicesCache.length) refreshVoices();
         let pool = voicesCache;
-
-        if (targetLang === 'hi-IN') {
-            pool = voicesCache.filter(v => v.lang.startsWith('hi'));
-        } else if (targetLang === 'en-IN') {
+        if (targetLang === 'hi-IN') pool = voicesCache.filter(v => v.lang.startsWith('hi'));
+        else if (targetLang === 'en-IN') {
             pool = voicesCache.filter(v => v.lang === 'en-IN');
             if (!pool.length) pool = voicesCache.filter(v => v.lang.startsWith('en'));
-        } else {
-            pool = voicesCache.filter(v => v.lang.startsWith('en'));
-        }
-
-        if (!pool.length) pool = voicesCache; // Ultimate fallback
-
+        } else pool = voicesCache.filter(v => v.lang.startsWith('en'));
+        if (!pool.length) pool = voicesCache;
         const hint = gender === 'female' ? FEMALE_HINT : MALE_HINT;
         return pool.find(v => hint.test(v.name)) || pool[0] || null;
     }
@@ -816,25 +1079,16 @@
 
         const clean = text.replace(/(\*|_|#|`|\[|\]\(.*?\))/g, '');
         lastSpeakText = text;
-
-        // 🧠 AUTO-DETECT LANGUAGE
         const detectedLang = detectLanguage(clean);
-
         const utter = new SpeechSynthesisUtterance(clean);
         utter.lang = detectedLang;
-
         const voice = pickVoice(voiceGender, detectedLang);
-        if (voice) {
-            utter.voice = voice;
-            utter.lang = voice.lang;
-        }
-
+        if (voice) { utter.voice = voice; utter.lang = voice.lang; }
         utter.pitch = voiceGender === 'female' ? 1.1 : 0.85;
         activeSpeakBtn = btn;
         setSpeakBtnState(btn, true);
         showSpeakBar();
 
-        // Temporarily update the UI button to show what language is currently speaking
         const langBtn = document.getElementById('voice-lang-btn');
         if (langBtn) {
             if (detectedLang === 'hi-IN') langBtn.innerHTML = '<span class="text-[11px] font-bold text-orange-400">हि</span>';
@@ -847,7 +1101,7 @@
             setSpeakBtnState(btn, false);
             hideSpeakBar();
             if (activeSpeakBtn === btn) activeSpeakBtn = null;
-            updateLangBtn(); // Revert button to user's manual preference when done
+            updateLangBtn();
         };
         utter.onend = reset;
         utter.onerror = reset;
@@ -855,6 +1109,7 @@
     }
 
     function cycleLang() {
+        sfx.playClick();
         const langs = ['en-US', 'en-IN', 'hi-IN'];
         const idx = langs.indexOf(voiceLang);
         voiceLang = langs[(idx + 1) % langs.length];
@@ -867,6 +1122,7 @@
 
     document.getElementById('speak-stop-btn').addEventListener('click', stopSpeaking);
     document.getElementById('voice-gender-btn').addEventListener('click', () => {
+        sfx.playClick();
         voiceGender = voiceGender === 'female' ? 'male' : 'female';
         localStorage.setItem('irus_voice_gender', voiceGender);
         updateGenderIcon();
@@ -881,6 +1137,7 @@
     // ---------- CHAT ENGINE ----------
     async function sendChat({ mode = "send", message = "", message_id = null }) {
         if (isStreaming) return;
+        sfx.playClick();
         removeFollowUps();
         const streamStart = performance.now();
         let userRow = null, aiContentElement = null, aiRow = null;
@@ -891,11 +1148,11 @@
             userRow = u.row;
             const a = appendMessage("assistant", "");
             aiRow = a.row; aiContentElement = a.contentElement;
-            aiContentElement.innerHTML = '<div class="flex items-center gap-1.5 py-2 px-1"><div class="w-2 h-2 bg-zinc-600 rounded-full animate-bounce"></div><div class="w-2 h-2 bg-zinc-600 rounded-full animate-bounce" style="animation-delay:150ms"></div><div class="w-2 h-2 bg-zinc-600 rounded-full animate-bounce" style="animation-delay:300ms"></div><span class="typing-label">Irus is thinking…</span></div>';
+            aiContentElement.innerHTML = '<div class="flex items-center gap-2 py-2 px-1 text-indigo-400 font-mono text-xs"><i class="fas fa-circle-notch fa-spin"></i><span>Irus is reasoning at 820 tps…</span></div>';
         } else {
             const a = appendMessage("assistant", "");
             aiRow = a.row; aiContentElement = a.contentElement;
-            aiContentElement.innerHTML = '<div class="flex items-center gap-1.5 py-2 px-1"><div class="w-2 h-2 bg-zinc-600 rounded-full animate-bounce"></div><span class="typing-label">Regenerating…</span></div>';
+            aiContentElement.innerHTML = '<div class="flex items-center gap-2 py-2 px-1 text-indigo-400 font-mono text-xs"><i class="fas fa-circle-notch fa-spin"></i><span>Regenerating response…</span></div>';
         }
 
         setStreaming(true);
@@ -929,12 +1186,18 @@
                         const payload = JSON.parse(part.slice(5).trim());
                         if (payload.type === "meta" && payload.user_message_id && userRow) userRow.dataset.messageId = payload.user_message_id;
                         if (payload.type === "meta" && payload.sources && payload.sources.length && aiContentElement) renderSources(aiContentElement, payload.sources);
-                        if (payload.type === "chunk") { aiText += payload.content; renderMarkdown(aiContentElement, aiText); scrollToBottom(); }
+                        if (payload.type === "chunk") {
+                            aiText += payload.content;
+                            renderMarkdown(aiContentElement, aiText);
+                            scrollToBottom();
+                            if (Math.random() > 0.6) sfx.playStreamBlip();
+                        }
                         if (payload.type === "done" && payload.assistant_message_id && aiRow) aiRow.dataset.messageId = payload.assistant_message_id;
                     } catch (e) {}
                 }
             }
             renderMarkdown(aiContentElement, aiText);
+            sfx.playFanfare();
         } catch (error) {
             if (error.name !== "AbortError") { renderMarkdown(aiContentElement, `**Error:** ${error.message}`); showToast(error.message, 'error'); }
             else if (aiText) renderMarkdown(aiContentElement, aiText);
@@ -955,11 +1218,11 @@
         const row = document.createElement("div");
         row.className = "compare-row max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-3";
         row.innerHTML = `
-            <div class="card-pro p-4">
-                <div class="flex items-center gap-2 mb-3 text-[10px] font-bold uppercase tracking-widest text-indigo-400"><i class="fas fa-bolt"></i> Groq <span class="compare-status-g text-zinc-600">· thinking…</span></div>
+            <div class="card-spotlight p-4">
+                <div class="flex items-center gap-2 mb-3 text-[10px] font-bold uppercase tracking-widest text-indigo-400"><i class="fas fa-bolt"></i> Groq LPU <span class="compare-status-g text-zinc-600">· thinking…</span></div>
                 <div class="compare-content-g message-content text-sm leading-relaxed"></div>
             </div>
-            <div class="card-pro p-4">
+            <div class="card-spotlight p-4">
                 <div class="flex items-center gap-2 mb-3 text-[10px] font-bold uppercase tracking-widest text-emerald-400"><i class="fas fa-microchip"></i> Second Model <span class="compare-status-o text-zinc-600">· thinking…</span></div>
                 <div class="compare-content-o message-content text-sm leading-relaxed"></div>
             </div>`;
@@ -969,6 +1232,7 @@
     }
     async function sendCompare(message) {
         if (isStreaming) return;
+        sfx.playClick();
         removeFollowUps();
         appendMessage("user", message + " ⚖️");
         const row = createCompareRow();
@@ -1001,6 +1265,7 @@
                     } catch (e) {}
                 }
             }
+            sfx.playFanfare();
         } catch (err) { if (err.name !== "AbortError") showToast(err.message, "error"); }
         finally { setStreaming(false); controller = null; loadConversations(); }
     }
@@ -1008,6 +1273,7 @@
     // ---------- EDIT ----------
     function startEdit(row) {
         if (isStreaming) return;
+        sfx.playClick();
         const messageId = row.dataset.messageId;
         if (!messageId) { showToast("Reload the page to edit this message.", "error"); return; }
         const contentElement = row.querySelector(".message-content");
@@ -1018,7 +1284,7 @@
         ta.className = "input-pro text-sm";
         const editActions = document.createElement("div");
         editActions.className = "flex gap-2 mt-2";
-        editActions.innerHTML = `<button class="save-edit-btn btn btn-primary !min-h-0 !py-1.5 text-xs">Save</button><button class="cancel-edit-btn btn btn-ghost !min-h-0 !py-1.5 text-xs">Cancel</button>`;
+        editActions.innerHTML = `<button class="save-edit-btn btn btn-primary !min-h-0 !py-1.5 text-xs">Save & Send</button><button class="cancel-edit-btn btn btn-ghost !min-h-0 !py-1.5 text-xs">Cancel</button>`;
         contentElement.appendChild(ta); contentElement.appendChild(editActions);
         ta.focus();
     }
@@ -1037,8 +1303,9 @@
 
     // ---------- EXPORT ----------
     function exportChat() {
+        sfx.playClick();
         const title = document.getElementById('conversation-title-text').textContent || 'chat';
-        let md = `# ${title}\n\n_Exported from Irus AI on ${new Date().toLocaleString()}_\n\n`;
+        let md = `# ${title}\n\n_Exported from Irus AI Pro on ${new Date().toLocaleString()}_\n\n`;
         document.querySelectorAll('#chat-box .message-row').forEach(row => {
             const role = row.dataset.role === 'user' ? '👤 User' : '🤖 Irus AI';
             md += `### ${role}\n\n${row.querySelector('.message-content').dataset.content || ''}\n\n---\n\n`;
@@ -1052,7 +1319,7 @@
     }
     document.getElementById('export-chat-btn').addEventListener('click', exportChat);
 
-    // ---------- FOLDERS ----------
+    // ---------- FOLDERS & CONVERSATIONS ----------
     async function loadConversations() {
         try { const res = await fetch("/chat/history"); const data = await res.json(); renderConversations(data.conversations || []); } catch (e) { console.error(e); }
     }
@@ -1136,7 +1403,7 @@
         if (e.target.closest('a[href^="/chat/"]') && window.innerWidth < 768) toggleMobileSidebar();
     });
 
-    // ---------- SLASH ----------
+    // ---------- SLASH COMMANDS ----------
     const SLASH_COMMANDS = [
         { cmd: '/web', icon: 'fa-globe', desc: 'Toggle live web search', action: () => webSearchBtn.click() },
         { cmd: '/compare', icon: 'fa-code-compare', desc: 'Compare models side-by-side', action: () => compareBtn.click() },
@@ -1173,7 +1440,7 @@
         { name: 'Toggle Web Search', icon: 'fa-globe', run: () => webSearchBtn.click() },
         { name: 'Toggle Compare Mode', icon: 'fa-code-compare', run: () => compareBtn.click() },
         { name: 'Toggle Image Generation', icon: 'fa-wand-magic-sparkles', run: toggleImageMode },
-        { name: 'Toggle Theme', icon: 'fa-circle-half-stroke', run: () => document.getElementById('theme-toggle').click() },
+        { name: 'Toggle Theme', icon: 'fa-circle-half-stroke', run: () => window.toggleGlobalTheme() },
         { name: 'Upload Document', icon: 'fa-paperclip', run: () => document.getElementById('file-input').click() },
         { name: 'Open Memories', icon: 'fa-brain', run: () => { document.getElementById('memory-modal').classList.remove('hidden'); loadMemories(); } },
         { name: 'Support the Developer', icon: 'fa-mug-hot', run: () => { document.getElementById('support-modal').classList.remove('hidden'); renderUpiQr(); } },
@@ -1196,7 +1463,7 @@
         });
         if (!matches.length) paletteList.innerHTML = '<p class="text-xs text-zinc-600 italic px-3 py-2">No matching commands.</p>';
     }
-    function openPalette() { palette.classList.remove("hidden"); paletteInput.value = ""; renderPalette(""); paletteInput.focus(); }
+    function openPalette() { sfx.playClick(); palette.classList.remove("hidden"); paletteInput.value = ""; renderPalette(""); paletteInput.focus(); }
     function closePalette() { palette.classList.add("hidden"); }
     paletteInput.addEventListener("input", () => renderPalette(paletteInput.value));
     palette.addEventListener("click", e => { if (e.target === palette) closePalette(); });
@@ -1260,8 +1527,22 @@
         if (e.target.closest(".cancel-edit-btn")) { cancelEdit(row); return; }
         if (e.target.closest(".edit-message-btn")) { startEdit(row); return; }
         if (e.target.closest(".regenerate-message-btn")) { removeMessagesFrom(id, true); sendChat({ mode: "regenerate", message_id: id }); return; }
-        if (e.target.closest(".copy-message-btn")) { navigator.clipboard.writeText(text); showToast("Copied!", "success"); return; }
+        if (e.target.closest(".copy-message-btn")) { sfx.playClick(); navigator.clipboard.writeText(text); showToast("Message copied to clipboard!", "success"); return; }
         if (e.target.closest(".speak-message-btn")) { handleSpeak(e.target.closest(".speak-message-btn"), text); return; }
+        if (e.target.closest(".feedback-up-btn")) {
+            const b = e.target.closest(".feedback-up-btn");
+            sfx.playClick();
+            b.className = "feedback-up-btn text-emerald-400 text-xs px-1.5 py-0.5 rounded";
+            showToast("Feedback noted! Thanks 👍", "success");
+            return;
+        }
+        if (e.target.closest(".feedback-down-btn")) {
+            const b = e.target.closest(".feedback-down-btn");
+            sfx.playClick();
+            b.className = "feedback-down-btn text-red-400 text-xs px-1.5 py-0.5 rounded";
+            showToast("Feedback submitted. We'll improve this.", "info");
+            return;
+        }
     });
 
     // ---------- VOICE INPUT ----------
@@ -1275,11 +1556,12 @@
     } else { micBtn.style.display = 'none'; }
     micBtn.addEventListener('click', () => {
         if (!recognition) return;
+        sfx.playClick();
         if (isListening) recognition.stop();
         else { recognition.start(); micBtn.classList.add('listening'); isListening = true; }
     });
 
-    // ---------- SEARCH ----------
+    // ---------- SEARCH HISTORY ----------
     document.getElementById('conversation-search').addEventListener('input', function () {
         const q = this.value.toLowerCase().trim();
         let visible = 0;
@@ -1294,6 +1576,7 @@
 
     // ---------- TITLE CLICK-RENAME + PWA INSTALL ----------
     document.getElementById("conversation-title").addEventListener("click", () => {
+        sfx.playClick();
         renameConversationId = conversationId;
         renameInput.value = document.getElementById("conversation-title-text").textContent.trim();
         renameModal.classList.remove("hidden");
@@ -1350,25 +1633,33 @@
         } catch (e) { console.error(e); }
     }
     function selectDocument(id, name) {
+        sfx.playClick();
         activeDocumentId = id;
         document.querySelectorAll(".doc-item").forEach(el => el.classList.remove("active"));
         const el = document.querySelector(`.doc-item[data-id="${id}"]`);
         if (el) el.classList.add("active");
+        updateCapabilityBadges();
         input.placeholder = `Ask about "${name}"...`;
     }
-    function clearDocumentSelection() { activeDocumentId = null; document.querySelectorAll(".doc-item").forEach(el => el.classList.remove("active")); input.placeholder = PLACEHOLDERS[0]; }
+    function clearDocumentSelection() {
+        sfx.playClick();
+        activeDocumentId = null;
+        document.querySelectorAll(".doc-item").forEach(el => el.classList.remove("active"));
+        updateCapabilityBadges();
+        input.placeholder = PLACEHOLDERS[0];
+    }
     async function uploadFile(file) {
         const fd = new FormData(); fd.append("file", file);
         showToast("Uploading document...", "info");
         try {
             const res = await fetch("/documents/upload", { method: "POST", body: fd });
             const data = await res.json();
-            if (data.success) { loadDocuments(); selectDocument(data.id, data.name); showToast("Document ready!", "success"); }
+            if (data.success) { loadDocuments(); selectDocument(data.id, data.name); showToast("Document ready for RAG! 📄", "success"); }
             else showToast(data.error || "Upload failed", "error");
         } catch (err) { showToast("Upload error", "error"); }
     }
-    document.getElementById('upload-doc-btn').addEventListener('click', () => fileInput.click());
-    document.getElementById('upload-doc-btn-mobile').addEventListener('click', () => fileInput.click());
+    document.getElementById('upload-doc-btn').addEventListener('click', () => { sfx.playClick(); fileInput.click(); });
+    document.getElementById('upload-doc-btn-mobile').addEventListener('click', () => { sfx.playClick(); fileInput.click(); });
     fileInput.addEventListener('change', e => { const f = e.target.files[0]; if (f) uploadFile(f); fileInput.value = ""; });
     docList.addEventListener('click', async e => {
         const btn = e.target.closest('.delete-doc-btn');
@@ -1395,7 +1686,7 @@
             });
         } catch (e) { console.error(e); }
     }
-    document.getElementById('open-memory-btn').addEventListener('click', () => { memoryModal.classList.remove('hidden'); loadMemories(); });
+    document.getElementById('open-memory-btn').addEventListener('click', () => { sfx.playClick(); memoryModal.classList.remove('hidden'); loadMemories(); });
     document.getElementById('memory-close').addEventListener('click', () => memoryModal.classList.add('hidden'));
     memoryModal.addEventListener('click', e => { if (e.target === memoryModal) memoryModal.classList.add('hidden'); });
     document.getElementById('add-memory-btn').addEventListener('click', async () => {
@@ -1413,17 +1704,19 @@
 
     // ---------- SUPPORT ----------
     const supportModal = document.getElementById("support-modal");
-    document.getElementById("open-support-btn").addEventListener("click", () => { supportModal.classList.remove("hidden"); renderUpiQr(); });
+    document.getElementById("open-support-btn").addEventListener("click", () => { sfx.playClick(); supportModal.classList.remove("hidden"); renderUpiQr(); });
     document.getElementById("support-close").addEventListener("click", () => supportModal.classList.add("hidden"));
     supportModal.addEventListener("click", e => { if (e.target === supportModal) supportModal.classList.add("hidden"); });
     document.getElementById("copy-upi-btn").addEventListener("click", function () {
+        sfx.playClick();
         navigator.clipboard.writeText("nejamulhaque@upi");
         this.textContent = "Copied!";
         setTimeout(() => { this.textContent = "Copy"; }, 2000);
     });
 
-    // ---------- INIT ----------
+    // ---------- INITIALIZATION ----------
     document.addEventListener("DOMContentLoaded", () => {
+        initDynamicGreeting();
         document.querySelectorAll(".message-row").forEach(row => {
             const c = row.querySelector(".message-content");
             renderMarkdown(c, c.dataset.content || "");

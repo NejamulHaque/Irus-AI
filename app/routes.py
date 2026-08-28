@@ -1084,71 +1084,174 @@ def admin_dashboard():
         flash('Access denied. Administrators only.', 'error')
         return redirect(url_for('main.index'))
 
+    import platform
+    import sys
+
+    now = datetime.utcnow()
+    yesterday = now - timedelta(days=1)
+    thirty_days_ago = now - timedelta(days=30)
+
+    # Core Counts
+    total_users = User.query.count()
+    total_conversations = Conversation.query.count()
+    total_messages = Message.query.count()
+    total_documents = Document.query.count()
+    total_chunks = DocumentChunk.query.count()
+    total_memories = Memory.query.count()
+    total_errors = ErrorLog.query.count()
+    total_api_keys = APIKey.query.count()
+    total_api_requests = APIRequestLog.query.count()
+    active_pro_users = Subscription.query.filter_by(status='active').filter(
+        (Subscription.expires_at == None) | (Subscription.expires_at > now)
+    ).count()
+
+    # Revenue Metrics
+    total_revenue = db.session.query(func.sum(Subscription.amount)).filter_by(status='active').scalar() or 0
+    revenue_30d = db.session.query(func.sum(Subscription.amount)).filter(
+        Subscription.status == 'active', Subscription.created_at >= thirty_days_ago
+    ).scalar() or 0
+    pending_revenue = db.session.query(func.sum(Subscription.amount)).filter_by(status='pending').scalar() or 0
+
+    # Tokens / Words estimate
+    est_total_tokens = int(total_messages * 180)
+
     stats = {
-        'users': User.query.count(),
-        'conversations': Conversation.query.count(),
-        'messages': Message.query.count(),
-        'documents': Document.query.count(),
-        'memories': Memory.query.count(),
-        'errors': ErrorLog.query.count(),
-        'api_keys': APIKey.query.count(),
-        'api_requests': APIRequestLog.query.count(),
+        'users': total_users,
+        'conversations': total_conversations,
+        'messages': total_messages,
+        'documents': total_documents,
+        'chunks': total_chunks,
+        'memories': total_memories,
+        'errors': total_errors,
+        'api_keys': total_api_keys,
+        'api_requests': total_api_requests,
+        'active_pro_users': active_pro_users,
+        'pro_conversion_pct': round((active_pro_users / max(total_users, 1)) * 100, 1),
+        'total_revenue': total_revenue,
+        'revenue_30d': revenue_30d,
+        'pending_revenue': pending_revenue,
+        'est_total_tokens': est_total_tokens,
     }
 
-    activity = []
-    max_count = 1
-    for i in range(6, -1, -1):
-        day = (datetime.utcnow() - timedelta(days=i)).date()
+    # 14-Day Timeline (Messages, Signups, API calls)
+    timeline_labels = []
+    daily_messages = []
+    daily_signups = []
+    daily_api_reqs = []
+
+    for i in range(13, -1, -1):
+        day = (now - timedelta(days=i)).date()
         start = datetime.combine(day, datetime.min.time())
         end = start + timedelta(days=1)
-        count = Message.query.filter(Message.created_at >= start, Message.created_at < end).count()
-        max_count = max(max_count, count)
-        activity.append({'label': day.strftime('%a'), 'count': count})
-    for d in activity:
-        d['height'] = max(4, int((d['count'] / max_count) * 100))
+        timeline_labels.append(day.strftime('%b %d'))
+        
+        m_count = Message.query.filter(Message.created_at >= start, Message.created_at < end).count()
+        u_count = User.query.filter(User.created_at >= start, User.created_at < end).count()
+        api_count = APIRequestLog.query.filter(APIRequestLog.created_at >= start, APIRequestLog.created_at < end).count()
+        
+        daily_messages.append(m_count)
+        daily_signups.append(u_count)
+        daily_api_reqs.append(api_count)
 
-    signups = []
-    for i in range(6, -1, -1):
-        day = (datetime.utcnow() - timedelta(days=i)).date()
-        start = datetime.combine(day, datetime.min.time())
-        end = start + timedelta(days=1)
-        signups.append({'label': day.strftime('%a'),
-                        'count': User.query.filter(User.created_at >= start, User.created_at < end).count()})
+    # 24-Hour Traffic Distribution
+    hourly_labels = [f"{h:02d}:00" for h in range(24)]
+    hourly_messages = [0] * 24
+    recent_24h_msgs = Message.query.filter(Message.created_at >= yesterday).all()
+    for msg in recent_24h_msgs:
+        hourly_messages[msg.created_at.hour] += 1
 
+    # AI Model Distribution
+    model_counts_raw = db.session.query(User.preferred_model, func.count(User.id)).group_by(User.preferred_model).all()
+    model_labels = [m[0] or 'llama-3.3-70b' for m in model_counts_raw]
+    model_data = [m[1] for m in model_counts_raw]
+
+    # Status Code Distribution for API Platform
+    status_codes_raw = db.session.query(APIRequestLog.status_code, func.count(APIRequestLog.id)).group_by(APIRequestLog.status_code).all()
+    status_labels = [f"HTTP {s[0]}" for s in status_codes_raw]
+    status_data = [s[1] for s in status_codes_raw]
+
+    # API Performance
+    avg_latency = db.session.query(func.avg(APIRequestLog.latency_ms)).scalar() or 0
+    api_stats = {
+        'total_keys': total_api_keys,
+        'total_requests': total_api_requests,
+        'requests_24h': APIRequestLog.query.filter(APIRequestLog.created_at >= yesterday).count(),
+        'error_count': APIRequestLog.query.filter(APIRequestLog.status_code >= 400).count(),
+        'avg_latency_ms': int(avg_latency),
+    }
+
+    # Intelligence & Top items
     most_used_docs = db.session.query(
         Document.original_name, func.count(Message.id).label('uses')
     ).join(Message, Message.document_id == Document.id).group_by(Document.id).order_by(
-        func.count(Message.id).desc()).limit(5).all()
+        func.count(Message.id).desc()).limit(6).all()
 
-    model_usage = db.session.query(User.preferred_model, func.count(User.id)).group_by(User.preferred_model).all()
     top_ips = db.session.query(LoginAudit.ip, func.count(LoginAudit.id).label('hits')).group_by(
-        LoginAudit.ip).order_by(func.count(LoginAudit.id).desc()).limit(5).all()
+        LoginAudit.ip).order_by(func.count(LoginAudit.id).desc()).limit(6).all()
 
-    api_stats = {
-        'total_keys': APIKey.query.count(),
-        'total_requests': APIRequestLog.query.count(),
-        'requests_24h': APIRequestLog.query.filter(
-            APIRequestLog.created_at >= datetime.utcnow() - timedelta(hours=24)).count(),
-        'error_count': APIRequestLog.query.filter(APIRequestLog.status_code >= 400).count(),
-    }
-    recent_api_logs = APIRequestLog.query.order_by(APIRequestLog.created_at.desc()).limit(10).all()
+    recent_api_logs = APIRequestLog.query.order_by(APIRequestLog.created_at.desc()).limit(12).all()
     top_keys = db.session.query(APIKey, func.count(APIRequestLog.id).label('uses')).outerjoin(
         APIRequestLog, APIRequestLog.api_key_id == APIKey.id).group_by(APIKey.id).order_by(
-        func.count(APIRequestLog.id).desc()).limit(5).all()
+        func.count(APIRequestLog.id).desc()).limit(6).all()
 
+    recent_logins = LoginAudit.query.order_by(LoginAudit.created_at.desc()).limit(12).all()
     recent_users = User.query.order_by(User.created_at.desc()).limit(8).all()
-    error_logs = ErrorLog.query.order_by(ErrorLog.created_at.desc()).limit(10).all()
+    error_logs = ErrorLog.query.order_by(ErrorLog.created_at.desc()).limit(15).all()
     all_users = User.query.order_by(User.created_at.desc()).all()
+    all_subscriptions = Subscription.query.order_by(Subscription.created_at.desc()).limit(30).all()
     all_conversations = Conversation.query.order_by(Conversation.updated_at.desc()).limit(20).all()
     active_broadcast = Broadcast.query.filter_by(is_active=True).first()
     pending_subs = Subscription.query.filter_by(status='pending').order_by(Subscription.created_at.desc()).all()
 
+    # System Diagnostics
+    db_size_mb = 0
+    db_path = os.path.join(current_app.root_path, '..', 'instance', 'irus.db')
+    if not os.path.exists(db_path):
+        db_path = os.path.join(current_app.root_path, 'irus.db')
+    if os.path.exists(db_path):
+        db_size_mb = round(os.path.getsize(db_path) / (1024 * 1024), 2)
+
+    system_info = {
+        'os': f"{platform.system()} {platform.release()}",
+        'python_version': platform.python_version(),
+        'db_size_mb': db_size_mb,
+        'groq_model': current_app.config.get('GROQ_MODEL', 'llama-3.1-8b-instant'),
+        'ai_provider': current_app.config.get('AI_PROVIDER', 'groq'),
+        'server_time': now.strftime('%Y-%m-%d %H:%M:%S UTC'),
+    }
+
+    # Chart datasets JSON package
+    charts_json = {
+        'timeline_labels': timeline_labels,
+        'daily_messages': daily_messages,
+        'daily_signups': daily_signups,
+        'daily_api_reqs': daily_api_reqs,
+        'hourly_labels': hourly_labels,
+        'hourly_messages': hourly_messages,
+        'model_labels': model_labels if model_labels else ['llama-3.3-70b-versatile'],
+        'model_data': model_data if model_data else [1],
+        'status_labels': status_labels if status_labels else ['HTTP 200'],
+        'status_data': status_data if status_data else [1],
+    }
+
     return render_template(
-        'admin.html', stats=stats, activity=activity, signups=signups,
-        most_used_docs=most_used_docs, model_usage=model_usage, top_ips=top_ips,
-        api_stats=api_stats, recent_api_logs=recent_api_logs, top_keys=top_keys,
-        recent_users=recent_users, error_logs=error_logs, all_users=all_users,
-        all_conversations=all_conversations, active_broadcast=active_broadcast,
+        'admin.html',
+        stats=stats,
+        system_info=system_info,
+        charts_json=charts_json,
+        most_used_docs=most_used_docs,
+        model_usage=model_counts_raw,
+        top_ips=top_ips,
+        api_stats=api_stats,
+        recent_api_logs=recent_api_logs,
+        top_keys=top_keys,
+        recent_logins=recent_logins,
+        recent_users=recent_users,
+        error_logs=error_logs,
+        all_users=all_users,
+        all_subscriptions=all_subscriptions,
+        all_conversations=all_conversations,
+        active_broadcast=active_broadcast,
         pending_subs=pending_subs
     )
 
@@ -1177,6 +1280,33 @@ def toggle_ban(user_id):
     user.is_banned = not getattr(user, 'is_banned', False)
     db.session.commit()
     return jsonify({'success': True, 'is_banned': user.is_banned})
+
+
+@main.route('/admin/users/<int:user_id>/toggle-pro', methods=['POST'])
+@login_required
+def toggle_user_pro(user_id):
+    if not current_user.is_admin:
+        return jsonify({'error': 'Denied'}), 403
+    user = User.query.get_or_404(user_id)
+    if user.is_pro:
+        # Deactivate active subscriptions
+        Subscription.query.filter_by(user_id=user.id, status='active').update({'status': 'rejected'})
+        db.session.commit()
+        return jsonify({'success': True, 'is_pro': False, 'message': f'Pro revoked from {user.username}'})
+    else:
+        # Create an active 1-year Pro subscription
+        sub = Subscription(
+            user_id=user.id,
+            plan='pro_yearly',
+            amount=999,
+            utr='ADMIN_MANUAL_GRANT',
+            status='active',
+            activated_at=datetime.utcnow(),
+            expires_at=datetime.utcnow() + timedelta(days=365)
+        )
+        db.session.add(sub)
+        db.session.commit()
+        return jsonify({'success': True, 'is_pro': True, 'message': f'1-Year Pro granted to {user.username}'})
 
 
 @main.route('/admin/users/<int:user_id>/delete', methods=['POST'])
@@ -1223,12 +1353,46 @@ def export_users():
         return redirect(url_for('main.index'))
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(['ID', 'Username', 'Email', 'Admin', 'Banned', 'Created'])
+    writer.writerow(['ID', 'Username', 'Email', 'Admin', 'Pro', 'Banned', 'Created'])
     for u in User.query.all():
-        writer.writerow([u.id, u.username, u.email, u.is_admin, getattr(u, 'is_banned', False), u.created_at])
+        writer.writerow([u.id, u.username, u.email, u.is_admin, u.is_pro, getattr(u, 'is_banned', False), u.created_at])
     response = make_response(output.getvalue())
     response.headers['Content-Type'] = 'text/csv'
     response.headers['Content-Disposition'] = 'attachment; filename=users.csv'
+    return response
+
+
+@main.route('/admin/export/subscriptions')
+@login_required
+def export_subscriptions():
+    if not current_user.is_admin:
+        return redirect(url_for('main.index'))
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['ID', 'User ID', 'Username', 'Plan', 'Amount (INR)', 'UTR', 'Status', 'Created At', 'Expires At'])
+    for s in Subscription.query.order_by(Subscription.created_at.desc()).all():
+        u_name = s.user.username if s.user else 'Unknown'
+        writer.writerow([s.id, s.user_id, u_name, s.plan, s.amount, s.utr or '', s.status, s.created_at, s.expires_at or ''])
+    response = make_response(output.getvalue())
+    response.headers['Content-Type'] = 'text/csv'
+    response.headers['Content-Disposition'] = 'attachment; filename=subscriptions.csv'
+    return response
+
+
+@main.route('/admin/export/api-logs')
+@login_required
+def export_api_logs():
+    if not current_user.is_admin:
+        return redirect(url_for('main.index'))
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['ID', 'Time', 'User ID', 'Key Prefix', 'Endpoint', 'Method', 'Status Code', 'Latency (ms)', 'IP'])
+    for l in APIRequestLog.query.order_by(APIRequestLog.created_at.desc()).limit(1000).all():
+        prefix = l.api_key.prefix if l.api_key else ''
+        writer.writerow([l.id, l.created_at, l.user_id or '', prefix, l.endpoint, l.method, l.status_code, l.latency_ms or '', l.ip or ''])
+    response = make_response(output.getvalue())
+    response.headers['Content-Type'] = 'text/csv'
+    response.headers['Content-Disposition'] = 'attachment; filename=api_requests.csv'
     return response
 
 
