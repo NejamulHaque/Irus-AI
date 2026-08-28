@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Background Squircle Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4f46e5" />
+      <stop offset="50%" stop-color="#6366f1" />
+      <stop offset="100%" stop-color="#9333ea" />
+    </linearGradient>
+
+    <!-- Top Gloss Overlay -->
+    <linearGradient id="glossGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Cyan Eye Glow Filter -->
+    <filter id="eyeGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur1" />
+      <feGaussianBlur in="SourceGraphic" stdDeviation="12" result="blur2" />
+      <feMerge>
+        <feMergeNode in="blur2" />
+        <feMergeNode in="blur1" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <!-- Head Outer Aura -->
+    <filter id="headAura" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="14" result="blur" />
+      <feFlood flood-color="#c084fc" flood-opacity="0.6" result="color" />
+      <feComposite in2="blur" operator="in" result="glow" />
+      <feMerge>
+        <feMergeNode in="glow" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <!-- Drop Shadow for Squircle -->
+    <filter id="squircleShadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#4338ca" flood-opacity="0.45" />
+    </filter>
+  </defs>
+
+  <!-- Squircle Base -->
+  <rect x="32" y="32" width="448" height="448" rx="112" ry="112" fill="url(#bgGrad)" filter="url(#squircleShadow)" />
+  <rect x="32" y="32" width="448" height="224" rx="112" ry="112" fill="url(#glossGrad)" />
+
+  <!-- Robot Group with Aura -->
+  <g filter="url(#headAura)">
+    <!-- Antenna Pole & Bulb -->
+    <rect x="246" y="115" width="20" height="45" rx="10" fill="#ffffff" />
+    <circle cx="256" cy="110" r="22" fill="#ffffff" />
+
+    <!-- Left & Right Ear Cushions -->
+    <rect x="110" y="240" width="36" height="76" rx="18" fill="#ffffff" />
+    <rect x="366" y="240" width="36" height="76" rx="18" fill="#ffffff" />
+
+    <!-- Main Helmet Head -->
+    <rect x="132" y="150" width="248" height="230" rx="100" ry="90" fill="#ffffff" />
+    <!-- Lower Chin Taper Curve -->
+    <ellipse cx="256" cy="345" rx="105" ry="70" fill="#ffffff" />
+  </g>
+
+  <!-- Visor Screen -->
+  <rect x="165" y="215" width="182" height="95" rx="34" ry="34" fill="#09090b" stroke="rgba(255,255,255,0.08)" stroke-width="2" />
+
+  <!-- Glowing Cyan Eyes -->
+  <g filter="url(#eyeGlow)">
+    <circle cx="218" cy="262" r="16" fill="#22d3ee" />
+    <circle cx="294" cy="262" r="16" fill="#22d3ee" />
+    <!-- Eye Highlights -->
+    <circle cx="214" cy="258" r="5" fill="#ffffff" opacity="0.9" />
+    <circle cx="290" cy="258" r="5" fill="#ffffff" opacity="0.9" />
+  </g>
+</svg>

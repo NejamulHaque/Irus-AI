@@ -24,7 +24,12 @@
     <meta name="twitter:description" content="Chat, search the live web, analyze PDFs, and generate AI art with zero wait time.">
     <meta name="twitter:image" content="https://irus-ai.onrender.com/static/icons/icon-512.png">
 
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='icons/favicon.svg') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='icons/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='icons/favicon-16x16.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='icons/apple-touch-icon.png') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='icons/favicon.ico') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -869,7 +874,7 @@
                         <ul class="space-y-3 text-xs text-zinc-300">
                             <li class="flex items-center gap-2.5"><i class="fas fa-crown text-amber-400"></i> Everything in Pro Monthly</li>
                             <li class="flex items-center gap-2.5"><i class="fas fa-gift text-purple-400"></i> 2 Months completely free</li>
-                            <li class="flex items-center gap-2.5"><i class="fas fa-sparkles text-amber-400"></i> Early beta access to new models</li>
+                            <li class="flex items-center gap-2.5"><i class="fas fa-wand-magic-sparkles text-amber-400"></i> Early beta access to new models</li>
                             <li class="flex items-center gap-2.5"><i class="fas fa-award text-indigo-400"></i> Founder Supporter Badge on profile</li>
                         </ul>
                     </div>
