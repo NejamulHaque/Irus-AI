@@ -39,7 +39,7 @@
             <div id="document-list" class="space-y-1 max-h-32 overflow-y-auto pr-1 custom-scrollbar">
                 <div class="text-xs text-zinc-600 italic px-1">No documents yet.</div>
             </div>
-            <input type="file" id="file-input" class="hidden" accept=".pdf,.docx,.txt">
+            <input type="file" id="file-input" class="hidden" accept=".pdf,.docx,.doc,.pptx,.ppt,.xlsx,.xls,.csv,.tsv,.txt,.md,.markdown,.rst,.json,.yaml,.yml,.xml,.html,.htm,.toml,.ini,.cfg,.env,.log,.py,.js,.jsx,.ts,.tsx,.css,.scss,.c,.cpp,.h,.hpp,.java,.go,.rs,.php,.rb,.sql,.sh,.bash,.zsh,.odt,.ods,.odp,.epub,.rtf">
         </div>
 
                 <!-- 💳 Plan & usage card -->
@@ -97,9 +97,14 @@
     <!-- ============ MAIN ============ -->
     <main class="flex-1 flex flex-col min-w-0 relative bg-zinc-950">
 
-        <div id="drag-overlay" class="hidden absolute inset-0 z-[60] bg-indigo-600/20 backdrop-blur-sm border-2 border-dashed border-indigo-500 flex-col items-center justify-center pointer-events-none">
-            <i class="fas fa-file-upload text-4xl text-indigo-400 mb-3"></i>
-            <p class="text-sm font-semibold text-white">Drop your document to upload</p>
+        <div id="drag-overlay" class="hidden absolute inset-0 z-[60] bg-zinc-950/85 backdrop-blur-md border-2 border-dashed border-indigo-500 rounded-2xl m-3 flex flex-col items-center justify-center gap-3 pointer-events-none transition-all">
+            <div class="w-16 h-16 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-3xl shadow-lg shadow-indigo-500/20 animate-bounce">
+                <i class="fas fa-file-arrow-up"></i>
+            </div>
+            <div class="text-center">
+                <p class="text-base font-bold text-white">Drop files to attach or analyze with Irus AI</p>
+                <p class="text-xs text-zinc-400 mt-1">PDF · DOCX · PPTX · Excel · CSV · Code · JSON · Markdown · TXT</p>
+            </div>
         </div>
 
         <header class="h-14 border-b border-zinc-900 bg-zinc-950/80 backdrop-blur-md flex items-center justify-between px-3 md:px-6 z-10">
@@ -237,8 +242,11 @@
                     <span id="cap-web" class="hidden capability-chip bg-blue-500/15 border border-blue-500/30 text-blue-300 cursor-pointer hover:bg-blue-500/25 transition-colors">
                         <i class="fas fa-globe text-[10px]"></i><span>Live Web Search Active</span><i class="fas fa-xmark text-[9px] ml-1"></i>
                     </span>
-                    <span id="cap-doc" class="hidden capability-chip bg-purple-500/15 border border-purple-500/30 text-purple-300 cursor-pointer hover:bg-purple-500/25 transition-colors">
-                        <i class="fas fa-file-alt text-[10px]"></i><span id="cap-doc-name">Document Active</span><i class="fas fa-xmark text-[9px] ml-1"></i>
+                    <span id="cap-doc" class="hidden capability-chip bg-purple-500/15 border border-purple-500/30 text-purple-300 transition-colors flex items-center gap-1.5">
+                        <i id="cap-doc-icon" class="fas fa-file-lines text-[10px]"></i>
+                        <span id="cap-doc-name" class="font-medium truncate max-w-[140px]">Document Active</span>
+                        <button id="doc-summary-trigger" class="ml-1 px-1.5 py-0.5 rounded-md bg-purple-500/30 hover:bg-purple-500/50 text-purple-200 text-[9px] font-bold flex items-center gap-1 transition-colors" title="Instant AI Summary & Key Takeaways"><i class="fas fa-bolt text-amber-300 text-[8px]"></i>Summary</button>
+                        <button id="cap-doc-close" class="hover:text-white p-0.5 ml-0.5"><i class="fas fa-xmark text-[9px]"></i></button>
                     </span>
                     <span id="cap-image" class="hidden capability-chip bg-pink-500/15 border border-pink-500/30 text-pink-300 cursor-pointer hover:bg-pink-500/25 transition-colors">
                         <i class="fas fa-palette text-[10px]"></i><span>AI Image Mode Active</span><i class="fas fa-xmark text-[9px] ml-1"></i>
@@ -275,7 +283,8 @@
 
                 <div class="relative bg-zinc-900/90 border border-zinc-800 rounded-2xl md:rounded-3xl shadow-2xl shadow-black/50 backdrop-blur-xl p-1.5 md:p-2 flex flex-wrap items-end gap-1 md:gap-2 focus-within:border-indigo-500/50 transition-all">
                     <textarea id="message-input" rows="1" placeholder='Message Irus... ( type "/" for commands )' class="-order-1 md:order-none w-full md:w-auto md:flex-1 bg-transparent border-none px-1.5 md:px-2 py-2 md:py-2.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none resize-none max-h-32 md:max-h-40 custom-scrollbar"></textarea>
-                    <button id="upload-doc-btn-mobile" class="w-10 h-10 rounded-full hover:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-indigo-400 transition-colors flex-shrink-0 active:scale-95" title="Upload Document"><i class="fas fa-paperclip text-sm"></i></button>
+                    <button id="enhance-prompt-btn" class="w-10 h-10 rounded-full hover:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-amber-400 transition-colors flex-shrink-0 active:scale-95" title="🪄 AI Prompt Enhancer (Polish your prompt)"><i class="fas fa-wand-magic-sparkles text-sm"></i></button>
+                    <button id="upload-doc-btn-mobile" class="w-10 h-10 rounded-full hover:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-indigo-400 transition-colors flex-shrink-0 active:scale-95" title="Upload Document (PDF, DOCX, PPT, Excel, Code, TXT)"><i class="fas fa-paperclip text-sm"></i></button>
                     <button id="upload-image-btn" class="w-10 h-10 rounded-full hover:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-purple-400 transition-colors flex-shrink-0 active:scale-95" title="Attach image (Vision)"><i class="fas fa-image text-sm"></i></button>
                     <input type="file" id="image-input" class="hidden" accept="image/*">
                     <button id="mic-btn" class="w-10 h-10 rounded-full hover:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:text-indigo-400 transition-colors flex-shrink-0 active:scale-95" title="Voice Input"><i class="fas fa-microphone text-sm"></i></button>
@@ -388,6 +397,39 @@
             <a href="https://www.buymeacoffee.com/nejamulhaque" target="_blank" rel="noopener" class="btn bg-amber-500 hover:bg-amber-400 text-black text-sm font-semibold"><i class="fas fa-mug-hot text-xs"></i> Coffee</a>
         </div>
         <button id="support-close" class="text-xs text-zinc-600 hover:text-zinc-300 active:scale-95">Maybe later</button>
+    </div>
+</div>
+
+<div id="doc-summary-modal" class="hidden fixed inset-0 z-[120] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div class="w-full max-w-xl bg-zinc-900 border border-zinc-800 rounded-3xl p-6 md:p-7 shadow-2xl animate-pop max-h-[85vh] flex flex-col relative overflow-hidden">
+        <div class="absolute -top-12 -right-12 w-36 h-36 bg-purple-500/10 rounded-full blur-2xl pointer-events-none"></div>
+        <div class="flex items-center justify-between pb-3 border-b border-zinc-800 relative z-10">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-500/20 to-indigo-500/20 border border-purple-500/30 text-purple-300 flex items-center justify-center text-lg">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-white truncate max-w-xs md:max-w-sm" id="doc-summary-title">Document Intelligence</h3>
+                    <p class="text-[11px] text-zinc-400" id="doc-summary-meta">AI Executive Summary & Suggested Questions</p>
+                </div>
+            </div>
+            <button id="doc-summary-close" class="w-8 h-8 rounded-xl hover:bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center active:scale-95"><i class="fas fa-xmark"></i></button>
+        </div>
+
+        <div id="doc-summary-body" class="my-4 space-y-3 overflow-y-auto custom-scrollbar flex-1 text-xs text-zinc-300 leading-relaxed pr-1 relative z-10">
+            <div class="flex flex-col items-center justify-center py-12 text-zinc-500 gap-3">
+                <i class="fas fa-circle-notch fa-spin text-2xl text-purple-400"></i>
+                <p>Analyzing document semantic structure & generating summary...</p>
+            </div>
+        </div>
+
+        <div class="pt-3 border-t border-zinc-800 flex items-center justify-between relative z-10">
+            <span class="text-[10px] text-zinc-500 font-mono" id="doc-summary-stats"></span>
+            <div class="flex gap-2">
+                <button id="doc-summary-copy-btn" class="btn btn-ghost !min-h-0 !py-2 text-xs"><i class="fas fa-copy mr-1"></i> Copy Summary</button>
+                <button id="doc-summary-ask-btn" class="btn btn-primary !min-h-0 !py-2 text-xs"><i class="fas fa-comment-dots mr-1"></i> Ask Irus</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -624,11 +666,25 @@
     }
 
     // ---------- CAPABILITY BADGES STRIP ----------
+    function getFileIcon(filename) {
+        const ext = ((filename || '').split('.').pop() || '').toLowerCase();
+        if (ext === 'pdf') return { icon: 'fa-file-pdf', color: 'text-red-400' };
+        if (['docx', 'doc', 'odt', 'rtf'].includes(ext)) return { icon: 'fa-file-word', color: 'text-blue-400' };
+        if (['pptx', 'ppt', 'odp'].includes(ext)) return { icon: 'fa-file-powerpoint', color: 'text-amber-500' };
+        if (['xlsx', 'xls', 'csv', 'tsv', 'ods'].includes(ext)) return { icon: 'fa-file-excel', color: 'text-emerald-400' };
+        if (['json', 'yaml', 'yml', 'xml', 'toml', 'ini', 'cfg', 'env'].includes(ext)) return { icon: 'fa-file-lines', color: 'text-yellow-400' };
+        if (['py', 'js', 'ts', 'jsx', 'tsx', 'html', 'htm', 'css', 'scss', 'c', 'cpp', 'java', 'go', 'rs', 'php', 'rb', 'sql', 'sh'].includes(ext)) return { icon: 'fa-file-code', color: 'text-cyan-400' };
+        if (ext === 'epub') return { icon: 'fa-book', color: 'text-purple-400' };
+        return { icon: 'fa-file-lines', color: 'text-purple-400' };
+    }
+
+    // ---------- CAPABILITY BADGES STRIP ----------
     function updateCapabilityBadges() {
         const bar = document.getElementById('active-caps-bar');
         const capWeb = document.getElementById('cap-web');
         const capDoc = document.getElementById('cap-doc');
         const capDocName = document.getElementById('cap-doc-name');
+        const capDocIcon = document.getElementById('cap-doc-icon');
         const capImage = document.getElementById('cap-image');
         const capCompare = document.getElementById('cap-compare');
         if (!bar) return;
@@ -639,8 +695,11 @@
         else capWeb.classList.add('hidden');
 
         if (activeDocumentId) {
-            const activeDocEl = document.querySelector(`.doc-item[data-id="${activeDocumentId}"] span`);
-            capDocName.textContent = activeDocEl ? activeDocEl.textContent : 'Document Attached';
+            const activeDocEl = document.querySelector(`.doc-item[data-id="${activeDocumentId}"]`);
+            const docName = activeDocEl ? (activeDocEl.dataset.name || activeDocEl.querySelector('.doc-title')?.textContent || 'Document') : 'Document';
+            capDocName.textContent = docName;
+            const fi = getFileIcon(docName);
+            if (capDocIcon) capDocIcon.className = `fas ${fi.icon} text-[10px] ${fi.color}`;
             capDoc.classList.remove('hidden');
             anyActive = true;
         } else capDoc.classList.add('hidden');
@@ -656,7 +715,7 @@
     }
 
     document.getElementById('cap-web').addEventListener('click', () => webSearchBtn.click());
-    document.getElementById('cap-doc').addEventListener('click', clearDocumentSelection);
+    document.getElementById('cap-doc-close')?.addEventListener('click', e => { e.stopPropagation(); clearDocumentSelection(); });
     document.getElementById('cap-image').addEventListener('click', toggleImageMode);
     document.getElementById('cap-compare').addEventListener('click', () => compareBtn.click());
 
@@ -1614,24 +1673,49 @@
     });
     renameInput.addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById('rename-save').click(); });
 
-    // ---------- DOCUMENTS ----------
+    // ---------- DOCUMENTS & KNOWLEDGE BASE ----------
     const docList = document.getElementById('document-list');
     const fileInput = document.getElementById('file-input');
+
     async function loadDocuments() {
         try {
-            const res = await fetch("/documents"); const docs = await res.json();
+            const res = await fetch("/documents");
+            const docs = await res.json();
             docList.innerHTML = "";
-            if (!docs.length) { docList.innerHTML = '<div class="text-xs text-zinc-600 italic px-1">No documents yet.</div>'; return; }
+            if (!docs.length) {
+                docList.innerHTML = '<div class="text-xs text-zinc-600 italic px-1">No documents uploaded yet.</div>';
+                return;
+            }
             docs.forEach(doc => {
+                const fi = getFileIcon(doc.name);
                 const div = document.createElement("div");
-                div.className = "doc-item"; div.dataset.id = doc.id;
-                div.innerHTML = `<div class="flex items-center gap-2 truncate flex-1"><i class="fas fa-file-alt text-zinc-600"></i><span class="truncate">${escapeHtml(doc.name)}</span></div>
-                    <button class="delete-doc-btn text-zinc-600 hover:text-red-400 ml-2 p-2" data-id="${doc.id}"><i class="fas fa-trash text-[10px]"></i></button>`;
-                div.addEventListener("click", e => { if (e.target.closest(".delete-doc-btn")) return; selectDocument(doc.id, doc.name); });
+                div.className = "doc-item group";
+                div.dataset.id = doc.id;
+                div.dataset.name = doc.name;
+                const metaStr = doc.words ? `${(doc.words).toLocaleString()} words` : `${doc.chunks || 1} chunks`;
+                div.innerHTML = `
+                    <div class="flex items-center gap-2 truncate flex-1 min-w-0">
+                        <i class="fas ${fi.icon} ${fi.color} text-xs flex-shrink-0"></i>
+                        <div class="truncate flex-1">
+                            <p class="truncate text-xs font-medium text-zinc-300 group-hover:text-white doc-title">${escapeHtml(doc.name)}</p>
+                            <p class="text-[9px] text-zinc-500">${(doc.ext || '').toUpperCase()} · ${metaStr}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center opacity-70 group-hover:opacity-100 transition-opacity">
+                        <button class="summary-doc-btn text-zinc-500 hover:text-purple-400 p-1 mr-0.5 rounded transition-colors" title="AI Summary" data-id="${doc.id}" data-name="${escapeHtml(doc.name)}"><i class="fas fa-bolt text-[10px]"></i></button>
+                        <button class="delete-doc-btn text-zinc-500 hover:text-red-400 p-1 rounded transition-colors" title="Delete document" data-id="${doc.id}"><i class="fas fa-trash text-[10px]"></i></button>
+                    </div>`;
+                div.addEventListener("click", e => {
+                    if (e.target.closest(".delete-doc-btn") || e.target.closest(".summary-doc-btn")) return;
+                    selectDocument(doc.id, doc.name);
+                });
                 docList.appendChild(div);
             });
-        } catch (e) { console.error(e); }
+        } catch (e) {
+            console.error("Error loading documents:", e);
+        }
     }
+
     function selectDocument(id, name) {
         sfx.playClick();
         activeDocumentId = id;
@@ -1639,8 +1723,9 @@
         const el = document.querySelector(`.doc-item[data-id="${id}"]`);
         if (el) el.classList.add("active");
         updateCapabilityBadges();
-        input.placeholder = `Ask about "${name}"...`;
+        input.placeholder = `Ask anything about "${name}"...`;
     }
+
     function clearDocumentSelection() {
         sfx.playClick();
         activeDocumentId = null;
@@ -1648,26 +1733,218 @@
         updateCapabilityBadges();
         input.placeholder = PLACEHOLDERS[0];
     }
+
     async function uploadFile(file) {
-        const fd = new FormData(); fd.append("file", file);
-        showToast("Uploading document...", "info");
+        if (!file) return;
+        const fd = new FormData();
+        fd.append("file", file);
+        showToast(`Uploading ${file.name}... ⏳`, "info");
         try {
             const res = await fetch("/documents/upload", { method: "POST", body: fd });
             const data = await res.json();
-            if (data.success) { loadDocuments(); selectDocument(data.id, data.name); showToast("Document ready for RAG! 📄", "success"); }
-            else showToast(data.error || "Upload failed", "error");
-        } catch (err) { showToast("Upload error", "error"); }
+            if (data.success) {
+                await loadDocuments();
+                selectDocument(data.id, data.name);
+                sfx.playDone();
+                showToast(`"${data.name}" parsed & indexed in Knowledge Base! 📄`, "success");
+            } else {
+                showToast(data.error || "Upload failed", "error");
+            }
+        } catch (err) {
+            showToast("Upload network error", "error");
+        }
     }
+
     document.getElementById('upload-doc-btn').addEventListener('click', () => { sfx.playClick(); fileInput.click(); });
     document.getElementById('upload-doc-btn-mobile').addEventListener('click', () => { sfx.playClick(); fileInput.click(); });
-    fileInput.addEventListener('change', e => { const f = e.target.files[0]; if (f) uploadFile(f); fileInput.value = ""; });
-    docList.addEventListener('click', async e => {
-        const btn = e.target.closest('.delete-doc-btn');
-        if (!btn || !confirm("Delete this document?")) return;
-        await fetch(`/documents/${btn.dataset.id}/delete`, { method: "POST" });
-        if (activeDocumentId == btn.dataset.id) clearDocumentSelection();
-        loadDocuments(); showToast("Document deleted", "success");
+    fileInput.addEventListener('change', e => {
+        const f = e.target.files[0];
+        if (f) uploadFile(f);
+        fileInput.value = "";
     });
+
+    docList.addEventListener('click', async e => {
+        const delBtn = e.target.closest('.delete-doc-btn');
+        if (delBtn) {
+            if (!confirm("Delete this document from knowledge base?")) return;
+            await fetch(`/documents/${delBtn.dataset.id}/delete`, { method: "POST" });
+            if (activeDocumentId == delBtn.dataset.id) clearDocumentSelection();
+            loadDocuments();
+            showToast("Document removed", "success");
+            return;
+        }
+
+        const sumBtn = e.target.closest('.summary-doc-btn');
+        if (sumBtn) {
+            openDocumentSummary(sumBtn.dataset.id, sumBtn.dataset.name);
+            return;
+        }
+    });
+
+    // ---------- DOCUMENT SUMMARY MODAL ----------
+    const docSummaryModal = document.getElementById('doc-summary-modal');
+    const docSummaryTitle = document.getElementById('doc-summary-title');
+    const docSummaryBody = document.getElementById('doc-summary-body');
+    const docSummaryStats = document.getElementById('doc-summary-stats');
+    const docSummaryClose = document.getElementById('doc-summary-close');
+    const docSummaryAskBtn = document.getElementById('doc-summary-ask-btn');
+    const docSummaryCopyBtn = document.getElementById('doc-summary-copy-btn');
+    let currentDocSummaryText = '';
+
+    if (docSummaryClose) docSummaryClose.addEventListener('click', () => docSummaryModal.classList.add('hidden'));
+    if (docSummaryModal) docSummaryModal.addEventListener('click', e => { if (e.target === docSummaryModal) docSummaryModal.classList.add('hidden'); });
+
+    async function openDocumentSummary(docId, docName) {
+        sfx.playClick();
+        if (!docId) return;
+        docSummaryTitle.textContent = docName || 'Document Intelligence';
+        docSummaryBody.innerHTML = `<div class="flex flex-col items-center justify-center py-12 text-zinc-500 gap-3">
+            <i class="fas fa-circle-notch fa-spin text-2xl text-purple-400"></i>
+            <p>Extracting semantic chunks & generating executive summary...</p>
+        </div>`;
+        docSummaryStats.textContent = '';
+        docSummaryModal.classList.remove('hidden');
+        try {
+            const res = await fetch(`/documents/${docId}/summary`);
+            const data = await res.json();
+            if (data.success && data.summary) {
+                currentDocSummaryText = data.summary;
+                renderMarkdown(docSummaryBody, data.summary);
+                docSummaryStats.textContent = `${(data.words || 0).toLocaleString()} words · ${data.chunks || 1} indexed chunks`;
+
+                // Add clickable suggested question handlers inside summary
+                docSummaryBody.querySelectorAll('li').forEach(li => {
+                    const txt = li.textContent.trim();
+                    if (txt.endsWith('?')) {
+                        li.classList.add('cursor-pointer', 'hover:text-indigo-400', 'transition-colors', 'underline', 'decoration-dotted');
+                        li.title = 'Click to ask Irus this question';
+                        li.addEventListener('click', () => {
+                            docSummaryModal.classList.add('hidden');
+                            selectDocument(docId, docName);
+                            input.value = txt;
+                            autoResizeTextarea();
+                            input.focus();
+                        });
+                    }
+                });
+            } else {
+                docSummaryBody.innerHTML = `<div class="p-4 rounded-xl bg-red-950/40 border border-red-800 text-red-300">
+                    ${escapeHtml(data.error || 'Failed to generate document summary')}
+                </div>`;
+            }
+        } catch (err) {
+            docSummaryBody.innerHTML = `<div class="p-4 rounded-xl bg-red-950/40 border border-red-800 text-red-300">Error connecting to document intelligence service.</div>`;
+        }
+    }
+
+    document.getElementById('doc-summary-trigger')?.addEventListener('click', e => {
+        e.stopPropagation();
+        if (activeDocumentId) {
+            const activeDocEl = document.querySelector(`.doc-item[data-id="${activeDocumentId}"]`);
+            const name = activeDocEl ? (activeDocEl.dataset.name || 'Document') : 'Document';
+            openDocumentSummary(activeDocumentId, name);
+        }
+    });
+
+    if (docSummaryAskBtn) {
+        docSummaryAskBtn.addEventListener('click', () => {
+            docSummaryModal.classList.add('hidden');
+            input.value = `Provide key findings and a structured overview of "${docSummaryTitle.textContent}":`;
+            autoResizeTextarea();
+            input.focus();
+        });
+    }
+
+    if (docSummaryCopyBtn) {
+        docSummaryCopyBtn.addEventListener('click', () => {
+            if (currentDocSummaryText) {
+                navigator.clipboard.writeText(currentDocSummaryText);
+                showToast('Summary copied to clipboard! 📋', 'success');
+            }
+        });
+    }
+
+    // ---------- DRAG & DROP FOR ALL FILES (DOCUMENTS & IMAGES) ----------
+    const dragOverlay = document.getElementById('drag-overlay');
+    let dragCounter = 0;
+
+    window.addEventListener('dragenter', e => {
+        e.preventDefault();
+        dragCounter++;
+        if (dragOverlay) dragOverlay.classList.remove('hidden');
+    });
+
+    window.addEventListener('dragleave', e => {
+        e.preventDefault();
+        dragCounter--;
+        if (dragCounter <= 0) {
+            dragCounter = 0;
+            if (dragOverlay) dragOverlay.classList.add('hidden');
+        }
+    });
+
+    window.addEventListener('dragover', e => {
+        e.preventDefault();
+    });
+
+    window.addEventListener('drop', e => {
+        e.preventDefault();
+        dragCounter = 0;
+        if (dragOverlay) dragOverlay.classList.add('hidden');
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            const file = e.dataTransfer.files[0];
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    attachedImage = ev.target.result;
+                    document.getElementById('image-preview').src = attachedImage;
+                    document.getElementById('image-preview-wrap').classList.remove('hidden');
+                    showToast('Image attached for Computer Vision analysis 👁️', 'success');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                uploadFile(file);
+            }
+        }
+    });
+
+    // ---------- PROMPT ENHANCER (MAGIC WAND 🪄) ----------
+    const enhancePromptBtn = document.getElementById('enhance-prompt-btn');
+    if (enhancePromptBtn) {
+        enhancePromptBtn.addEventListener('click', async () => {
+            sfx.playClick();
+            const raw = input.value.trim();
+            if (!raw) {
+                showToast('Type a prompt or draft first, then click to polish! 🪄', 'info');
+                input.focus();
+                return;
+            }
+            enhancePromptBtn.disabled = true;
+            enhancePromptBtn.classList.add('animate-spin', 'text-amber-400');
+            showToast('Polishing prompt with expert AI phrasing... ✨', 'info');
+            try {
+                const res = await fetch('/api/enhance-prompt', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: raw })
+                });
+                const data = await res.json();
+                if (data.success && data.enhanced_prompt) {
+                    input.value = data.enhanced_prompt;
+                    autoResizeTextarea();
+                    sfx.playDone();
+                    showToast('Prompt enhanced with expert depth! 🪄', 'success');
+                } else {
+                    showToast(data.error || 'Failed to enhance prompt', 'error');
+                }
+            } catch (err) {
+                showToast('Prompt enhancement network error', 'error');
+            } finally {
+                enhancePromptBtn.disabled = false;
+                enhancePromptBtn.classList.remove('animate-spin', 'text-amber-400');
+            }
+        });
+    }
 
     // ---------- MEMORIES ----------
     const memoryModal = document.getElementById('memory-modal');

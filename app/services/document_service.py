@@ -1,41 +1,268 @@
 import os
 import io
 import json
+import csv
+import re
+import zipfile
+import xml.etree.ElementTree as ET
 
 import requests
 import numpy as np
 from werkzeug.utils import secure_filename
 from PyPDF2 import PdfReader
 from docx import Document as DocxDocument
+from pptx import Presentation
+from openpyxl import load_workbook
 
 from app.models import db, Document, DocumentChunk
 
-ALLOWED_EXTENSIONS = {'txt', 'pdf', 'docx'}
+ALLOWED_EXTENSIONS = {
+    # Documents & Presentations
+    'pdf', 'docx', 'doc', 'pptx', 'ppt', 'rtf', 'odt', 'odp', 'epub',
+    # Spreadsheets & Tabular Data
+    'xlsx', 'xls', 'csv', 'tsv', 'ods',
+    # Plain Text, Markdown & Documentation
+    'txt', 'md', 'markdown', 'rst', 'log',
+    # Structured Data & Configs
+    'json', 'yaml', 'yml', 'xml', 'toml', 'ini', 'cfg', 'env',
+    # Source Code & Scripts
+    'py', 'js', 'jsx', 'ts', 'tsx', 'html', 'htm', 'css', 'scss',
+    'c', 'cpp', 'h', 'hpp', 'java', 'go', 'rs', 'php', 'rb', 'sql', 'sh', 'bash', 'zsh'
+}
 
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+# ---------- Specialized Format Extractors ----------
+
+def _extract_pdf(stream):
+    reader = PdfReader(stream)
+    pages = []
+    for i, page in enumerate(reader.pages, 1):
+        txt = (page.extract_text() or "").strip()
+        if txt:
+            pages.append(f"[Page {i}]\n{txt}")
+    return "\n\n".join(pages)
+
+
+def _extract_docx(stream):
+    try:
+        doc = DocxDocument(stream)
+        text_parts = []
+        for para in doc.paragraphs:
+            if para.text.strip():
+                text_parts.append(para.text.strip())
+        # Also extract all tables cleanly in markdown format
+        for t_idx, table in enumerate(doc.tables, 1):
+            rows = []
+            for row in table.rows:
+                row_cells = [c.text.strip().replace('\n', ' ') for c in row.cells]
+                if any(row_cells):
+                    rows.append(" | ".join(row_cells))
+            if rows:
+                text_parts.append(f"\n[Table {t_idx}]\n" + "\n".join(rows))
+        return "\n\n".join(text_parts)
+    except Exception:
+        # Fallback for older .doc or XML-based documents
+        stream.seek(0)
+        return _extract_xml_from_zip(stream, 'word/document.xml')
+
+
+def _extract_pptx(stream):
+    try:
+        prs = Presentation(stream)
+        slides_text = []
+        for i, slide in enumerate(prs.slides, 1):
+            slide_content = []
+            title = ""
+            if slide.shapes.title and slide.shapes.title.text:
+                title = f": {slide.shapes.title.text.strip()}"
+            slide_content.append(f"[Slide {i}{title}]")
+
+            for shape in slide.shapes:
+                if shape.has_text_frame and shape != slide.shapes.title:
+                    txt = shape.text.strip()
+                    if txt:
+                        slide_content.append(txt)
+                elif shape.has_table:
+                    t_rows = []
+                    for row in shape.table.rows:
+                        cells = [c.text.strip().replace('\n', ' ') for c in row.cells]
+                        if any(cells):
+                            t_rows.append(" | ".join(cells))
+                    if t_rows:
+                        slide_content.append("\n".join(t_rows))
+
+            # Check for speaker notes
+            try:
+                if slide.has_notes_slide and slide.notes_slide.notes_text_frame.text:
+                    notes = slide.notes_slide.notes_text_frame.text.strip()
+                    if notes:
+                        slide_content.append(f"[Speaker Notes]: {notes}")
+            except Exception:
+                pass
+
+            slides_text.append("\n".join(slide_content))
+        return "\n\n---\n\n".join(slides_text)
+    except Exception:
+        # Fallback XML parsing
+        stream.seek(0)
+        return _extract_xml_from_zip(stream, r'ppt/slides/slide\d+\.xml')
+
+
+def _extract_xlsx(stream):
+    wb = load_workbook(stream, data_only=True)
+    sheets_text = []
+    for sheet_name in wb.sheetnames:
+        ws = wb[sheet_name]
+        rows_content = [f"[Sheet: {sheet_name}]"]
+        row_count = 0
+        for row in ws.iter_rows(values_only=True):
+            if any(row):
+                row_cells = [str(c).strip() if c is not None else "" for c in row]
+                rows_content.append(" | ".join(row_cells))
+                row_count += 1
+                if row_count >= 1000:  # Prevent runaway huge sheets
+                    rows_content.append(f"... [Truncated after {row_count} rows] ...")
+                    break
+        if len(rows_content) > 1:
+            sheets_text.append("\n".join(rows_content))
+    return "\n\n---\n\n".join(sheets_text)
+
+
+def _extract_csv(stream, is_tsv=False):
+    raw = stream.read()
+    content = _decode_bytes(raw)
+    reader = csv.reader(io.StringIO(content), delimiter='\t' if is_tsv else ',')
+    rows = []
+    for row in reader:
+        if any(row):
+            rows.append(" | ".join([c.strip() for c in row]))
+    return "\n".join(rows)
+
+
+def _extract_opendocument(stream):
+    with zipfile.ZipFile(stream) as z:
+        if 'content.xml' in z.namelist():
+            tree = ET.fromstring(z.read('content.xml'))
+            texts = [elem.text.strip() for elem in tree.iter() if elem.text and elem.text.strip()]
+            return "\n\n".join(texts)
+    return ""
+
+
+def _extract_epub(stream):
+    text_parts = []
+    with zipfile.ZipFile(stream) as z:
+        for name in z.namelist():
+            if name.endswith(('.html', '.xhtml', '.htm')):
+                raw = z.read(name)
+                html = _decode_bytes(raw)
+                # Strip HTML tags
+                clean = re.sub(r'<style.*?</style>', '', html, flags=re.DOTALL)
+                clean = re.sub(r'<script.*?</script>', '', clean, flags=re.DOTALL)
+                clean = re.sub(r'<[^>]+>', ' ', clean)
+                clean = re.sub(r'\s+', ' ', clean).strip()
+                if clean:
+                    text_parts.append(clean)
+    return "\n\n".join(text_parts)
+
+
+def _extract_rtf(stream):
+    raw = stream.read()
+    text = _decode_bytes(raw)
+    text = re.sub(r'\\par[d]?', '\n', text)
+    text = re.sub(r'\\tab', '\t', text)
+    text = re.sub(r'\\[a-zA-Z0-9]+ ?', '', text)
+    text = re.sub(r'[{}]', '', text)
+    return "\n".join([line.strip() for line in text.splitlines() if line.strip()])
+
+
+def _extract_html(stream):
+    raw = stream.read()
+    html = _decode_bytes(raw)
+    clean = re.sub(r'<style.*?</style>', '', html, flags=re.DOTALL)
+    clean = re.sub(r'<script.*?</script>', '', clean, flags=re.DOTALL)
+    clean = re.sub(r'<br\s*/?>', '\n', clean)
+    clean = re.sub(r'</p>', '\n\n', clean)
+    clean = re.sub(r'</div>', '\n', clean)
+    clean = re.sub(r'<[^>]+>', ' ', clean)
+    return "\n".join([line.strip() for line in clean.splitlines() if line.strip()])
+
+
+def _extract_structured_data(stream, ext):
+    raw = stream.read()
+    text = _decode_bytes(raw)
+    if ext == 'json':
+        try:
+            parsed = json.loads(text)
+            return f"[JSON Structure]\n" + json.dumps(parsed, indent=2)
+        except Exception:
+            return text
+    return text
+
+
+def _extract_plain_text(stream):
+    raw = stream.read()
+    return _decode_bytes(raw)
+
+
+def _decode_bytes(b):
+    for enc in ('utf-8', 'utf-16', 'latin-1', 'cp1252'):
+        try:
+            return b.decode(enc)
+        except (UnicodeDecodeError, Exception):
+            continue
+    return b.decode('utf-8', errors='ignore')
+
+
+def _extract_xml_from_zip(stream, pattern):
+    try:
+        with zipfile.ZipFile(stream) as z:
+            texts = []
+            for name in z.namelist():
+                if re.search(pattern, name):
+                    tree = ET.fromstring(z.read(name))
+                    texts.extend([elem.text.strip() for elem in tree.iter() if elem.text and elem.text.strip()])
+            return "\n\n".join(texts)
+    except Exception:
+        return ""
+
+
 def extract_text(stream, filename):
-    """Extract text from an in-memory file stream."""
-    ext = filename.rsplit('.', 1)[1].lower()
-    text = ""
+    """Extract text from any supported document stream."""
+    ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else 'txt'
     try:
         if ext == 'pdf':
-            reader = PdfReader(stream)
-            for page in reader.pages:
-                text += (page.extract_text() or "") + "\n"
-        elif ext == 'docx':
-            doc = DocxDocument(stream)
-            for para in doc.paragraphs:
-                text += para.text + "\n"
-        elif ext == 'txt':
-            text = stream.read().decode('utf-8', errors='ignore')
+            return _extract_pdf(stream).strip()
+        elif ext in ('docx', 'doc'):
+            return _extract_docx(stream).strip()
+        elif ext in ('pptx', 'ppt'):
+            return _extract_pptx(stream).strip()
+        elif ext in ('xlsx', 'xls'):
+            return _extract_xlsx(stream).strip()
+        elif ext in ('csv', 'tsv'):
+            return _extract_csv(stream, is_tsv=(ext == 'tsv')).strip()
+        elif ext in ('odt', 'ods', 'odp'):
+            return _extract_opendocument(stream).strip()
+        elif ext == 'epub':
+            return _extract_epub(stream).strip()
+        elif ext == 'rtf':
+            return _extract_rtf(stream).strip()
+        elif ext in ('html', 'htm'):
+            return _extract_html(stream).strip()
+        elif ext in ('json', 'yaml', 'yml', 'xml', 'toml', 'ini', 'cfg', 'env'):
+            return _extract_structured_data(stream, ext).strip()
+        else:
+            return _extract_plain_text(stream).strip()
     except Exception as e:
-        print(f"Error extracting text: {e}")
-        return ""
-    return text.strip()
+        print(f"Error extracting text from {filename}: {e}")
+        try:
+            stream.seek(0)
+            return _extract_plain_text(stream).strip()
+        except Exception:
+            return ""
 
 
 def chunk_text(text, chunk_size=1000, overlap=200):

@@ -886,7 +886,68 @@ def delete_document(doc_id):
 @login_required
 def list_documents():
     docs = Document.query.filter_by(user_id=current_user.id).order_by(Document.created_at.desc()).all()
-    return jsonify([{'id': d.id, 'name': d.original_name, 'date': d.created_at.strftime('%Y-%m-%d')} for d in docs])
+    res = []
+    for d in docs:
+        ext = d.original_name.rsplit('.', 1)[1].lower() if '.' in d.original_name else 'txt'
+        chunks_count = len(d.chunks)
+        word_count = sum(len(c.content.split()) for c in d.chunks)
+        res.append({
+            'id': d.id,
+            'name': d.original_name,
+            'ext': ext,
+            'chunks': chunks_count,
+            'words': word_count,
+            'date': d.created_at.strftime('%Y-%m-%d')
+        })
+    return jsonify(res)
+
+
+@main.route('/documents/<int:doc_id>/summary')
+@login_required
+def document_summary(doc_id):
+    doc = Document.query.filter_by(id=doc_id, user_id=current_user.id).first()
+    if not doc or not doc.chunks:
+        return jsonify({'error': 'Document not found or empty'}), 404
+    sample_text = "\n\n".join([c.content for c in doc.chunks[:4]])[:3500]
+    prompt = (
+        f"You are Irus AI Document Intelligence. Analyze this document titled '{doc.original_name}' "
+        f"and provide:\n1. A high-impact 3-bullet Executive Summary\n2. Key Topics/Takeaways\n"
+        f"3. 3 suggested questions the user can ask.\n\nDocument excerpt:\n{sample_text}"
+    )
+    try:
+        summary_res = ai_service.get_chat_response([{'role': 'user', 'content': prompt}])
+        return jsonify({
+            'success': True,
+            'name': doc.original_name,
+            'summary': summary_res,
+            'chunks': len(doc.chunks),
+            'words': sum(len(c.content.split()) for c in doc.chunks)
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@main.route('/api/enhance-prompt', methods=['POST'])
+@login_required
+@limiter.limit("20 per minute")
+def enhance_prompt():
+    data = request.get_json() or {}
+    user_prompt = (data.get('prompt') or '').strip()
+    if not user_prompt:
+        return jsonify({'error': 'Prompt is required'}), 400
+    system_instruction = (
+        "You are an elite prompt engineer. Rewrite the user's input into a crystal-clear, detailed, "
+        "expert-level prompt optimized for maximum reasoning depth, accuracy, and formatting. "
+        "Output ONLY the refined prompt text, with NO explanations, quotes, or introductory preamble."
+    )
+    try:
+        enhanced = ai_service.get_chat_response([
+            {'role': 'system', 'content': system_instruction},
+            {'role': 'user', 'content': user_prompt}
+        ])
+        return jsonify({'success': True, 'enhanced_prompt': enhanced.strip()})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 # -----------------------
