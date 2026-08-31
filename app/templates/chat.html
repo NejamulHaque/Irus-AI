@@ -632,8 +632,8 @@
         mobileOverlay.classList.toggle("hidden");
         document.body.style.overflow = sidebar.classList.contains("-translate-x-full") ? "" : "hidden";
     }
-    document.getElementById("sidebar-toggle").addEventListener("click", toggleMobileSidebar);
-    mobileOverlay.addEventListener("click", toggleMobileSidebar);
+    document.getElementById("sidebar-toggle")?.addEventListener("click", toggleMobileSidebar);
+    mobileOverlay?.addEventListener("click", toggleMobileSidebar);
 
     // ---------- CONNECTION ----------
     const connDot = document.getElementById("conn-dot");
@@ -651,9 +651,9 @@
 
     // ---------- SHORTCUTS ----------
     const shortcutsModal = document.getElementById("shortcuts-modal");
-    document.getElementById("shortcuts-btn").addEventListener("click", () => { sfx.playClick(); shortcutsModal.classList.remove("hidden"); });
-    document.getElementById("shortcuts-close").addEventListener("click", () => shortcutsModal.classList.add("hidden"));
-    shortcutsModal.addEventListener("click", e => { if (e.target === shortcutsModal) shortcutsModal.classList.add("hidden"); });
+    document.getElementById("shortcuts-btn")?.addEventListener("click", () => { sfx.playClick(); shortcutsModal.classList.remove("hidden"); });
+    document.getElementById("shortcuts-close")?.addEventListener("click", () => shortcutsModal.classList.add("hidden"));
+    shortcutsModal?.addEventListener("click", e => { if (e.target === shortcutsModal) shortcutsModal.classList.add("hidden"); });
 
     // ---------- DYNAMIC GREETING ----------
     function initDynamicGreeting() {
@@ -714,10 +714,10 @@
         else { bar.classList.add('hidden'); bar.classList.remove('flex'); }
     }
 
-    document.getElementById('cap-web').addEventListener('click', () => webSearchBtn.click());
+    document.getElementById('cap-web')?.addEventListener('click', () => webSearchBtn.click());
     document.getElementById('cap-doc-close')?.addEventListener('click', e => { e.stopPropagation(); clearDocumentSelection(); });
-    document.getElementById('cap-image').addEventListener('click', toggleImageMode);
-    document.getElementById('cap-compare').addEventListener('click', () => compareBtn.click());
+    document.getElementById('cap-image')?.addEventListener('click', toggleImageMode);
+    document.getElementById('cap-compare')?.addEventListener('click', () => compareBtn.click());
 
     function triggerSearchPrompt() {
         sfx.playClick();
@@ -816,13 +816,13 @@
     }
 
     // ---------- SCROLL ----------
-    chatBox.addEventListener("scroll", () => {
+    chatBox?.addEventListener("scroll", () => {
         const dist = chatBox.scrollHeight - chatBox.scrollTop - chatBox.clientHeight;
         stickToBottom = dist < 150;
         scrollBtn.classList.toggle("hidden", dist < 200);
         scrollBtn.classList.toggle("flex", dist >= 200);
     });
-    scrollBtn.addEventListener("click", () => { sfx.playClick(); chatBox.scrollTop = chatBox.scrollHeight; });
+    scrollBtn?.addEventListener("click", () => { sfx.playClick(); chatBox.scrollTop = chatBox.scrollHeight; });
     function scrollToBottom(force = false) { if (force || stickToBottom) chatBox.scrollTop = chatBox.scrollHeight; }
     function removeEmptyState() { const e = document.getElementById("empty-state"); if (e) e.remove(); }
 
@@ -976,7 +976,7 @@
         updateCapabilityBadges();
         showToast(imageMode ? "Image generation enabled 🎨" : "Image generation disabled", "info");
     }
-    webSearchBtn.addEventListener("click", () => {
+    webSearchBtn?.addEventListener("click", () => {
         sfx.playClick();
         webSearchEnabled = !webSearchEnabled;
         webSearchBtn.classList.toggle("text-indigo-400", webSearchEnabled);
@@ -985,7 +985,7 @@
         updateCapabilityBadges();
         showToast(webSearchEnabled ? "Web search enabled 🌐" : "Web search disabled", "info");
     });
-    compareBtn.addEventListener("click", () => {
+    compareBtn?.addEventListener("click", () => {
         sfx.playClick();
         {% if not current_user.is_pro %}
         showToast('Model comparison is a Pro feature. <a href="/pricing" class="underline text-amber-400">Upgrade now</a>', 'info');
@@ -1004,9 +1004,9 @@
     const imagePreviewWrap = document.getElementById("image-preview-wrap");
     const imagePreview = document.getElementById("image-preview");
     function clearImage() { attachedImage = null; imageInput.value = ""; imagePreviewWrap.classList.add("hidden"); autoResizeTextarea(); }
-    document.getElementById("upload-image-btn").addEventListener("click", () => { sfx.playClick(); imageInput.click(); });
-    document.getElementById("image-remove").addEventListener("click", clearImage);
-    imageInput.addEventListener("change", e => {
+    document.getElementById("upload-image-btn")?.addEventListener("click", () => { sfx.playClick(); imageInput.click(); });
+    document.getElementById("image-remove")?.addEventListener("click", clearImage);
+    imageInput?.addEventListener("change", e => {
         const file = e.target.files[0];
         if (!file) return;
         if (!file.type.startsWith("image/")) { showToast("Please choose an image file.", "error"); return; }
@@ -1041,7 +1041,7 @@
         if (amount) upi += "&am=" + amount;
         new QRCode(box, { text: upi, width: 116, height: 116, colorDark: "#09090b", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M });
     }
-    document.getElementById("qr-generate").addEventListener("click", renderUpiQr);
+    document.getElementById("qr-generate")?.addEventListener("click", renderUpiQr);
 
     // ---------- SHARE ----------
     const shareModal = document.getElementById("share-modal");
@@ -1055,10 +1055,10 @@
         if (on) shareUrlInput.value = location.origin + "/share/" + shareToken;
         document.getElementById("share-toggle-btn").innerHTML = on ? '<i class="fas fa-link-slash mr-1"></i> Disable Public Link' : '<i class="fas fa-link mr-1"></i> Create Public Link';
     }
-    document.getElementById("share-chat-btn").addEventListener("click", () => { sfx.playClick(); renderShareModal(); shareModal.classList.remove("hidden"); });
-    document.getElementById("share-close").addEventListener("click", () => shareModal.classList.add("hidden"));
-    shareModal.addEventListener("click", e => { if (e.target === shareModal) shareModal.classList.add("hidden"); });
-    document.getElementById("share-toggle-btn").addEventListener("click", async () => {
+    document.getElementById("share-chat-btn")?.addEventListener("click", () => { sfx.playClick(); renderShareModal(); shareModal.classList.remove("hidden"); });
+    document.getElementById("share-close")?.addEventListener("click", () => shareModal.classList.add("hidden"));
+    shareModal?.addEventListener("click", e => { if (e.target === shareModal) shareModal.classList.add("hidden"); });
+    document.getElementById("share-toggle-btn")?.addEventListener("click", async () => {
         sfx.playClick();
         if (shareToken) {
             if (!confirm("Disable this public link?")) return;
@@ -1070,7 +1070,7 @@
             if (res.ok) { shareToken = data.token; showToast("Public link created!", "success"); renderShareModal(); }
         }
     });
-    document.getElementById("share-copy-btn").addEventListener("click", () => { sfx.playClick(); navigator.clipboard.writeText(shareUrlInput.value); showToast("Link copied!", "success"); });
+    document.getElementById("share-copy-btn")?.addEventListener("click", () => { sfx.playClick(); navigator.clipboard.writeText(shareUrlInput.value); showToast("Link copied!", "success"); });
 
     // ---------- TEXT-TO-SPEECH ----------
     let activeSpeakBtn = null, lastSpeakText = "";
@@ -1179,8 +1179,8 @@
         if (activeSpeakBtn && lastSpeakText) { const b = activeSpeakBtn; stopSpeaking(); handleSpeak(b, lastSpeakText); }
     }
 
-    document.getElementById('speak-stop-btn').addEventListener('click', stopSpeaking);
-    document.getElementById('voice-gender-btn').addEventListener('click', () => {
+    document.getElementById('speak-stop-btn')?.addEventListener('click', stopSpeaking);
+    document.getElementById('voice-gender-btn')?.addEventListener('click', () => {
         sfx.playClick();
         voiceGender = voiceGender === 'female' ? 'male' : 'female';
         localStorage.setItem('irus_voice_gender', voiceGender);
@@ -1188,7 +1188,7 @@
         showToast(`Voice set to ${voiceGender} ${voiceGender === 'female' ? '♀' : '♂'}`, 'info');
         if (activeSpeakBtn && lastSpeakText) { const b = activeSpeakBtn; stopSpeaking(); handleSpeak(b, lastSpeakText); }
     });
-    document.getElementById('voice-lang-btn').addEventListener('click', cycleLang);
+    document.getElementById('voice-lang-btn')?.addEventListener('click', cycleLang);
 
     updateGenderIcon();
     updateLangBtn();
@@ -1376,7 +1376,7 @@
         a.click(); URL.revokeObjectURL(a.href);
         showToast('Chat exported as Markdown!', 'success');
     }
-    document.getElementById('export-chat-btn').addEventListener('click', exportChat);
+    document.getElementById('export-chat-btn')?.addEventListener('click', exportChat);
 
     // ---------- FOLDERS & CONVERSATIONS ----------
     async function loadConversations() {
@@ -1428,17 +1428,17 @@
         folderModal.classList.remove("hidden"); folderInput.focus();
     }
     function closeFolderModal() { folderModal.classList.add("hidden"); folderTargetId = null; }
-    document.getElementById("folder-cancel").addEventListener("click", closeFolderModal);
-    folderModal.addEventListener("click", e => { if (e.target === folderModal) closeFolderModal(); });
-    document.getElementById("folder-save").addEventListener("click", async () => {
+    document.getElementById("folder-cancel")?.addEventListener("click", closeFolderModal);
+    folderModal?.addEventListener("click", e => { if (e.target === folderModal) closeFolderModal(); });
+    document.getElementById("folder-save")?.addEventListener("click", async () => {
         if (!folderTargetId) return;
         const folder = folderInput.value.trim();
         const res = await fetch(`/chat/${folderTargetId}/folder`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ folder }) });
         if (res.ok) { showToast(folder ? `Moved to "${folder}"` : "Moved to Uncategorized", "success"); closeFolderModal(); loadConversations(); }
     });
-    folderInput.addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById("folder-save").click(); if (e.key === "Escape") closeFolderModal(); });
+    folderInput?.addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById("folder-save").click(); if (e.key === "Escape") closeFolderModal(); });
 
-    document.getElementById("conversation-list").addEventListener("click", async e => {
+    document.getElementById("conversation-list")?.addEventListener("click", async e => {
         const renameBtn = e.target.closest(".rename-chat-btn");
         if (renameBtn) { const item = renameBtn.closest(".conversation-item"); renameConversationId = item.dataset.conversationId; document.getElementById("rename-input").value = item.dataset.title || ""; document.getElementById("rename-modal").classList.remove("hidden"); document.getElementById("rename-input").focus(); return; }
         const moveBtn = e.target.closest(".move-to-folder-btn");
@@ -1466,7 +1466,8 @@
     const SLASH_COMMANDS = [
         { cmd: '/web', icon: 'fa-globe', desc: 'Toggle live web search', action: () => webSearchBtn.click() },
         { cmd: '/compare', icon: 'fa-code-branch', desc: 'Compare models side-by-side', action: () => compareBtn.click() },
-        { cmd: '/image', icon: 'fa-wand-magic-sparkles', desc: 'Toggle AI image generation', action: toggleImageMode },
+        { cmd: '/image', icon: 'fa-wand-magic-sparkles', desc: 'Toggle AI image generator (Flux Realism)', action: toggleImageMode },
+        { cmd: '/realistic', icon: 'fa-camera', desc: 'Generate 8K photorealistic image', action: () => { if (!imageMode) toggleImageMode(); input.value = '8k photorealistic award-winning national geographic photo of '; autoResizeTextarea(); input.focus(); } },
         { cmd: '/doc', icon: 'fa-paperclip', desc: 'Upload a document', action: () => document.getElementById('file-input').click() },
         { cmd: '/remember', icon: 'fa-brain', desc: 'Save a memory', action: () => { input.value = 'Remember that '; input.focus(); } },
         { cmd: '/code', icon: 'fa-code', desc: 'Generate code', action: () => { input.value = 'Write clean, well-commented code for: '; input.focus(); } },
@@ -1524,8 +1525,8 @@
     }
     function openPalette() { sfx.playClick(); palette.classList.remove("hidden"); paletteInput.value = ""; renderPalette(""); paletteInput.focus(); }
     function closePalette() { palette.classList.add("hidden"); }
-    paletteInput.addEventListener("input", () => renderPalette(paletteInput.value));
-    palette.addEventListener("click", e => { if (e.target === palette) closePalette(); });
+    paletteInput?.addEventListener("input", () => renderPalette(paletteInput.value));
+    palette?.addEventListener("click", e => { if (e.target === palette) closePalette(); });
 
     // ---------- KEYBOARD ----------
     document.addEventListener("keydown", e => {
@@ -1542,20 +1543,45 @@
         if (!palette.classList.contains("hidden") && e.key === "Enter") { e.preventDefault(); const first = paletteList.querySelector("button"); if (first) first.click(); }
     });
 
-    // ---------- DRAG & DROP ----------
-    const mainEl = document.querySelector("main");
+    // ---------- DRAG & DROP FOR ALL FILES (DOCUMENTS & IMAGES) ----------
     let dragCounter = 0;
-    mainEl.addEventListener("dragenter", e => { e.preventDefault(); dragCounter++; dragOverlay.classList.remove("hidden"); dragOverlay.classList.add("flex"); });
-    mainEl.addEventListener("dragover", e => e.preventDefault());
-    mainEl.addEventListener("dragleave", () => { dragCounter--; if (dragCounter <= 0) { dragCounter = 0; dragOverlay.classList.add("hidden"); dragOverlay.classList.remove("flex"); } });
-    mainEl.addEventListener("drop", e => {
-        e.preventDefault(); dragCounter = 0; dragOverlay.classList.add("hidden"); dragOverlay.classList.remove("flex");
-        const file = e.dataTransfer.files[0];
-        if (file) uploadFile(file);
+    window.addEventListener("dragenter", e => {
+        e.preventDefault();
+        dragCounter++;
+        if (dragOverlay) { dragOverlay.classList.remove("hidden"); dragOverlay.classList.add("flex"); }
+    });
+    window.addEventListener("dragover", e => e.preventDefault());
+    window.addEventListener("dragleave", () => {
+        dragCounter--;
+        if (dragCounter <= 0) {
+            dragCounter = 0;
+            if (dragOverlay) { dragOverlay.classList.add("hidden"); dragOverlay.classList.remove("flex"); }
+        }
+    });
+    window.addEventListener("drop", e => {
+        e.preventDefault();
+        dragCounter = 0;
+        if (dragOverlay) { dragOverlay.classList.add("hidden"); dragOverlay.classList.remove("flex"); }
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            const file = e.dataTransfer.files[0];
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    attachedImage = ev.target.result;
+                    document.getElementById('image-preview').src = attachedImage;
+                    document.getElementById('image-preview-wrap').classList.remove('hidden');
+                    showToast('Image attached for Computer Vision analysis 👁️', 'success');
+                    autoResizeTextarea();
+                };
+                reader.readAsDataURL(file);
+            } else {
+                uploadFile(file);
+            }
+        }
     });
 
     // ---------- INPUT EVENTS ----------
-    sendBtn.addEventListener("click", () => {
+    sendBtn?.addEventListener("click", () => {
         const msg = input.value.trim();
         if (msg || attachedImage) {
             input.value = ""; autoResizeTextarea(); slashMenu.classList.add("hidden");
@@ -1563,21 +1589,21 @@
             else sendChat({ mode: "send", message: msg });
         }
     });
-    stopBtn.addEventListener("click", () => { if (controller) controller.abort(); });
-    input.addEventListener("keydown", e => {
+    stopBtn?.addEventListener("click", () => { if (controller) controller.abort(); });
+    input?.addEventListener("keydown", e => {
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             if (!slashMenu.classList.contains("hidden")) { const first = slashList.querySelector("button"); if (first) { first.click(); return; } }
             sendBtn.click();
         }
     });
-    input.addEventListener("input", () => {
+    input?.addEventListener("input", () => {
         autoResizeTextarea();
         if (input.value.startsWith("/")) renderSlashMenu(input.value.slice(1));
         else slashMenu.classList.add("hidden");
     });
 
-    chatBox.addEventListener("click", e => {
+    chatBox?.addEventListener("click", e => {
         const row = e.target.closest(".message-row");
         if (!row) return;
         const text = row.querySelector(".message-content").innerText;
@@ -1621,7 +1647,7 @@
     });
 
     // ---------- SEARCH HISTORY ----------
-    document.getElementById('conversation-search').addEventListener('input', function () {
+    document.getElementById('conversation-search')?.addEventListener('input', function () {
         const q = this.value.toLowerCase().trim();
         let visible = 0;
         document.querySelectorAll('.conversation-item').forEach(item => {
@@ -1634,7 +1660,7 @@
     });
 
     // ---------- TITLE CLICK-RENAME + PWA INSTALL ----------
-    document.getElementById("conversation-title").addEventListener("click", () => {
+    document.getElementById("conversation-title")?.addEventListener("click", () => {
         sfx.playClick();
         renameConversationId = conversationId;
         renameInput.value = document.getElementById("conversation-title-text").textContent.trim();
@@ -1648,7 +1674,7 @@
         deferredPrompt = e;
         document.getElementById('install-app-btn').classList.remove('hidden');
     });
-    document.getElementById('install-app-btn').addEventListener('click', async () => {
+    document.getElementById('install-app-btn')?.addEventListener('click', async () => {
         if (!deferredPrompt) return;
         deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
@@ -1659,9 +1685,9 @@
     // ---------- RENAME ----------
     const renameModal = document.getElementById('rename-modal');
     const renameInput = document.getElementById('rename-input');
-    document.getElementById('rename-cancel').addEventListener('click', () => renameModal.classList.add('hidden'));
-    renameModal.addEventListener('click', e => { if (e.target === renameModal) renameModal.classList.add("hidden"); });
-    document.getElementById('rename-save').addEventListener('click', async () => {
+    document.getElementById('rename-cancel')?.addEventListener('click', () => renameModal.classList.add('hidden'));
+    renameModal?.addEventListener('click', e => { if (e.target === renameModal) renameModal.classList.add("hidden"); });
+    document.getElementById('rename-save')?.addEventListener('click', async () => {
         const title = renameInput.value.trim();
         if (!title || !renameConversationId) return;
         const res = await fetch(`/chat/${renameConversationId}/rename`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title }) });
@@ -1671,7 +1697,7 @@
             renameModal.classList.add('hidden'); showToast("Chat renamed!", "success"); loadConversations();
         } else showToast(data.error || "Rename failed", "error");
     });
-    renameInput.addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById('rename-save').click(); });
+    renameInput?.addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById('rename-save').click(); });
 
     // ---------- DOCUMENTS & KNOWLEDGE BASE ----------
     const docList = document.getElementById('document-list');
@@ -1755,15 +1781,15 @@
         }
     }
 
-    document.getElementById('upload-doc-btn').addEventListener('click', () => { sfx.playClick(); fileInput.click(); });
-    document.getElementById('upload-doc-btn-mobile').addEventListener('click', () => { sfx.playClick(); fileInput.click(); });
-    fileInput.addEventListener('change', e => {
+    document.getElementById('upload-doc-btn')?.addEventListener('click', () => { sfx.playClick(); fileInput.click(); });
+    document.getElementById('upload-doc-btn-mobile')?.addEventListener('click', () => { sfx.playClick(); fileInput.click(); });
+    fileInput?.addEventListener('change', e => {
         const f = e.target.files[0];
         if (f) uploadFile(f);
         fileInput.value = "";
     });
 
-    docList.addEventListener('click', async e => {
+    docList?.addEventListener('click', async e => {
         const delBtn = e.target.closest('.delete-doc-btn');
         if (delBtn) {
             if (!confirm("Delete this document from knowledge base?")) return;
@@ -1791,7 +1817,7 @@
     const docSummaryCopyBtn = document.getElementById('doc-summary-copy-btn');
     let currentDocSummaryText = '';
 
-    if (docSummaryClose) docSummaryClose.addEventListener('click', () => docSummaryModal.classList.add('hidden'));
+    if (docSummaryClose) docSummaryClose?.addEventListener('click', () => docSummaryModal.classList.add('hidden'));
     if (docSummaryModal) docSummaryModal.addEventListener('click', e => { if (e.target === docSummaryModal) docSummaryModal.classList.add('hidden'); });
 
     async function openDocumentSummary(docId, docName) {
@@ -1847,7 +1873,7 @@
     });
 
     if (docSummaryAskBtn) {
-        docSummaryAskBtn.addEventListener('click', () => {
+        docSummaryAskBtn?.addEventListener('click', () => {
             docSummaryModal.classList.add('hidden');
             input.value = `Provide key findings and a structured overview of "${docSummaryTitle.textContent}":`;
             autoResizeTextarea();
@@ -1856,7 +1882,7 @@
     }
 
     if (docSummaryCopyBtn) {
-        docSummaryCopyBtn.addEventListener('click', () => {
+        docSummaryCopyBtn?.addEventListener('click', () => {
             if (currentDocSummaryText) {
                 navigator.clipboard.writeText(currentDocSummaryText);
                 showToast('Summary copied to clipboard! 📋', 'success');
@@ -1864,54 +1890,10 @@
         });
     }
 
-    // ---------- DRAG & DROP FOR ALL FILES (DOCUMENTS & IMAGES) ----------
-    const dragOverlay = document.getElementById('drag-overlay');
-    let dragCounter = 0;
-
-    window.addEventListener('dragenter', e => {
-        e.preventDefault();
-        dragCounter++;
-        if (dragOverlay) dragOverlay.classList.remove('hidden');
-    });
-
-    window.addEventListener('dragleave', e => {
-        e.preventDefault();
-        dragCounter--;
-        if (dragCounter <= 0) {
-            dragCounter = 0;
-            if (dragOverlay) dragOverlay.classList.add('hidden');
-        }
-    });
-
-    window.addEventListener('dragover', e => {
-        e.preventDefault();
-    });
-
-    window.addEventListener('drop', e => {
-        e.preventDefault();
-        dragCounter = 0;
-        if (dragOverlay) dragOverlay.classList.add('hidden');
-        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-            const file = e.dataTransfer.files[0];
-            if (file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = ev => {
-                    attachedImage = ev.target.result;
-                    document.getElementById('image-preview').src = attachedImage;
-                    document.getElementById('image-preview-wrap').classList.remove('hidden');
-                    showToast('Image attached for Computer Vision analysis 👁️', 'success');
-                };
-                reader.readAsDataURL(file);
-            } else {
-                uploadFile(file);
-            }
-        }
-    });
-
     // ---------- PROMPT ENHANCER (MAGIC WAND 🪄) ----------
     const enhancePromptBtn = document.getElementById('enhance-prompt-btn');
     if (enhancePromptBtn) {
-        enhancePromptBtn.addEventListener('click', async () => {
+        enhancePromptBtn?.addEventListener('click', async () => {
             sfx.playClick();
             const raw = input.value.trim();
             if (!raw) {
@@ -1963,10 +1945,10 @@
             });
         } catch (e) { console.error(e); }
     }
-    document.getElementById('open-memory-btn').addEventListener('click', () => { sfx.playClick(); memoryModal.classList.remove('hidden'); loadMemories(); });
-    document.getElementById('memory-close').addEventListener('click', () => memoryModal.classList.add('hidden'));
-    memoryModal.addEventListener('click', e => { if (e.target === memoryModal) memoryModal.classList.add('hidden'); });
-    document.getElementById('add-memory-btn').addEventListener('click', async () => {
+    document.getElementById('open-memory-btn')?.addEventListener('click', () => { sfx.playClick(); memoryModal.classList.remove('hidden'); loadMemories(); });
+    document.getElementById('memory-close')?.addEventListener('click', () => memoryModal.classList.add('hidden'));
+    memoryModal?.addEventListener('click', e => { if (e.target === memoryModal) memoryModal.classList.add('hidden'); });
+    document.getElementById('add-memory-btn')?.addEventListener('click', async () => {
         const content = newMemoryInput.value.trim();
         if (!content) return;
         const res = await fetch("/memories", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content }) });
@@ -1981,10 +1963,10 @@
 
     // ---------- SUPPORT ----------
     const supportModal = document.getElementById("support-modal");
-    document.getElementById("open-support-btn").addEventListener("click", () => { sfx.playClick(); supportModal.classList.remove("hidden"); renderUpiQr(); });
-    document.getElementById("support-close").addEventListener("click", () => supportModal.classList.add("hidden"));
-    supportModal.addEventListener("click", e => { if (e.target === supportModal) supportModal.classList.add("hidden"); });
-    document.getElementById("copy-upi-btn").addEventListener("click", function () {
+    document.getElementById("open-support-btn")?.addEventListener("click", () => { sfx.playClick(); supportModal.classList.remove("hidden"); renderUpiQr(); });
+    document.getElementById("support-close")?.addEventListener("click", () => supportModal.classList.add("hidden"));
+    supportModal?.addEventListener("click", e => { if (e.target === supportModal) supportModal.classList.add("hidden"); });
+    document.getElementById("copy-upi-btn")?.addEventListener("click", function () {
         sfx.playClick();
         navigator.clipboard.writeText("nejamulhaque@upi");
         this.textContent = "Copied!";
