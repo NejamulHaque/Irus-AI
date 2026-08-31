@@ -237,6 +237,15 @@ def stream_chat(messages, model_override=None):
     if last_error:
         raise last_error
 
+def get_chat_response(messages, model_override=None):
+    """
+    Non-streaming helper that returns the complete text response from stream_chat.
+    """
+    chunks = []
+    for chunk in stream_chat(messages, model_override=model_override):
+        chunks.append(chunk)
+    return "".join(chunks).strip()
+
 # ----------------------- Photorealistic Image Prompt Disambiguation -----------------------
 def optimize_image_prompt(raw_prompt):
     """
