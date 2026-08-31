@@ -129,7 +129,7 @@
             </div>
         </header>
 
-        <div id="chat-box" class="flex-1 overflow-y-auto px-3 md:px-8 py-4 md:py-6 pb-36 md:pb-52 space-y-4 md:space-y-8 custom-scrollbar">
+        <div id="chat-box" class="flex-1 overflow-y-auto px-3 md:px-8 py-4 md:py-6 pb-56 md:pb-72 space-y-4 md:space-y-8 custom-scrollbar">
             {% for message in messages %}
                 <div class="message-row group flex gap-3 max-w-4xl mx-auto {% if message.role == 'user' %}justify-end{% else %}justify-start{% endif %}" data-message-id="{{ message.id }}" data-role="{{ message.role }}">
                     {% if message.role == 'assistant' %}
@@ -231,7 +231,7 @@
             {% endfor %}
         </div>
 
-        <button id="scroll-bottom-btn" class="hidden absolute bottom-36 md:bottom-52 left-1/2 -translate-x-1/2 z-20 w-9 h-9 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-white shadow-xl items-center justify-center transition-all active:scale-95" title="Jump to latest"><i class="fas fa-arrow-down text-xs"></i></button>
+        <button id="scroll-bottom-btn" class="hidden absolute bottom-28 md:bottom-36 left-1/2 -translate-x-1/2 z-20 w-9 h-9 rounded-full bg-zinc-800/90 backdrop-blur-md border border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-700 shadow-2xl items-center justify-center transition-all active:scale-95" title="Jump to latest"><i class="fas fa-arrow-down text-xs"></i></button>
 
         <!-- ============ FLOATING INPUT ============ -->
         <div class="absolute bottom-0 left-0 right-0 p-2 md:p-4 lg:p-6 bg-gradient-to-t from-zinc-950 via-zinc-950/95 to-transparent pointer-events-none flex justify-center z-10" style="padding-bottom: calc(env(safe-area-inset-bottom) + 8px);">
@@ -249,7 +249,7 @@
                         <button id="cap-doc-close" class="hover:text-white p-0.5 ml-0.5"><i class="fas fa-xmark text-[9px]"></i></button>
                     </span>
                     <span id="cap-image" class="hidden capability-chip bg-pink-500/15 border border-pink-500/30 text-pink-300 cursor-pointer hover:bg-pink-500/25 transition-colors">
-                        <i class="fas fa-palette text-[10px]"></i><span>AI Image Mode Active</span><i class="fas fa-xmark text-[9px] ml-1"></i>
+                        <i class="fas fa-palette text-[10px]"></i><span>Photorealistic 8K Image Mode Active</span><i class="fas fa-xmark text-[9px] ml-1"></i>
                     </span>
                     <span id="cap-compare" class="hidden capability-chip bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 cursor-pointer hover:bg-emerald-500/25 transition-colors">
                         <i class="fas fa-code-branch text-[10px]"></i><span>Model Compare Active</span><i class="fas fa-xmark text-[9px] ml-1"></i>
@@ -500,6 +500,15 @@
     .message-actions { gap: .3rem !important; margin-top: .45rem; }
     .message-actions button { padding: .3rem .55rem; border-radius: .6rem; border: 1px solid transparent; }
     .message-actions button:hover { background: var(--bg-2); border-color: var(--border); color: var(--t-1) !important; }
+    header button { border: 1px solid transparent !important; outline: none !important; box-shadow: none !important; }
+    header button:focus, header button:focus-visible { outline: none !important; box-shadow: none !important; border-color: transparent !important; }
+    [data-theme="light"] header button:hover { background-color: #f4f4f5 !important; color: #18181b !important; }
+    [data-theme="light"] .card-spotlight { background: #ffffff !important; border: 1px solid #e4e4e7 !important; box-shadow: 0 4px 18px -4px rgba(0,0,0,0.06) !important; }
+    [data-theme="light"] .card-spotlight:hover { border-color: rgba(99,102,241,0.4) !important; box-shadow: 0 10px 25px -5px rgba(99,102,241,0.12) !important; }
+    [data-theme="light"] .card-spotlight p, [data-theme="light"] .card-spotlight span { color: #18181b !important; }
+    [data-theme="light"] .card-spotlight .text-zinc-500, [data-theme="light"] .card-spotlight .text-zinc-400, [data-theme="light"] .card-spotlight .text-zinc-600 { color: #71717a !important; }
+    [data-theme="light"] .bg-zinc-900\/80, [data-theme="light"] .bg-zinc-900\/90, [data-theme="light"] .bg-zinc-900 { background-color: #ffffff !important; border-color: #e4e4e7 !important; color: #18181b !important; }
+    [data-theme="light"] .bg-zinc-800 { background-color: #e4e4e7 !important; }
 </style>
 
 <script>
@@ -846,16 +855,36 @@
     }
 
     // ---------- TYPEWRITER PLACEHOLDER ----------
-    const PLACEHOLDERS = ['Message Irus... ( type "/" for commands )', 'Ask me to explain anything...', 'Try "Search the web for AI news"...', 'Attach an image and ask "What is this?"...', 'Press Ctrl+K for the command palette...'];
-    let phIdx = 0, phPos = 0, phDel = false;
+    const PLACEHOLDERS = [
+        'Message Irus... ( type "/" for commands )',
+        'Ask anything, write code, analyze data...',
+        'Type /realistic for 8K photorealistic AI images...',
+        'Type /web to search the live web in real-time...',
+        'Upload PDF, Word, PowerPoint, Excel, or code...',
+        'Press Ctrl+K for the quick action palette...'
+    ];
+    let phIdx = 0, phPos = 0, phDel = false, phPause = 0;
     setInterval(() => {
-        if (imageMode || document.activeElement === input || input.value) return;
+        if (imageMode || activeDocumentId || webSearchEnabled || document.activeElement === input || (input && input.value)) return;
+        if (phPause > 0) { phPause--; return; }
         const target = PLACEHOLDERS[phIdx];
-        phPos += phDel ? -1 : 1;
-        if (!phDel && phPos === target.length) phDel = true;
-        if (phDel && phPos === 0) { phDel = false; phIdx = (phIdx + 1) % PLACEHOLDERS.length; }
-        input.placeholder = target.slice(0, phPos);
-    }, 45);
+        if (!phDel) {
+            phPos++;
+            input.placeholder = target.slice(0, phPos);
+            if (phPos >= target.length) {
+                phDel = true;
+                phPause = 35; // pause ~1.8 seconds so the user can read the prompt
+            }
+        } else {
+            phPos--;
+            input.placeholder = target.slice(0, phPos);
+            if (phPos <= 0) {
+                phDel = false;
+                phIdx = (phIdx + 1) % PLACEHOLDERS.length;
+                phPause = 6;
+            }
+        }
+    }, 50);
 
     // ---------- MESSAGE ACTIONS ----------
     function addMessageActions(row) {
@@ -972,9 +1001,9 @@
     function toggleImageMode() {
         sfx.playClick();
         imageMode = !imageMode;
-        input.placeholder = imageMode ? "Describe the image you want to create..." : PLACEHOLDERS[0];
+        input.placeholder = imageMode ? "Describe the photorealistic scene (e.g. A portrait of a man with his dog in a park, 8k photo)..." : PLACEHOLDERS[0];
         updateCapabilityBadges();
-        showToast(imageMode ? "Image generation enabled 🎨" : "Image generation disabled", "info");
+        showToast(imageMode ? "Photorealistic 8K image mode enabled 🎨" : "Image mode disabled", "info");
     }
     webSearchBtn?.addEventListener("click", () => {
         sfx.playClick();

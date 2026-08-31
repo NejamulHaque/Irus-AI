@@ -69,7 +69,8 @@ def _image_parts(content):
 
 # ----------------------- Providers -----------------------
 GROQ_FALLBACK_MODELS = [
-    "llama-3.3-70b-versatile",
+    "qwen/qwen3.8-27b",
+    "openai/gpt-oss-120b",
     "openai/gpt-oss-20b",
     "qwen/qwen3.6-27b",
     "groq/compound",
@@ -82,7 +83,7 @@ def _stream_groq(messages, model_override=None):
         raise RuntimeError("GROQ_API_KEY is missing")
     client = Groq(api_key=api_key)
 
-    models_to_try = [model_override or os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")]
+    models_to_try = [model_override or os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")]
     models_to_try += [m for m in GROQ_FALLBACK_MODELS if m not in models_to_try]
 
     last_err = None
@@ -235,3 +236,34 @@ def stream_chat(messages, model_override=None):
                 print(f"[Warning: {p} failed. Trying fallback: {order[i + 1]}]")
     if last_error:
         raise last_error
+
+# ----------------------- Photorealistic Image Prompt Disambiguation -----------------------
+def optimize_image_prompt(raw_prompt):
+    """
+    Expands a user's concise image idea into a detailed, photorealistic prompt.
+    Explicitly enforces subject separation to prevent entity blending (e.g. human-animal hybrids).
+    """
+    if not raw_prompt or len(raw_prompt.strip()) > 350:
+        return raw_prompt.strip()
+
+    sys_msg = (
+        "You are an expert AI prompt engineer for Flux / Midjourney photorealistic image generation. "
+        "Expand the user's short prompt into a rich, detailed photorealistic visual description.\n"
+        "RULES:\n"
+        "1. If multiple entities or animals are mentioned (e.g. 'man with dog'), EXPLICITLY describe each entity as a distinct separate subject (e.g., 'a human man sitting outdoors alongside his loyal golden retriever dog') to strictly avoid entity blending or mutant hybrids.\n"
+        "2. Include natural photography elements: lighting (e.g. golden hour, soft studio light), realistic skin/fur textures, 35mm lens, sharp focus, 8k resolution.\n"
+        "3. Output ONLY the improved prompt text in English. NO quotes, NO explanation, NO intro."
+    )
+    messages = [
+        {"role": "system", "content": sys_msg},
+        {"role": "user", "content": raw_prompt.strip()}
+    ]
+    try:
+        chunks = []
+        for chunk in stream_chat(messages):
+            chunks.append(chunk)
+        res = "".join(chunks).strip().strip('"').strip("'")
+        return res if res else raw_prompt.strip()
+    except Exception as e:
+        print(f"[optimize_image_prompt error] {e}")
+        return raw_prompt.strip()

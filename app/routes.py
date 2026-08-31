@@ -692,11 +692,13 @@ def stream_chat(conversation_id):
                     yield sse({'type': 'chunk', 'content': piece})
             elif image_mode and message_text:
                 seed = random.randint(1, 10000000)
-                # Enhance prompt with realistic photographic cues if style isn't specifically non-photographic
+                # Intelligently disambiguate subjects and expand photographic detail
                 prompt_lower = message_text.lower()
                 is_stylized = any(k in prompt_lower for k in ('anime', 'cartoon', 'sketch', 'pixel', 'illustration', 'vector art', 'drawing'))
-                realistic_suffix = "" if is_stylized else ", highly detailed, photorealistic 8k resolution, cinematic studio lighting, sharp focus, master photography, realistic textures, 35mm lens"
-                enhanced_prompt = message_text.strip() + realistic_suffix
+                if is_stylized:
+                    enhanced_prompt = message_text.strip()
+                else:
+                    enhanced_prompt = ai_service.optimize_image_prompt(message_text)
 
                 img_url = (f"https://image.pollinations.ai/prompt/{urllib.parse.quote(enhanced_prompt)}"
                            f"?width=1024&height=1024&seed={seed}&model=flux-realism&nologo=true&enhance=true")

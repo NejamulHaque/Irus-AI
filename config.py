@@ -13,7 +13,7 @@ class Config:
     GROQ_API_KEY = os.getenv('GROQ_API_KEY')
     AI_PROVIDER = os.getenv('AI_PROVIDER', 'groq')
     FALLBACK_PROVIDER = os.getenv('FALLBACK_PROVIDER', '')
-    GROQ_MODEL = os.getenv('GROQ_MODEL', 'llama-3.1-8b-instant')
+    GROQ_MODEL = os.getenv('GROQ_MODEL', 'qwen/qwen3.8-27b')
     OLLAMA_MODEL = os.getenv('OLLAMA_MODEL', 'llama3.2')
     
         # Hardened session cookies

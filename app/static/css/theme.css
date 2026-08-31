@@ -233,6 +233,30 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   box-shadow: 0 20px 40px -15px rgba(99,102,241,0.25);
 }
 
+[data-theme="light"] .card-spotlight {
+  background: #ffffff !important;
+  border-color: #e4e4e7 !important;
+  box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.06) !important;
+  color: #18181b !important;
+}
+[data-theme="light"] .card-spotlight:hover {
+  border-color: rgba(99, 102, 241, 0.4) !important;
+  box-shadow: 0 12px 28px -8px rgba(99, 102, 241, 0.15) !important;
+}
+[data-theme="light"] .card-spotlight p,
+[data-theme="light"] .card-spotlight span,
+[data-theme="light"] .card-spotlight div {
+  color: inherit;
+}
+[data-theme="light"] .card-spotlight .text-zinc-300,
+[data-theme="light"] .card-spotlight .text-zinc-400,
+[data-theme="light"] .card-spotlight .text-zinc-500 {
+  color: #52525b !important;
+}
+[data-theme="light"] .card-spotlight .text-zinc-600 {
+  color: #71717a !important;
+}
+
 .terminal-window {
   background: #09090d;
   border: 1px solid rgba(255,255,255,0.1);
