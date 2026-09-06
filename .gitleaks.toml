@@ -1,0 +1,18 @@
+title = "Irus AI — Gitleaks configuration"
+
+# Allowlist #1: documentation & template placeholders
+[[allowlists]]
+description = "Docs and UI templates contain example credentials only"
+paths = [
+    '''README\.md''',
+    '''app/templates/api_keys\.html''',
+    '''SECURITY\.md''',
+]
+
+# Allowlist #2: any placeholder-style token anywhere (e.g. YOUR_API_KEY, ${VAR})
+[[allowlists]]
+description = "Ignore obvious placeholder tokens"
+regexes = [
+    '''(?i)^(irus_)?(your|my|test|example)_[a-z0-9_]+$''',
+    '''Bearer\s+\$\{?[A-Z_]+\}?''',
+]
