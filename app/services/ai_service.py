@@ -321,11 +321,12 @@ def optimize_image_prompt(raw_prompt, style_key="photorealistic"):
     sys_msg = (
         f"You are an expert AI visual prompt engineer ({style_cfg['name']}). "
         f"Expand the user's short prompt into a high-fidelity visual description depicting {tone_desc}.\n"
-        "STRICT COMPOSITION RULES:\n"
-        "1. ENTITY DISAMBIGUATION: If the prompt involves humans with animals (e.g. 'man with dog', 'woman with cat'):\n"
-        "   - Explicitly specify TWO DISTINCT BODIES: 'an adult human with a human face and regular clothing, standing/sitting side-by-side beside a separate domestic animal'.\n"
-        "   - Explicitly prohibit entity blending: 'strictly two separate entities, zero hybrid features, no animal head on human body, distinct human head and face, distinct quadruped animal body'.\n"
-        "2. Add visual parameters: camera lens (e.g. 35mm), lighting (golden hour / studio light), surface textures, depth of field, 8k resolution.\n"
+        "STRICT COMPOSITION & SEPARATION RULES:\n"
+        "1. SUBJECT ISOLATION & ZERO TEXTURE LEAKAGE: If the prompt involves humans with animals (e.g. 'man with dog', 'girl with cat'):\n"
+        "   - Position the subjects strictly SIDE-BY-SIDE with clear physical space between them (e.g., 'An adult human man standing on the left side of the frame, and a separate domestic golden retriever dog sitting on the grass to his right').\n"
+        "   - Explicitly specify the human's clothing as smooth matte fabric with ZERO fur (e.g., 'The man wears a smooth dark cotton jacket with clean fabric seams, completely free of any animal fur, hair, or blending').\n"
+        "   - Explicitly enforce strict anatomical separation: 'Strictly two separate distinct entities, zero hybrid features, no animal head or fur on human body, distinct human face and hands, distinct quadruped animal on four legs'.\n"
+        "2. Add visual parameters: camera lens (35mm / 50mm portrait lens), natural lighting (golden hour / soft diffuse studio light), surface textures, depth of field with bokeh, 8k resolution.\n"
         "3. Output ONLY the refined prompt text in English. NO quotes, NO explanation, NO intro."
     )
     messages = [
@@ -367,8 +368,8 @@ def generate_image_meta(prompt, style="photorealistic", aspect_ratio="1:1", seed
     height = ar_info["height"]
 
     encoded = urllib.parse.quote(enhanced_prompt)
-    # Set enhance=false so Pollinations does not mutate or overwrite our engineered prompt
-    url = f"https://image.pollinations.ai/prompt/{encoded}?width={width}&height={height}&seed={seed_val}&model={model}&nologo=true&enhance=false"
+    # nologo=true&nofeed=true&private=true&enhance=false removes watermark & prevents server-side prompt mutation
+    url = f"https://image.pollinations.ai/prompt/{encoded}?width={width}&height={height}&seed={seed_val}&model={model}&nologo=true&nofeed=true&private=true&enhance=false"
 
     return {
         "url": url,
