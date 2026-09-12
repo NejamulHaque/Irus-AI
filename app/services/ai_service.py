@@ -69,10 +69,10 @@ def _image_parts(content):
 
 # ----------------------- Providers -----------------------
 GROQ_FALLBACK_MODELS = [
-    "qwen/qwen3.8-27b",
     "openai/gpt-oss-120b",
     "openai/gpt-oss-20b",
     "qwen/qwen3.6-27b",
+    "qwen/qwen3.8-27b",
     "groq/compound",
 ]
 
@@ -83,8 +83,8 @@ def _stream_groq(messages, model_override=None):
         raise RuntimeError("GROQ_API_KEY is missing")
     client = Groq(api_key=api_key)
 
-    models_to_try = [model_override or os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")]
-    models_to_try += [m for m in GROQ_FALLBACK_MODELS if m not in models_to_try]
+    preferred = model_override or os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
+    models_to_try = [preferred] + [m for m in GROQ_FALLBACK_MODELS if m != preferred]
 
     last_err = None
     for model in models_to_try:
@@ -93,7 +93,7 @@ def _stream_groq(messages, model_override=None):
                 model=model,
                 messages=messages,
                 temperature=float(os.getenv("AI_TEMPERATURE", "0.7")),
-                max_tokens=int(os.getenv("AI_MAX_TOKENS", "1024")),
+                max_tokens=min(int(os.getenv("AI_MAX_TOKENS", "800")), 800),
                 stream=True,
             )
             got = False
@@ -319,12 +319,14 @@ def optimize_image_prompt(raw_prompt, style_key="photorealistic"):
     tone_desc = style_cfg["prompt_tone"]
 
     sys_msg = (
-        f"You are an expert AI prompt engineer for Flux / Midjourney visual generation ({style_cfg['name']}). "
-        f"Expand the user's short prompt into a rich, detailed visual description depicting {tone_desc}.\n"
-        "RULES:\n"
-        "1. If multiple entities or animals are mentioned (e.g. 'man with dog'), EXPLICITLY describe each entity as a distinct separate subject (e.g., 'a human man sitting outdoors alongside his loyal golden retriever dog') to strictly avoid entity blending or mutant hybrids.\n"
-        "2. Add specific visual cues: composition, focal point, lighting, authentic materials, textures, color grading.\n"
-        "3. Output ONLY the improved prompt in English. NO quotes, NO explanation, NO conversational filler."
+        f"You are an expert AI visual prompt engineer ({style_cfg['name']}). "
+        f"Expand the user's short prompt into a high-fidelity visual description depicting {tone_desc}.\n"
+        "STRICT COMPOSITION RULES:\n"
+        "1. ENTITY DISAMBIGUATION: If the prompt involves humans with animals (e.g. 'man with dog', 'woman with cat'):\n"
+        "   - Explicitly specify TWO DISTINCT BODIES: 'an adult human with a human face and regular clothing, standing/sitting side-by-side beside a separate domestic animal'.\n"
+        "   - Explicitly prohibit entity blending: 'strictly two separate entities, zero hybrid features, no animal head on human body, distinct human head and face, distinct quadruped animal body'.\n"
+        "2. Add visual parameters: camera lens (e.g. 35mm), lighting (golden hour / studio light), surface textures, depth of field, 8k resolution.\n"
+        "3. Output ONLY the refined prompt text in English. NO quotes, NO explanation, NO intro."
     )
     messages = [
         {"role": "system", "content": sys_msg},
@@ -365,7 +367,8 @@ def generate_image_meta(prompt, style="photorealistic", aspect_ratio="1:1", seed
     height = ar_info["height"]
 
     encoded = urllib.parse.quote(enhanced_prompt)
-    url = f"https://image.pollinations.ai/prompt/{encoded}?width={width}&height={height}&seed={seed_val}&model={model}&nologo=true&enhance=true"
+    # Set enhance=false so Pollinations does not mutate or overwrite our engineered prompt
+    url = f"https://image.pollinations.ai/prompt/{encoded}?width={width}&height={height}&seed={seed_val}&model={model}&nologo=true&enhance=false"
 
     return {
         "url": url,
