@@ -432,3 +432,85 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   background: #eef2ff;
   border-color: #c7d2fe;
 }
+
+/* ============ 📱 UNIVERSAL MOBILE RESPONSIVENESS & TOUCH SUITE ============ */
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 1rem;
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+@media (max-width: 768px) {
+  /* Prevent iOS Safari from auto-zooming into form inputs */
+  input[type="text"],
+  input[type="password"],
+  input[type="email"],
+  input[type="number"],
+  input[type="search"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+
+  .card-spotlight {
+    border-radius: 1.15rem;
+    padding: 1rem !important;
+  }
+
+  .card-pro {
+    border-radius: 1.15rem;
+  }
+
+  .glass {
+    border-radius: 1.15rem;
+  }
+
+  /* Modals full-width on mobile */
+  #shortcuts-modal > div,
+  #doc-summary-modal > div,
+  #share-modal > div,
+  #sub-modal > div,
+  #support-modal > div,
+  #rename-modal > div,
+  #folder-modal > div,
+  #memory-modal > div {
+    max-width: 95vw !important;
+    margin: 0.5rem auto !important;
+    border-radius: 1.25rem !important;
+    padding: 1.25rem !important;
+  }
+
+  /* Mobile tables scrolling */
+  table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+
+  /* Header adjustments */
+  .h-18 {
+    height: 4rem;
+  }
+
+  /* Chat floating bar bottom safe area */
+  .chat-bottom-bar {
+    padding-bottom: calc(env(safe-area-inset-bottom, 12px) + 8px) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 { font-size: 1.75rem !important; line-height: 1.25 !important; }
+  .btn { padding: 0.6rem 0.9rem; font-size: 0.75rem; }
+}

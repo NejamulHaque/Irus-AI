@@ -61,13 +61,13 @@
             </div>
 
             <!-- Navigation Tabs -->
-            <div class="flex items-center gap-2 mt-6 pt-4 border-t border-zinc-800/80 overflow-x-auto pb-1 text-xs font-semibold">
-                <button class="nav-tab active px-3.5 py-1.5 rounded-xl transition-all" data-tab="tab-overview"><i class="fas fa-chart-pie mr-1.5"></i>Overview & Analytics</button>
-                <button class="nav-tab px-3.5 py-1.5 rounded-xl transition-all" data-tab="tab-users"><i class="fas fa-users mr-1.5"></i>Users ({{ stats.users }})</button>
-                <button class="nav-tab px-3.5 py-1.5 rounded-xl transition-all" data-tab="tab-finance"><i class="fas fa-coins mr-1.5"></i>Revenue & Pro ({{ pending_subs|length }} pending)</button>
-                <button class="nav-tab px-3.5 py-1.5 rounded-xl transition-all" data-tab="tab-api"><i class="fas fa-terminal mr-1.5"></i>API Platform</button>
-                <button class="nav-tab px-3.5 py-1.5 rounded-xl transition-all" data-tab="tab-security"><i class="fas fa-shield-halved mr-1.5"></i>Security & Audits</button>
-                <button class="nav-tab px-3.5 py-1.5 rounded-xl transition-all" data-tab="tab-system"><i class="fas fa-sliders mr-1.5"></i>System & Broadcast</button>
+            <div class="flex items-center gap-2 mt-6 pt-4 border-t border-zinc-800/80 overflow-x-auto pb-1 text-xs font-semibold no-scrollbar flex-nowrap whitespace-nowrap">
+                <button class="nav-tab active px-3.5 py-1.5 rounded-xl transition-all flex-shrink-0" data-tab="tab-overview"><i class="fas fa-chart-pie mr-1.5"></i>Overview & Analytics</button>
+                <button class="nav-tab px-3.5 py-1.5 rounded-xl transition-all flex-shrink-0" data-tab="tab-users"><i class="fas fa-users mr-1.5"></i>Users ({{ stats.users }})</button>
+                <button class="nav-tab px-3.5 py-1.5 rounded-xl transition-all flex-shrink-0" data-tab="tab-finance"><i class="fas fa-coins mr-1.5"></i>Revenue & Pro ({{ pending_subs|length }} pending)</button>
+                <button class="nav-tab px-3.5 py-1.5 rounded-xl transition-all flex-shrink-0" data-tab="tab-api"><i class="fas fa-terminal mr-1.5"></i>API Platform</button>
+                <button class="nav-tab px-3.5 py-1.5 rounded-xl transition-all flex-shrink-0" data-tab="tab-security"><i class="fas fa-shield-halved mr-1.5"></i>Security & Audits</button>
+                <button class="nav-tab px-3.5 py-1.5 rounded-xl transition-all flex-shrink-0" data-tab="tab-system"><i class="fas fa-sliders mr-1.5"></i>System & Broadcast</button>
             </div>
         </div>
 
@@ -241,7 +241,7 @@
                 </div>
 
                 <div class="overflow-x-auto rounded-xl border border-zinc-800">
-                    <table class="table-pro w-full" id="user-table">
+                    <table class="table-pro w-full min-w-[750px]" id="user-table">
                         <thead>
                             <tr class="bg-zinc-900/90 text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
                                 <th class="py-3 px-4">User</th>
@@ -328,7 +328,7 @@
                 </div>
 
                 <div class="overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-950/80">
-                    <table class="table-pro w-full">
+                    <table class="table-pro w-full min-w-[700px]">
                         <thead>
                             <tr class="bg-zinc-900/90 text-[11px] font-bold text-zinc-400 uppercase">
                                 <th class="py-3 px-4">User</th>
@@ -384,7 +384,7 @@
                 </div>
 
                 <div class="overflow-x-auto rounded-xl border border-zinc-800">
-                    <table class="table-pro w-full">
+                    <table class="table-pro w-full min-w-[700px]">
                         <thead>
                             <tr class="bg-zinc-900/90 text-[11px] font-bold text-zinc-400 uppercase">
                                 <th class="py-3 px-4">ID</th>
@@ -454,7 +454,7 @@
                 </div>
 
                 <div class="overflow-x-auto rounded-xl border border-zinc-800">
-                    <table class="table-pro w-full">
+                    <table class="table-pro w-full min-w-[700px]">
                         <thead>
                             <tr class="bg-zinc-900/90 text-[11px] font-bold text-zinc-400 uppercase">
                                 <th class="py-3 px-4">Timestamp</th>
