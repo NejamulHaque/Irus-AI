@@ -53,17 +53,18 @@ h1, h2, h3, .font-display { font-family: 'Space Grotesk', 'Inter', sans-serif; l
 .animate-pop { animation: popIn .25s ease both; }
 .icon-float { animation: iconFloat 4s ease-in-out infinite; }
 
-/* ---------- 🌌 Ambient 3D background ---------- */
-.ambient { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+/* ---------- 🌌 Ambient 3D background (Fixed position - strictly 0 layout space) ---------- */
+.ambient { position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100vh !important; z-index: -1 !important; overflow: hidden !important; pointer-events: none !important; margin: 0 !important; padding: 0 !important; }
 .aurora { position: absolute; width: 60vw; height: 60vw; border-radius: 50%; filter: blur(90px); opacity: .22; animation: drift 26s ease-in-out infinite alternate; }
 .aurora.a1 { top: -20%; left: -15%; background: radial-gradient(circle, #6366f1, transparent 60%); }
 .aurora.a2 { bottom: -25%; right: -15%; background: radial-gradient(circle, #a855f7, transparent 60%); animation-delay: -8s; }
 .aurora.a3 { top: 30%; left: 45%; width: 40vw; height: 40vw; background: radial-gradient(circle, #06b6d4, transparent 60%); animation-delay: -16s; opacity: .12; }
-.grid-lines { position: absolute; inset: 0;
+.grid-lines { position: absolute !important; inset: 0 !important;
   background-image: linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
   background-size: 56px 56px; mask-image: radial-gradient(ellipse at center, black 30%, transparent 78%); }
-#fx-particles { position: absolute; inset: 0; }
-#cursor-aura { position: fixed; left: 0; top: 0; width: 420px; height: 420px; margin: -210px 0 0 -210px;
+#fx-particles { position: absolute !important; inset: 0 !important; width: 100% !important; height: 100% !important; display: block !important; pointer-events: none !important; }
+.sr-only { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0,0,0,0) !important; white-space: nowrap !important; border-width: 0 !important; }
+#cursor-aura { position: fixed !important; left: 0 !important; top: 0 !important; width: 420px !important; height: 420px !important; margin: -210px 0 0 -210px !important;
   border-radius: 50%; pointer-events: none; z-index: -1; opacity: .07;
   background: radial-gradient(circle, #818cf8, transparent 60%); transform: translate3d(-1000px,-1000px,0); }
 [data-theme="light"] .aurora { opacity: .15; }

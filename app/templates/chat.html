@@ -2385,7 +2385,9 @@
             renderMarkdown(c, c.dataset.content || "");
             addMessageActions(row);
         });
-        scrollToBottom(true);
+        if (document.querySelectorAll(".message-row").length > 0) {
+            scrollToBottom(true);
+        }
         autoResizeTextarea();
         loadDocuments();
         loadConversations();
