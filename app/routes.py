@@ -691,22 +691,31 @@ def stream_chat(conversation_id):
                     full_response.append(piece)
                     yield sse({'type': 'chunk', 'content': piece})
             elif image_mode and message_text:
-                seed = random.randint(1, 10000000)
-                # Intelligently disambiguate subjects and expand photographic detail
                 prompt_lower = message_text.lower()
-                is_stylized = any(k in prompt_lower for k in ('anime', 'cartoon', 'sketch', 'pixel', 'illustration', 'vector art', 'drawing'))
-                if is_stylized:
-                    enhanced_prompt = message_text.strip()
-                else:
-                    enhanced_prompt = ai_service.optimize_image_prompt(message_text)
+                detected_style = "photorealistic"
+                if any(k in prompt_lower for k in ("anime", "manga", "ghibli")):
+                    detected_style = "anime"
+                elif any(k in prompt_lower for k in ("cinematic", "unreal", "movie still", "octane")):
+                    detected_style = "cinematic"
+                elif any(k in prompt_lower for k in ("cyberpunk", "neon")):
+                    detected_style = "cyberpunk"
+                elif any(k in prompt_lower for k in ("oil painting", "canvas")):
+                    detected_style = "oil_painting"
+                elif any(k in prompt_lower for k in ("3d", "isometric", "clay", "pixar")):
+                    detected_style = "isometric_3d"
+                elif any(k in prompt_lower for k in ("concept art", "digital art")):
+                    detected_style = "digital_art"
 
-                img_url = (f"https://image.pollinations.ai/prompt/{urllib.parse.quote(enhanced_prompt)}"
-                           f"?width=1024&height=1024&seed={seed}&model=flux-realism&nologo=true&enhance=true")
+                meta = ai_service.generate_image_meta(message_text, style=detected_style, aspect_ratio="1:1", enhance=True)
+                img_url = meta["url"]
+
                 image_text = (
-                    f"🎨 **Photorealistic Render for:** *{message_text}*\n\n"
+                    f"🎨 **AI Creative Studio ({meta['style_name']})**\n\n"
+                    f"**Prompt:** *{message_text}*\n\n"
                     f"![{message_text}]({img_url})\n\n"
-                    f"✨ **[📥 Download High-Res (1024x1024)]({img_url})** · **[🔍 View Full Screen]({img_url})**\n\n"
-                    f"_<small class=\"text-zinc-500\">Engine: Neural Flux Realism · Res: 1024×1024 · Seed: {seed}</small>_"
+                    f"✨ **[📥 Download High-Res ({meta['width']}×{meta['height']})]({img_url})** · "
+                    f"**[🔍 Full Screen Lightbox]({img_url})**\n\n"
+                    f"_<small class=\"text-zinc-500\">Engine: {meta['model']} · Aspect: {meta['aspect_label']} · Seed: {meta['seed']}</small>_"
                 )
                 for piece in [image_text[i:i + 32] for i in range(0, len(image_text), 32)]:
                     full_response.append(piece)
@@ -960,6 +969,42 @@ def enhance_prompt():
         return jsonify({'success': True, 'enhanced_prompt': enhanced.strip()})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@main.route('/api/generate-image', methods=['POST'])
+@login_required
+@limiter.limit("20 per minute")
+def api_generate_image():
+    data = request.get_json() or {}
+    prompt = (data.get('prompt') or '').strip()
+    if not prompt:
+        return jsonify({'error': 'Image prompt is required'}), 400
+
+    style = data.get('style', 'photorealistic')
+    aspect_ratio = data.get('aspect_ratio', '1:1')
+    seed = data.get('seed', None)
+    enhance = data.get('enhance', True)
+
+    try:
+        meta = ai_service.generate_image_meta(
+            prompt=prompt,
+            style=style,
+            aspect_ratio=aspect_ratio,
+            seed=seed,
+            enhance=bool(enhance)
+        )
+        return jsonify({'success': True, **meta})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@main.route('/api/image-styles', methods=['GET'])
+@login_required
+def api_image_styles():
+    return jsonify({
+        'styles': ai_service.IMAGE_STYLES,
+        'aspect_ratios': ai_service.ASPECT_RATIOS
+    })
 
 
 # -----------------------

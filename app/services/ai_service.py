@@ -246,22 +246,85 @@ def get_chat_response(messages, model_override=None):
         chunks.append(chunk)
     return "".join(chunks).strip()
 
-# ----------------------- Photorealistic Image Prompt Disambiguation -----------------------
-def optimize_image_prompt(raw_prompt):
+# ----------------------- AI Creative Image Studio Suite -----------------------
+IMAGE_STYLES = {
+    "photorealistic": {
+        "name": "Photorealistic 8K RAW",
+        "icon": "fa-camera",
+        "model": "flux-realism",
+        "suffix": ", 8k uhd, photorealistic, 35mm lens, soft natural lighting, sharp focus, master photography, realistic textures, highly detailed",
+        "prompt_tone": "a photorealistic master photography photograph with authentic skin/fur textures, natural lighting, 35mm lens and depth of field"
+    },
+    "cinematic": {
+        "name": "Cinematic Unreal 5",
+        "icon": "fa-film",
+        "model": "flux",
+        "suffix": ", cinematic lighting, volumetric atmosphere, unreal engine 5 render, octane render 8k, epic composition, ray tracing, sharp details",
+        "prompt_tone": "a cinematic 3D movie still with volumetric lighting, dramatic depth and atmospheric ray tracing"
+    },
+    "anime": {
+        "name": "Anime (Makoto Shinkai)",
+        "icon": "fa-paint-brush",
+        "model": "flux-anime",
+        "suffix": ", anime aesthetic, Makoto Shinkai style, vibrant colors, detailed sky, highly detailed illustration, studio anime masterpiece, 4k",
+        "prompt_tone": "a breathtaking anime artwork in the style of Makoto Shinkai and Studio Ghibli with lush colors and glowing lighting"
+    },
+    "cyberpunk": {
+        "name": "Cyberpunk Neon Matrix",
+        "icon": "fa-city",
+        "model": "flux",
+        "suffix": ", cyberpunk aesthetic, neon glow, holographic reflections, futuristic city, rainy reflections, moody lighting, 8k highly detailed",
+        "prompt_tone": "a futuristic cyberpunk scene filled with vivid neon light reflections and high-tech details"
+    },
+    "digital_art": {
+        "name": "Concept Digital Art",
+        "icon": "fa-palette",
+        "model": "flux",
+        "suffix": ", digital concept art, trending on ArtStation, highly detailed fantasy, masterpiece, dramatic lighting, vivid colors",
+        "prompt_tone": "an award-winning digital concept painting with rich colors and dramatic lighting"
+    },
+    "isometric_3d": {
+        "name": "3D Cute Isometric / Clay",
+        "icon": "fa-cubes",
+        "model": "flux-3d",
+        "suffix": ", 3d isometric render, cute clay style, smooth textures, soft ambient occlusion, blender 3d, vibrant colors, clean lighting",
+        "prompt_tone": "a cute 3D isometric miniature scene with clean soft lighting and smooth textures"
+    },
+    "oil_painting": {
+        "name": "Classical Oil Painting",
+        "icon": "fa-paintbrush",
+        "model": "flux",
+        "suffix": ", classic oil painting, rich brush strokes, textured canvas, Rembrandt lighting, fine art masterpiece, museum quality",
+        "prompt_tone": "a classical oil painting with rich textural brushwork and dramatic chiaroscuro lighting"
+    }
+}
+
+ASPECT_RATIOS = {
+    "1:1": {"width": 1024, "height": 1024, "label": "Square (1:1)"},
+    "16:9": {"width": 1280, "height": 720, "label": "Landscape (16:9)"},
+    "9:16": {"width": 720, "height": 1280, "label": "Portrait (9:16)"},
+    "4:3": {"width": 1024, "height": 768, "label": "Standard (4:3)"},
+    "3:4": {"width": 768, "height": 1024, "label": "Vertical (3:4)"},
+}
+
+def optimize_image_prompt(raw_prompt, style_key="photorealistic"):
     """
-    Expands a user's concise image idea into a detailed, photorealistic prompt.
+    Expands a user's concise image idea into a detailed, style-aware visual prompt.
     Explicitly enforces subject separation to prevent entity blending (e.g. human-animal hybrids).
     """
-    if not raw_prompt or len(raw_prompt.strip()) > 350:
-        return raw_prompt.strip()
+    if not raw_prompt or len(raw_prompt.strip()) > 400:
+        return (raw_prompt or "").strip()
+
+    style_cfg = IMAGE_STYLES.get(style_key, IMAGE_STYLES["photorealistic"])
+    tone_desc = style_cfg["prompt_tone"]
 
     sys_msg = (
-        "You are an expert AI prompt engineer for Flux / Midjourney photorealistic image generation. "
-        "Expand the user's short prompt into a rich, detailed photorealistic visual description.\n"
+        f"You are an expert AI prompt engineer for Flux / Midjourney visual generation ({style_cfg['name']}). "
+        f"Expand the user's short prompt into a rich, detailed visual description depicting {tone_desc}.\n"
         "RULES:\n"
         "1. If multiple entities or animals are mentioned (e.g. 'man with dog'), EXPLICITLY describe each entity as a distinct separate subject (e.g., 'a human man sitting outdoors alongside his loyal golden retriever dog') to strictly avoid entity blending or mutant hybrids.\n"
-        "2. Include natural photography elements: lighting (e.g. golden hour, soft studio light), realistic skin/fur textures, 35mm lens, sharp focus, 8k resolution.\n"
-        "3. Output ONLY the improved prompt text in English. NO quotes, NO explanation, NO intro."
+        "2. Add specific visual cues: composition, focal point, lighting, authentic materials, textures, color grading.\n"
+        "3. Output ONLY the improved prompt in English. NO quotes, NO explanation, NO conversational filler."
     )
     messages = [
         {"role": "system", "content": sys_msg},
@@ -276,3 +339,44 @@ def optimize_image_prompt(raw_prompt):
     except Exception as e:
         print(f"[optimize_image_prompt error] {e}")
         return raw_prompt.strip()
+
+def generate_image_meta(prompt, style="photorealistic", aspect_ratio="1:1", seed=None, enhance=True):
+    import urllib.parse
+    import random
+
+    style_info = IMAGE_STYLES.get(style, IMAGE_STYLES["photorealistic"])
+    ar_info = ASPECT_RATIOS.get(aspect_ratio, ASPECT_RATIOS["1:1"])
+
+    if seed is None or str(seed).strip() in ("", "0"):
+        seed_val = random.randint(1000, 9999999)
+    else:
+        try:
+            seed_val = int(seed)
+        except Exception:
+            seed_val = random.randint(1000, 9999999)
+
+    if enhance:
+        enhanced_prompt = optimize_image_prompt(prompt, style_key=style)
+    else:
+        enhanced_prompt = prompt.strip() + style_info["suffix"]
+
+    model = style_info["model"]
+    width = ar_info["width"]
+    height = ar_info["height"]
+
+    encoded = urllib.parse.quote(enhanced_prompt)
+    url = f"https://image.pollinations.ai/prompt/{encoded}?width={width}&height={height}&seed={seed_val}&model={model}&nologo=true&enhance=true"
+
+    return {
+        "url": url,
+        "prompt": prompt,
+        "enhanced_prompt": enhanced_prompt,
+        "style": style,
+        "style_name": style_info["name"],
+        "aspect_ratio": aspect_ratio,
+        "aspect_label": ar_info["label"],
+        "width": width,
+        "height": height,
+        "seed": seed_val,
+        "model": model
+    }

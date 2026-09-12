@@ -121,6 +121,7 @@
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                     <span>{{ config.get('AI_PROVIDER', 'groq')|upper }} LPU 820 TPS</span>
                 </div>
+                <button id="image-studio-btn" class="w-9 h-9 rounded-lg hover:bg-zinc-900 flex items-center justify-center text-pink-400 hover:text-pink-300 transition-colors active:scale-95" title="🎨 AI Creative Image Studio"><i class="fas fa-palette text-xs"></i></button>
                 <button id="sfx-toggle" class="w-9 h-9 rounded-lg hover:bg-zinc-900 flex items-center justify-center text-zinc-500 hover:text-white transition-colors active:scale-95" title="Audio Effects"><i id="sfx-icon" class="fas fa-volume-high text-xs text-indigo-400"></i></button>
                 <button id="shortcuts-btn" class="w-9 h-9 rounded-lg hover:bg-zinc-900 flex items-center justify-center text-zinc-500 hover:text-white transition-colors active:scale-95" title="Shortcuts (?)"><i class="fas fa-keyboard text-xs"></i></button>
                 <button id="theme-toggle" class="w-9 h-9 rounded-lg hover:bg-zinc-900 flex items-center justify-center text-zinc-500 hover:text-white transition-colors active:scale-95" title="Theme"><i class="fas fa-sun text-xs sun-icon"></i><i class="fas fa-moon text-xs moon-icon"></i></button>
@@ -445,6 +446,157 @@
             <button id="share-copy-btn" class="btn btn-ghost !min-h-0 !py-2 text-xs">Copy</button>
         </div>
         <button id="share-toggle-btn" class="btn btn-accent w-full"></button>
+    </div>
+</div>
+
+<!-- ==================== 🎨 AI CREATIVE IMAGE STUDIO MODAL ==================== -->
+<div id="image-studio-modal" class="hidden fixed inset-0 z-[140] flex items-center justify-center bg-black/85 backdrop-blur-md p-3 sm:p-4 overflow-y-auto">
+    <div class="w-full max-w-2xl bg-zinc-900/95 border border-zinc-800 rounded-3xl p-5 sm:p-7 shadow-2xl animate-pop flex flex-col relative overflow-hidden my-auto max-h-[90vh]">
+        <div class="absolute -top-16 -right-16 w-48 h-48 bg-gradient-to-br from-pink-500/20 to-purple-600/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-16 -left-16 w-48 h-48 bg-gradient-to-tr from-indigo-600/15 to-cyan-500/15 rounded-full blur-3xl pointer-events-none"></div>
+
+        <!-- Header -->
+        <div class="flex items-center justify-between pb-4 border-b border-zinc-800 relative z-10">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-pink-500 to-purple-600 p-0.5 shadow-lg shadow-pink-500/25 flex items-center justify-center flex-shrink-0">
+                    <div class="w-full h-full bg-zinc-950 rounded-[14px] flex items-center justify-center text-pink-400 text-lg">
+                        <i class="fas fa-wand-magic-sparkles"></i>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-base sm:text-lg font-bold text-white tracking-tight">AI Creative Studio</h3>
+                        <span class="badge badge-indigo text-[9px] font-mono">Neural Flux · 8K</span>
+                    </div>
+                    <p class="text-[11px] text-zinc-400">Generate high-fidelity photorealistic & stylized AI art with custom aspect ratios</p>
+                </div>
+            </div>
+            <button id="image-studio-close" class="w-8 h-8 rounded-xl hover:bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center active:scale-95 transition-colors">
+                <i class="fas fa-xmark text-sm"></i>
+            </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="my-4 space-y-4 overflow-y-auto custom-scrollbar flex-1 pr-1 relative z-10 text-xs text-zinc-300">
+            <!-- Prompt Input & Enhancer -->
+            <div>
+                <div class="flex items-center justify-between mb-1.5">
+                    <label class="font-bold text-zinc-400 uppercase tracking-wider text-[10px]">Image Prompt</label>
+                    <button id="studio-enhance-btn" class="text-[10px] text-amber-400 hover:text-amber-300 font-semibold flex items-center gap-1 active:scale-95 transition-transform" title="Use LLM to expand lighting, textures, lens and scene details">
+                        <i class="fas fa-wand-magic-sparkles"></i> AI Enhance Prompt
+                    </button>
+                </div>
+                <div class="relative">
+                    <textarea id="studio-prompt-input" rows="3" placeholder="Describe the scene you want to generate (e.g., 'A human astronaut standing on an alien crystal cliff watching dual moons rise at twilight')..." class="w-full bg-zinc-950 border border-zinc-800 focus:border-pink-500/60 rounded-2xl p-3 text-xs text-white placeholder-zinc-600 focus:outline-none resize-none transition-colors custom-scrollbar"></textarea>
+                </div>
+            </div>
+
+            <!-- Style Presets Grid -->
+            <div>
+                <label class="block font-bold text-zinc-400 uppercase tracking-wider text-[10px] mb-2">Artistic Style Engine</label>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="studio-style-grid">
+                    <button type="button" class="studio-style-btn active p-2.5 rounded-xl border border-pink-500/50 bg-pink-500/10 text-white flex flex-col items-center gap-1.5 transition-all text-center" data-style="photorealistic">
+                        <i class="fas fa-camera text-pink-400 text-sm"></i>
+                        <span class="font-semibold text-[11px]">Photorealistic 8K</span>
+                        <span class="text-[9px] text-zinc-400">Flux Realism</span>
+                    </button>
+                    <button type="button" class="studio-style-btn p-2.5 rounded-xl border border-zinc-800 bg-zinc-950/60 hover:border-zinc-700 text-zinc-400 hover:text-white flex flex-col items-center gap-1.5 transition-all text-center" data-style="cinematic">
+                        <i class="fas fa-film text-indigo-400 text-sm"></i>
+                        <span class="font-semibold text-[11px]">Cinematic 3D</span>
+                        <span class="text-[9px] text-zinc-500">Unreal Engine 5</span>
+                    </button>
+                    <button type="button" class="studio-style-btn p-2.5 rounded-xl border border-zinc-800 bg-zinc-950/60 hover:border-zinc-700 text-zinc-400 hover:text-white flex flex-col items-center gap-1.5 transition-all text-center" data-style="anime">
+                        <i class="fas fa-palette text-purple-400 text-sm"></i>
+                        <span class="font-semibold text-[11px]">Anime & Manga</span>
+                        <span class="text-[9px] text-zinc-500">Makoto Shinkai</span>
+                    </button>
+                    <button type="button" class="studio-style-btn p-2.5 rounded-xl border border-zinc-800 bg-zinc-950/60 hover:border-zinc-700 text-zinc-400 hover:text-white flex flex-col items-center gap-1.5 transition-all text-center" data-style="cyberpunk">
+                        <i class="fas fa-city text-cyan-400 text-sm"></i>
+                        <span class="font-semibold text-[11px]">Cyberpunk Neon</span>
+                        <span class="text-[9px] text-zinc-500">Matrix Glow</span>
+                    </button>
+                    <button type="button" class="studio-style-btn p-2.5 rounded-xl border border-zinc-800 bg-zinc-950/60 hover:border-zinc-700 text-zinc-400 hover:text-white flex flex-col items-center gap-1.5 transition-all text-center" data-style="digital_art">
+                        <i class="fas fa-brush text-emerald-400 text-sm"></i>
+                        <span class="font-semibold text-[11px]">Digital Concept</span>
+                        <span class="text-[9px] text-zinc-500">ArtStation Pro</span>
+                    </button>
+                    <button type="button" class="studio-style-btn p-2.5 rounded-xl border border-zinc-800 bg-zinc-950/60 hover:border-zinc-700 text-zinc-400 hover:text-white flex flex-col items-center gap-1.5 transition-all text-center" data-style="isometric_3d">
+                        <i class="fas fa-cubes text-amber-400 text-sm"></i>
+                        <span class="font-semibold text-[11px]">3D Isometric</span>
+                        <span class="text-[9px] text-zinc-500">Cute Clay</span>
+                    </button>
+                    <button type="button" class="studio-style-btn p-2.5 rounded-xl border border-zinc-800 bg-zinc-950/60 hover:border-zinc-700 text-zinc-400 hover:text-white flex flex-col items-center gap-1.5 transition-all text-center" data-style="oil_painting">
+                        <i class="fas fa-paintbrush text-orange-400 text-sm"></i>
+                        <span class="font-semibold text-[11px]">Oil Painting</span>
+                        <span class="text-[9px] text-zinc-500">Museum Fine Art</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Aspect Ratio & Parameters Row -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-bold text-zinc-400 uppercase tracking-wider text-[10px] mb-1.5">Aspect Ratio</label>
+                    <div class="flex items-center gap-1.5" id="studio-ar-group">
+                        <button type="button" class="studio-ar-btn active flex-1 py-1.5 px-2 rounded-xl border border-pink-500/50 bg-pink-500/10 text-white font-semibold text-[11px] text-center" data-ar="1:1">1:1 Square</button>
+                        <button type="button" class="studio-ar-btn flex-1 py-1.5 px-2 rounded-xl border border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:text-white font-semibold text-[11px] text-center" data-ar="16:9">16:9 Wide</button>
+                        <button type="button" class="studio-ar-btn flex-1 py-1.5 px-2 rounded-xl border border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:text-white font-semibold text-[11px] text-center" data-ar="9:16">9:16 Story</button>
+                        <button type="button" class="studio-ar-btn flex-1 py-1.5 px-2 rounded-xl border border-zinc-800 bg-zinc-950/60 text-zinc-400 hover:text-white font-semibold text-[11px] text-center" data-ar="4:3">4:3 Standard</button>
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-bold text-zinc-400 uppercase tracking-wider text-[10px] mb-1.5">Seed (Optional)</label>
+                    <div class="flex items-center gap-2">
+                        <input id="studio-seed-input" type="number" placeholder="Random Seed" class="flex-1 bg-zinc-950 border border-zinc-800 focus:border-pink-500/60 rounded-xl px-3 py-1.5 text-xs text-white placeholder-zinc-600 focus:outline-none">
+                        <button type="button" id="studio-seed-random-btn" class="btn btn-ghost !min-h-0 !py-1.5 !px-2.5 text-[11px]" title="Randomize Seed"><i class="fas fa-dice"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Result Showcase Area (Appears on generation) -->
+            <div id="studio-result-container" class="hidden rounded-2xl bg-zinc-950 border border-zinc-800 p-4 space-y-3">
+                <div class="relative rounded-xl overflow-hidden group">
+                    <img id="studio-result-img" src="" class="w-full max-h-[380px] object-contain mx-auto rounded-xl bg-black/40 cursor-pointer transition-transform duration-300 group-hover:scale-[1.01]" alt="Generated AI Art">
+                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 pointer-events-none">
+                        <span class="px-3 py-1.5 rounded-xl bg-white/20 backdrop-blur-md text-white font-semibold text-xs flex items-center gap-1.5"><i class="fas fa-magnifying-glass-plus"></i> Click to Zoom</span>
+                    </div>
+                </div>
+                <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-zinc-800/80">
+                    <span id="studio-result-meta" class="text-[10px] text-zinc-400 font-mono"></span>
+                    <div class="flex items-center gap-2">
+                        <button type="button" id="studio-copy-url-btn" class="btn btn-ghost !min-h-0 !py-1.5 !px-3 text-[11px]"><i class="fas fa-link mr-1"></i> Copy Link</button>
+                        <button type="button" id="studio-send-chat-btn" class="btn btn-ghost !min-h-0 !py-1.5 !px-3 text-[11px] text-indigo-400 hover:text-indigo-300"><i class="fas fa-comment-dots mr-1"></i> Send to Chat</button>
+                        <a id="studio-download-btn" href="#" target="_blank" download class="btn btn-accent !min-h-0 !py-1.5 !px-3 text-[11px]"><i class="fas fa-download mr-1"></i> Download HD</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Generate Action -->
+        <div class="pt-3 border-t border-zinc-800 flex items-center justify-between relative z-10">
+            <span class="text-[10px] text-zinc-500"><i class="fas fa-infinity text-emerald-400 mr-1"></i> Free & Unlimited GPU Renders</span>
+            <button type="button" id="studio-generate-btn" class="btn btn-accent px-6 py-2.5 font-bold text-xs shadow-lg shadow-pink-500/25 flex items-center gap-2">
+                <i class="fas fa-wand-magic-sparkles"></i>
+                <span id="studio-generate-btn-text">Generate Masterpiece</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== 🔍 FULLSCREEN IMAGE LIGHTBOX MODAL ==================== -->
+<div id="image-lightbox-modal" class="hidden fixed inset-0 z-[150] flex items-center justify-center bg-black/95 backdrop-blur-lg p-3 sm:p-6 select-none">
+    <button id="lightbox-close" class="absolute top-4 right-4 z-50 w-11 h-11 rounded-2xl bg-zinc-900/80 border border-zinc-800 hover:bg-zinc-800 text-zinc-300 hover:text-white flex items-center justify-center text-lg active:scale-95 transition-all">
+        <i class="fas fa-xmark"></i>
+    </button>
+    <div class="relative max-w-5xl max-h-[90vh] flex flex-col items-center justify-center">
+        <img id="lightbox-img" src="" class="max-w-full max-h-[78vh] object-contain rounded-2xl shadow-2xl border border-zinc-800/80 transition-transform duration-300" alt="Fullscreen View">
+        <div class="mt-4 flex flex-wrap items-center justify-between gap-4 w-full px-2">
+            <p id="lightbox-prompt" class="text-xs text-zinc-300 max-w-xl truncate"></p>
+            <div class="flex items-center gap-2">
+                <button id="lightbox-copy-btn" class="btn btn-ghost !min-h-0 !py-1.5 !px-3 text-xs"><i class="fas fa-copy mr-1"></i> Copy Prompt</button>
+                <a id="lightbox-download-btn" href="#" target="_blank" download class="btn btn-accent !min-h-0 !py-1.5 !px-3 text-xs"><i class="fas fa-download mr-1"></i> Download HD</a>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -2000,6 +2152,229 @@
         navigator.clipboard.writeText("nejamulhaque@upi");
         this.textContent = "Copied!";
         setTimeout(() => { this.textContent = "Copy"; }, 2000);
+    });
+
+    // ---------- 🎨 AI CREATIVE IMAGE STUDIO CONTROLLER ----------
+    const studioModal = document.getElementById("image-studio-modal");
+    const studioPromptInput = document.getElementById("studio-prompt-input");
+    const studioGenerateBtn = document.getElementById("studio-generate-btn");
+    const studioGenerateBtnText = document.getElementById("studio-generate-btn-text");
+    const studioResultContainer = document.getElementById("studio-result-container");
+    const studioResultImg = document.getElementById("studio-result-img");
+    const studioResultMeta = document.getElementById("studio-result-meta");
+    const studioDownloadBtn = document.getElementById("studio-download-btn");
+    const studioCopyUrlBtn = document.getElementById("studio-copy-url-btn");
+    const studioSendChatBtn = document.getElementById("studio-send-chat-btn");
+    const studioSeedInput = document.getElementById("studio-seed-input");
+
+    let currentStudioStyle = "photorealistic";
+    let currentStudioAr = "1:1";
+    let lastGeneratedImageUrl = "";
+    let lastGeneratedPrompt = "";
+
+    function openImageStudio(prefillPrompt = "") {
+        sfx.playClick();
+        if (prefillPrompt && studioPromptInput) {
+            studioPromptInput.value = prefillPrompt;
+        }
+        studioModal?.classList.remove("hidden");
+        studioPromptInput?.focus();
+    }
+
+    document.getElementById("image-studio-btn")?.addEventListener("click", () => openImageStudio());
+    document.getElementById("image-studio-close")?.addEventListener("click", () => studioModal?.classList.add("hidden"));
+    studioModal?.addEventListener("click", e => { if (e.target === studioModal) studioModal.classList.add("hidden"); });
+
+    // Style preset button selection
+    document.querySelectorAll(".studio-style-btn").forEach(btn => {
+        btn.addEventListener("click", function () {
+            sfx.playClick();
+            document.querySelectorAll(".studio-style-btn").forEach(b => {
+                b.classList.remove("active", "border-pink-500/50", "bg-pink-500/10", "text-white");
+                b.classList.add("border-zinc-800", "bg-zinc-950/60", "text-zinc-400");
+            });
+            this.classList.add("active", "border-pink-500/50", "bg-pink-500/10", "text-white");
+            this.classList.remove("border-zinc-800", "bg-zinc-950/60", "text-zinc-400");
+            currentStudioStyle = this.dataset.style || "photorealistic";
+        });
+    });
+
+    // Aspect ratio button selection
+    document.querySelectorAll(".studio-ar-btn").forEach(btn => {
+        btn.addEventListener("click", function () {
+            sfx.playClick();
+            document.querySelectorAll(".studio-ar-btn").forEach(b => {
+                b.classList.remove("active", "border-pink-500/50", "bg-pink-500/10", "text-white");
+                b.classList.add("border-zinc-800", "bg-zinc-950/60", "text-zinc-400");
+            });
+            this.classList.add("active", "border-pink-500/50", "bg-pink-500/10", "text-white");
+            this.classList.remove("border-zinc-800", "bg-zinc-950/60", "text-zinc-400");
+            currentStudioAr = this.dataset.ar || "1:1";
+        });
+    });
+
+    // Randomize seed button
+    document.getElementById("studio-seed-random-btn")?.addEventListener("click", () => {
+        sfx.playClick();
+        if (studioSeedInput) {
+            studioSeedInput.value = Math.floor(Math.random() * 9000000) + 1000000;
+        }
+    });
+
+    // AI Enhance Prompt button in studio
+    document.getElementById("studio-enhance-btn")?.addEventListener("click", async function () {
+        const raw = studioPromptInput?.value?.trim();
+        if (!raw) {
+            showToast("Enter a prompt draft to enhance first!", "info");
+            return;
+        }
+        sfx.playClick();
+        const originalText = this.innerHTML;
+        this.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Polishing...';
+        this.disabled = true;
+        try {
+            const res = await fetch("/api/enhance-prompt", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ prompt: `[Style: ${currentStudioStyle}] ${raw}` })
+            });
+            const data = await res.json();
+            if (res.ok && data.enhanced_prompt) {
+                studioPromptInput.value = data.enhanced_prompt;
+                showToast("Prompt expanded with photorealistic details! ✨", "success");
+            } else {
+                showToast(data.error || "Enhance failed", "error");
+            }
+        } catch (err) {
+            showToast("Failed to reach prompt enhancer", "error");
+        } finally {
+            this.innerHTML = originalText;
+            this.disabled = false;
+        }
+    });
+
+    // Generate Masterpiece in Studio
+    studioGenerateBtn?.addEventListener("click", async () => {
+        const promptText = studioPromptInput?.value?.trim();
+        if (!promptText) {
+            showToast("Please enter an image prompt!", "error");
+            studioPromptInput?.focus();
+            return;
+        }
+        sfx.playSend();
+        studioGenerateBtn.disabled = true;
+        studioGenerateBtnText.textContent = "Synthesizing Image...";
+        studioResultContainer?.classList.remove("hidden");
+        studioResultMeta.textContent = "Connecting to Neural GPU cluster...";
+        
+        // Show loading placeholder on image
+        studioResultImg.src = "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect fill='%2318181b' width='400' height='300'/%3E%3Ctext fill='%2371717a' font-family='sans-serif' font-size='14' dy='10.5' font-weight='bold' x='50%25' y='50%25' text-anchor='middle'%3EGenerating neural masterpiece...%3C/text%3E%3C/svg%3E";
+
+        try {
+            const res = await fetch("/api/generate-image", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    prompt: promptText,
+                    style: currentStudioStyle,
+                    aspect_ratio: currentStudioAr,
+                    seed: studioSeedInput?.value || null,
+                    enhance: true
+                })
+            });
+            const data = await res.json();
+            if (res.ok && data.url) {
+                lastGeneratedImageUrl = data.url;
+                lastGeneratedPrompt = promptText;
+                
+                const img = new Image();
+                img.onload = () => {
+                    studioResultImg.src = data.url;
+                    studioResultMeta.textContent = `Engine: ${data.model} · ${data.width}×${data.height} · Seed: ${data.seed}`;
+                    if (studioDownloadBtn) studioDownloadBtn.href = data.url;
+                    sfx.playReceive();
+                    showToast("Masterpiece generated! 🎨", "success");
+                };
+                img.onerror = () => {
+                    studioResultImg.src = data.url;
+                    studioResultMeta.textContent = `Generated · Res: ${data.width}×${data.height}`;
+                };
+                img.src = data.url;
+            } else {
+                showToast(data.error || "Generation error", "error");
+            }
+        } catch (err) {
+            showToast("Network error generating image", "error");
+        } finally {
+            studioGenerateBtn.disabled = false;
+            studioGenerateBtnText.textContent = "Generate Masterpiece";
+        }
+    });
+
+    // Copy link action
+    studioCopyUrlBtn?.addEventListener("click", () => {
+        if (!lastGeneratedImageUrl) return;
+        sfx.playClick();
+        navigator.clipboard.writeText(lastGeneratedImageUrl);
+        showToast("Direct image link copied to clipboard! 📋", "success");
+    });
+
+    // Send to Chat action
+    studioSendChatBtn?.addEventListener("click", () => {
+        if (!lastGeneratedPrompt) return;
+        sfx.playClick();
+        studioModal?.classList.add("hidden");
+        input.value = `/image ${lastGeneratedPrompt}`;
+        imageMode = true;
+        updateCapabilityBadges();
+        autoResizeTextarea();
+        showToast("Switched to chat with image prompt ready! 🚀", "info");
+    });
+
+    // Lightbox Zoom Handler
+    const lightboxModal = document.getElementById("image-lightbox-modal");
+    const lightboxImg = document.getElementById("lightbox-img");
+    const lightboxPrompt = document.getElementById("lightbox-prompt");
+    const lightboxDownloadBtn = document.getElementById("lightbox-download-btn");
+    const lightboxCopyBtn = document.getElementById("lightbox-copy-btn");
+
+    function openLightbox(url, promptStr = "") {
+        sfx.playClick();
+        if (lightboxImg) lightboxImg.src = url;
+        if (lightboxPrompt) lightboxPrompt.textContent = promptStr || "AI Generated Artwork";
+        if (lightboxDownloadBtn) lightboxDownloadBtn.href = url;
+        lightboxModal?.classList.remove("hidden");
+    }
+
+    studioResultImg?.addEventListener("click", () => {
+        if (lastGeneratedImageUrl) openLightbox(lastGeneratedImageUrl, lastGeneratedPrompt);
+    });
+
+    document.getElementById("lightbox-close")?.addEventListener("click", () => lightboxModal?.classList.add("hidden"));
+    lightboxModal?.addEventListener("click", e => { if (e.target === lightboxModal) lightboxModal.classList.add("hidden"); });
+    window.addEventListener("keydown", e => {
+        if (e.key === "Escape") {
+            lightboxModal?.classList.add("hidden");
+            studioModal?.classList.add("hidden");
+        }
+    });
+
+    lightboxCopyBtn?.addEventListener("click", () => {
+        if (lightboxPrompt?.textContent) {
+            sfx.playClick();
+            navigator.clipboard.writeText(lightboxPrompt.textContent);
+            showToast("Prompt copied! 📋", "success");
+        }
+    });
+
+    // Delegate click on any image inside chat messages to open lightbox
+    chatBox?.addEventListener("click", e => {
+        const img = e.target.closest(".msg-bubble img");
+        if (img && img.src && !img.closest(".msg-avatar")) {
+            e.preventDefault();
+            const promptText = img.alt || "AI Image";
+            openLightbox(img.src, promptText);
+        }
     });
 
     // ---------- INITIALIZATION ----------
