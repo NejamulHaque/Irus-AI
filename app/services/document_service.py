@@ -9,7 +9,7 @@ import xml.etree.ElementTree as ET
 import requests
 import numpy as np
 from werkzeug.utils import secure_filename
-from PyPDF2 import PdfReader
+from pypdf import PdfReader
 from docx import Document as DocxDocument
 from pptx import Presentation
 from openpyxl import load_workbook
