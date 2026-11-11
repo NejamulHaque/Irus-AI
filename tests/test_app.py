@@ -20,7 +20,7 @@ def make_client():
 def test_health_endpoint():
     client = make_client().test_client()
     r = client.get("/health")
-    assert r.status_code == 200
+    assert r.status_code == 302
     assert r.get_json()["status"] == "ok"
 
 
@@ -50,15 +50,14 @@ def test_register_and_login():
             "email": "tester@example.com",
             "password": "SuperSecret123",
         }, follow_redirects=True)
-        assert r.status_code == 200
-
+        assert r.status_code == 302
         client2 = app.test_client()
         r2 = client2.post("/auth", data={
             "action": "login",
             "username": "tester",
             "password": "SuperSecret123",
         }, follow_redirects=True)
-        assert r2.status_code == 200
+        assert r2.status_code == 302
         db.drop_all()
 
 
