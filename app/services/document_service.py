@@ -4,7 +4,7 @@ import json
 import csv
 import re
 import zipfile
-import xml.etree.ElementTree as ET
+from defusedxml import ElementTree as DefusedET
 
 import requests
 import numpy as np
@@ -146,7 +146,7 @@ def _extract_csv(stream, is_tsv=False):
 def _extract_opendocument(stream):
     with zipfile.ZipFile(stream) as z:
         if 'content.xml' in z.namelist():
-            tree = ET.fromstring(z.read('content.xml'))
+            tree = DefusedET.fromstring(z.read('content.xml'))
             texts = [elem.text.strip() for elem in tree.iter() if elem.text and elem.text.strip()]
             return "\n\n".join(texts)
     return ""
@@ -223,7 +223,7 @@ def _extract_xml_from_zip(stream, pattern):
             texts = []
             for name in z.namelist():
                 if re.search(pattern, name):
-                    tree = ET.fromstring(z.read(name))
+                    tree = DefusedET.fromstring(z.read(name))
                     texts.extend([elem.text.strip() for elem in tree.iter() if elem.text and elem.text.strip()])
             return "\n\n".join(texts)
     except Exception:
